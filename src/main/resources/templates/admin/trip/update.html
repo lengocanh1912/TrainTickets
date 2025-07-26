@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <title>Trang quản trị - TrainTickets</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- Bootstrap -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" th:href="@{/css/styles.css}">
+  <link th:href="@{'/img/favicon.ico'}" rel="shortcut icon" type="image/x-icon">
+  <!-- Bootstrap v5.0.1 -->
+  <link th:href="@{'/css/bootstrap.css'}" type="text/css" rel="stylesheet">
+  <script th:src="@{'/js/bootstrap.bundle.js'}" type="text/javascript"></script>
+  <!-- Bootstrap Icons v1.5.0 -->
+  <link th:href="@{'/css/bootstrap-icons.css'}" type="text/css" rel="stylesheet">
+  <!-- Custom Styles -->
+  <link th:href="@{'/css/styles.css'}" type="text/css" rel="stylesheet">
+  <script>
+    var changeLanguage = function (dom) {
+      window.location.href = '?lang=' + dom.value;
+    }
+  </script>
+</head>
+
+<body style="padding-top: 55px;">
+<!--header frag-->
+<div th:replace="/admin/common/fragments :: header_nav"> </div>
+<!-- Sidebar Fragment -->
+<div th:replace="/admin/common/fragments :: side_navbar"> </div>
+<!-- Main Content -->
+<div class="main-content">
+  <div class="container-fluid">
+    <div class="container mt-4">
+      <h3>Cập nhật chuyến đi</h3>
+
+      <form th:action="@{/admin/trip/update}" th:object="${trip}" method="post">
+        <!-- ID ẩn -->
+        <input type="hidden" th:field="*{id}"/>
+
+        <!-- Chọn tàu -->
+        <div class="mb-3">
+          <label for="trainId" class="form-label">Tàu</label>
+          <select class="form-select" id="trainId" th:field="*{trainId}" required>
+            <option value="">-- Chọn tàu --</option>
+            <option th:each="train : ${trains}" th:value="${train.id}" th:text="${train.name}"></option>
+          </select>
+          <div class="text-danger" th:if="${#fields.hasErrors('trainId')}" th:errors="*{trainId}"></div>
+        </div>
+
+        <!-- Chọn tuyến đường -->
+        <div class="mb-3">
+          <label for="routeId" class="form-label">Tuyến đường</label>
+          <select class="form-select" id="routeId" th:field="*{routeId}" required>
+            <option value="">-- Chọn tuyến --</option>
+            <option th:each="route : ${routes}" th:value="${route.id}"
+                    th:text="${route.departure.name + ' → ' + route.arrival.name}"></option>
+          </select>
+          <div class="text-danger" th:if="${#fields.hasErrors('routeId')}" th:errors="*{routeId}"></div>
+        </div>
+
+        <!-- Giá vé -->
+        <div class="mb-3">
+          <label for="price" class="form-label">Giá vé</label>
+          <input type="number" class="form-control" id="price" th:field="*{price}" required min="0" step="1">
+          <div class="text-danger" th:if="${#fields.hasErrors('price')}" th:errors="*{price}"></div>
+        </div>
+
+        <!-- Thời gian xuất phát -->
+        <div class="mb-3">
+          <label for="departureAt" class="form-label">Thời gian xuất phát</label>
+          <input type="datetime-local"
+                 class="form-control"
+                 id="departureAt"
+                 th:field="*{departureAt}"
+                 th:value="${#temporals.format(trip.departureAt, 'yyyy-MM-dd''T''HH:mm')}"/>
+<!--          <input type="datetime-local"-->
+<!--                 class="form-control"-->
+<!--                 th:field="*{departureAt}" />-->
+
+          <div class="text-danger" th:if="${#fields.hasErrors('departureAt')}"
+               th:errors="*{departureAt}"></div>
+        </div>
+
+        <!-- Thời gian đến -->
+        <div class="mb-3">
+          <label for="arrivalAt" class="form-label">Thời gian đến</label>
+          <input type="datetime-local"
+                 class="form-control"
+                 id="arrivalAt"
+                 th:field="*{arrivalAt}"
+                 th:value="${#temporals.format(trip.arrivalAt, 'yyyy-MM-dd''T''HH:mm')}" />
+
+          <div class="text-danger" th:if="${#fields.hasErrors('arrivalAt')}" th:errors="*{arrivalAt}"></div>
+        </div>
+
+        <!-- Trạng thái (radio) -->
+        <div class="mb-3" th:if="${trip.id != null}">
+          <label class="form-label d-block">Trạng thái</label>
+
+          <!-- Hoạt động -->
+          <div class="form-check form-check-inline">
+            <input class="form-check-input"
+                   type="radio"
+                   id="statusActive"
+                   th:field="*{status}"
+                   th:value="true"
+                   required>
+            <label class="form-check-label" for="statusActive">Đang chạy</label>
+          </div>
+
+          <!-- Tạm dừng -->
+          <div class="form-check form-check-inline">
+            <input class="form-check-input"
+                   type="radio"
+                   id="statusPaused"
+                   th:field="*{status}"
+                   th:value="false"
+                   required>
+            <label class="form-check-label" for="statusPaused">Tạm dừng</label>
+          </div>
+
+          <div class="text-danger mt-1" th:if="${#fields.hasErrors('status')}" th:errors="*{status}"></div>
+        </div>
+
+
+
+        <!-- Nút thao tác -->
+        <div class="text-end">
+          <button class="btn btn-success" type="submit">Cập nhật</button>
+          <a class="btn btn-secondary" th:href="@{/admin/trip/view}">Quay lại</a>
+        </div>
+
+        <!-- Lỗi toàn form -->
+        <div th:if="${#fields.hasErrors('*')}" class="alert alert-danger mt-3">
+          <ul>
+            <li th:each="err : ${#fields.errors('*')}" th:text="${err}"></li>
+          </ul>
+        </div>
+      </form>
+
+      <!-- Thông báo thành công -->
+      <div th:if="${message}" class="alert alert-info mt-3" th:text="${message}"></div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

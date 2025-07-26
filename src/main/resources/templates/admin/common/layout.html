@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="vi">
+<head th:fragment="adminHead(title)">
+    <meta charset="UTF-8">
+    <title th:text="${title}">Trang quản trị</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" th:href="@{/css/bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/css/layout.css}">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-KyZXEJ10x8bH8tQy4bm8a7Unw7CkCz7Y2pA8a6vFtvbA0hZTkNffpV8V4jeIm9xr" crossorigin="anonymous">
+    <!-- Bootstrap Icons (optional, for the account icon) -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+    <link th:href="@{/css/styles.css}" type="text/css" rel="stylesheet">
+  <!-- Bootstrap JS CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+</head>
+
+<body>
+<!-- Sidebar Fragment -->
+<div class="sidebar d-flex flex-column justify-content-between" th:fragment="adminSidebar">
+  <a th:href="@{/admin/home}" th:classappend="${menu == 'dashboard'} ? 'active'">Admin Panel</a>
+  <hr>
+<!--  <div class="container mt-5">-->
+    <!-- Account Dropdown -->
+    <div class="dropdown">
+      <!-- Account Icon -->
+      <button class="btn btn-secondary " type="button" id="accountDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+        <i class="bi bi-person-circle"></i> Tài khoản
+      </button>
+      <ul class="dropdown-menu" aria-labelledby="accountDropdown">
+        <li><a class="dropdown-item text-dark" th:href="@{/admin/password}">Đổi mật khẩu</a></li>
+        <li><a class="dropdown-item text-dark" th:href="@{/logout}">Đăng xuất</a></li>
+        <li><a class="dropdown-item text-dark" th:href="@{/user/home}">Business</a></li>
+      </ul>
+    </div>
+<!--  </div>-->
+  <!-- Sidebar Links -->
+  <a class="nav-link" th:href="@{/admin/home}" th:classappend="${menu == 'dashboard'} ? 'active'">Trang chủ</a>
+<!--  <li class="nav-link" th:classappend="${menu == 'dashboard'} ? 'active'">-->
+<!--    <a th:href="@{/admin/home}">Trang chủ</a>-->
+<!--  </li>-->
+  <a class="nav-link" th:href="@{/admin/user/view}" th:classappend="${menu == 'user'} ? 'active'"> Người dùng</a>
+  <a class="nav-link" th:href="@{/admin/train/view}" th:classappend="${menu == 'train'} ? 'active'">Các Chuyến tàu</a>
+  <a class="nav-link" th:href="@{/admin/trip/view}" th:classappend="${menu == 'trip'} ? 'active'">Chuyến đi</a>
+  <a class="nav-link" th:href="@{/admin/ticket/view}" th:classappend="${menu == 'ticket'} ? 'active'">Vé tàu hiện tại</a>
+  <a class="nav-link" th:href="@{/admin/discount/view}" th:classappend="${menu == 'discount'} ? 'active'">Mã giảm giá</a>
+  <a class="nav-link" th:href="@{/admin/order/view}" th:classappend="${menu == 'order'} ? 'active'">Đơn đặt vé</a>
+<!--email người dùng đang đăng nhập-->
+  <div class="sb-sidenav-footer mt-auto">
+    <div class="small">Logged in as:</div>
+    <div class="text-danger block" th:text="${currentUser.email}"></div>
+  </div>
+</div>
+
+<div id="layoutSidenav_nav" th:fragment="side_navbar">
+  <nav class="sb-sidenav accordion sb-sidenav-dark" id="sidenavAccordion">
+    <div class="sb-sidenav-menu">
+      <div class="nav">
+        <div class="sidebar d-flex flex-column justify-content-between" >
+          <a th:href="@{/admin/home}" th:classappend="${menu == 'dashboard'} ? 'active'">Admin Panel</a>
+          <hr>
+          <!-- Sidebar Links -->
+          <a class="nav-link" th:href="@{/admin/home}" th:classappend="${menu == 'dashboard'} ? 'active'">Trang chủ</a>
+          <!--  <li class="nav-link" th:classappend="${menu == 'dashboard'} ? 'active'">-->
+          <!--    <a th:href="@{/admin/home}">Trang chủ</a>-->
+          <!--  </li>-->
+          <a class="nav-link" th:href="@{/admin/user/view}" th:classappend="${menu == 'user'} ? 'active'"> Người dùng</a>
+          <a class="nav-link" th:href="@{/admin/train/view}" th:classappend="${menu == 'train'} ? 'active'">Các Chuyến tàu</a>
+          <a class="nav-link" th:href="@{/admin/trip/view}" th:classappend="${menu == 'trip'} ? 'active'">Chuyến đi</a>
+          <a class="nav-link" th:href="@{/admin/ticket/view}" th:classappend="${menu == 'ticket'} ? 'active'">Vé tàu hiện tại</a>
+          <a class="nav-link" th:href="@{/admin/discount/view}" th:classappend="${menu == 'discount'} ? 'active'">Mã giảm giá</a>
+          <a class="nav-link" th:href="@{/admin/order/view}" th:classappend="${menu == 'order'} ? 'active'">Đơn đặt vé</a>
+          <!--email người dùng đang đăng nhập-->
+          <div class="sb-sidenav-footer mt-auto ">
+            <div class="small">Logged in as:</div>
+            <div class="text-danger block" th:text="${currentUser.email}"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </nav>
+  <!-- End of nav bar-->
+</div>
+
+<!-- fragments/header.html -->
+<header th:fragment="header()" class="main-content">
+  <div class="container-fluid px-4">
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+      <!-- Thanh tìm kiếm -->
+      <form action="#" class="flex-grow-1" style="max-width: 400px;">
+        <div class="input-group">
+          <input type="text" class="form-control" placeholder="Nhập từ khóa..." aria-label="Search">
+          <button class="btn btn-primary" type="button">
+            <i class="bi bi-search"></i>
+          </button>
+        </div>
+      </form>
+
+      <!-- Tiêu đề -->
+      <h3 class="mb-0 text-center flex-grow-1">Quản lý người dùng</h3>
+
+      <!-- Nút thêm -->
+      <div>
+        <a class="btn btn-primary" th:href="@{'/admin/user/create'}">Thêm người dùng</a>
+      </div>
+
+    </div>
+  </div>
+</header>
+
+<!-- Main Content Layout -->
+<div class="main-content" th:fragment="adminContent(content)">
+  <div th:replace="${content}"></div>
+</div>
+
+</body>
+</html>

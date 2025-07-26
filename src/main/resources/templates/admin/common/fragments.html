@@ -1,0 +1,179 @@
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="https://www.thymeleaf.org/thymeleaf-extras-springsecurity6">
+<head th:fragment="head(title)">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title th:text="${title}"></title>
+    <link th:href="@{'/img/favicon.ico'}" rel="shortcut icon" type="image/x-icon">
+    <!-- Bootstrap v5.0.1 -->
+    <link th:href="@{'/css/bootstrap.css'}" type="text/css" rel="stylesheet">
+    <script th:src="@{'/js/bootstrap.bundle.js'}" type="text/javascript"></script>
+    <!-- Bootstrap Icons v1.5.0 -->
+    <link th:href="@{'/css/bootstrap-icons.css'}" type="text/css" rel="stylesheet">
+    <!-- Custom Styles -->
+    <link th:href="@{/css/styles.css}" type="text/css" rel="stylesheet">
+    <!-- Bootstrap JS CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!--        Font Awesome-->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <link th:href="@{/css/font-awesome.min.css}" type="text/css" rel="stylesheet">
+    <script>
+        var changeLanguage = function (dom) {
+            window.location.href = '?lang=' + dom.value;
+        }
+    </script>
+
+</head>
+<!--header-->
+<div th:fragment="header_nav">
+    <nav class="sb-topnav navbar navbar-expand navbar-dark bg-dark fixed-top">
+        <!-- Navbar Brand-->
+        <a class="navbar-brand ps-3" th:href="@{/admin/home}">TrainTicket</a>
+        <!-- Sidebar Toggle Button -->
+        <button class="btn btn-link btn-sm order-1 order-lg-0 me-4 me-lg-0"
+                id="sidebarToggle" type="button">
+            <i class="fa-solid fa-bars"></i>
+        </button>
+        <!-- Navbar Search-->
+        <form
+                class="d-none d-md-inline-block form-inline ms-auto me-0 me-md-3 my-2 my-md-0">
+        </form>
+        <!-- Navbar-->
+        <ul class="navbar-nav ms-auto ms-md-0 me-3 me-lg-4">
+            <div class="dropdown">
+                <!-- Account Icon -->
+                <button class="btn btn-secondary " type="button" id="accountDropdown"
+                        data-bs-toggle="dropdown"
+                        aria-expanded="false">
+                    <i class="bi bi-person"></i>
+                </button>
+                <ul class="dropdown-menu" aria-labelledby="accountDropdown">
+                    <li><a class="dropdown-item text-primary"
+                           th:href="@{/user/home}">BUSINESS</a></li>
+                    <hr>
+                    <li><a class="dropdown-item text-dark"
+                           th:href="@{/admin/password}">Đổi mật khẩu</a></li>
+                    <li><a class="dropdown-item text-dark"
+                           th:href="@{/logout}">Đăng xuất</a></li>
+                </ul>
+            </div>
+        </ul>
+    </nav>
+</div>
+<!--sidebar-->
+<div id="layoutSidenav_nav" th:fragment="side_navbar">
+    <nav class="sb-sidenav accordion sb-sidenav-dark" id="sidenavAccordion">
+        <div class="sb-sidenav-menu">
+            <div class="nav">
+                <div class="sidebar d-flex flex-column justify-content-between" >
+                    <a th:href="@{/admin/home}" th:classappend="${menu == 'dashboard'} ? 'active'">Dashboard</a>
+                    <hr>
+                    <!-- Sidebar Links -->
+<!--                    <a class="nav-link" th:href="@{/admin/home}" th:classappend="${menu == 'dashboard'} ? 'active'">Trang chủ</a>-->
+                    <!--  <li class="nav-link" th:classappend="${menu == 'dashboard'} ? 'active'">-->
+                    <!--    <a th:href="@{/admin/home}">Trang chủ</a>-->
+                    <!--  </li>-->
+                    <a class="nav-link" th:href="@{/admin/user/view}"
+                       th:classappend="${menu == 'user'} ? 'active'"> Người dùng</a>
+                    <a class="nav-link" th:href="@{/admin/train/view}"
+                       th:classappend="${menu == 'train'} ? 'active'">Các tàu</a>
+                    <a class="nav-link" th:href="@{/admin/trip/view}"
+                       th:classappend="${menu == 'trip'} ? 'active'">Chuyến đi</a>
+                    <a class="nav-link" th:href="@{/admin/ticket/view}"
+                       th:classappend="${menu == 'ticket'} ? 'active'">Vé tàu đã đặt</a>
+                    <a class="nav-link" th:href="@{/admin/revenue/view}"
+                       th:classappend="${menu == 'revenue'} ? 'active'">Doanh thu</a>
+                    <a class="nav-link" th:href="@{/admin/order/view}"
+                       th:classappend="${menu == 'order'} ? 'active'">Đơn đặt vé</a>
+                    <a class="nav-link" th:href="@{/admin/route/view}"
+                       th:classappend="${menu == 'route'} ? 'active'">Tuyến đường hiện tại</a>
+                    <a class="nav-link" th:href="@{/admin/review/view}"
+                       th:classappend="${menu == 'review'} ? 'active'">Đánh giá </a>
+
+                    <!--email người dùng đang đăng nhập-->
+                    <div class="sb-sidenav-footer mt-auto ">
+                        <div class="small">Logged in as:</div>
+                        <div class="text-danger block" th:text="${currentUser.email}"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+    <!-- End of nav bar-->
+</div>
+
+<!--footer-->
+<footer th:fragment="footer()" class="section-footer">
+    <section class="footer-top py-5 bg-light">
+        <div class="container">
+            <div class="row">
+                <aside class="col-sm-6 col-lg-3">
+                    <h6 class="pb-2">Giới thiệu</h6>
+                    <ul class="list-unstyled">
+                        <li><a href="#">Về Shop</a></li>
+                        <li><a href="#">Tuyển dụng</a></li>
+                        <li><a href="#">Chính sách thanh toán</a></li>
+                        <li><a href="#">Chính sách bảo mật</a></li>
+                        <li><a href="#">Giải quyết khiếu nại</a></li>
+                        <li><a href="#">Hợp tác</a></li>
+                    </ul>
+                </aside>
+                <aside class="col-sm-6 col-lg-3">
+                    <h6 class="pb-2">Hỗ trợ khách hàng</h6>
+                    <ul class="list-unstyled">
+                        <li>Hotline: 1900-80xx</li>
+                        <li><a href="#">Câu hỏi thường gặp</a></li>
+                        <li><a href="#">Hướng dẫn đặt hàng</a></li>
+                        <li><a href="#">Phương thức vận chuyển</a></li>
+                        <li><a href="#">Chính sách đổi trả</a></li>
+                    </ul>
+                </aside>
+                <aside class="col-lg-5">
+                    <h6 class="pb-2">Đăng ký nhận tin</h6>
+                    <form action="#">
+                        <div class="input-group w-100">
+                            <input type="text" class="form-control" placeholder="Email của bạn ...">
+                            <button class="btn btn-primary" type="button">
+                                Đăng ký
+                            </button>
+                        </div>
+                    </form>
+                </aside>
+            </div> <!-- row.// -->
+        </div> <!-- container.// -->
+    </section> <!-- footer-top.// -->
+
+    <section class="footer-bottom text-center bg-light border-top py-3">
+        <div class="container-fluid">© 2025 — Shop Bán Sách</div> <!-- container-fluid.// -->
+    </section> <!-- footer-bottom.// -->
+</footer> <!-- section-footer.// -->
+<!--phân trang-->
+<nav th:fragment="paginationid()" class="mt-4" th:if="${page.totalPages > 0}">
+    <ul class="pagination">
+        <!-- Previous page link -->
+        <li class="page-item" th:classappend="${page.first} ? 'disabled'">
+            <a class="page-link"
+               th:href="@{${path} (page=${page.number - 1})}"
+               th:if="${!page.first}">Trang trước</a>
+            <span class="page-link" th:if="${page.first}">Trang trước</span>
+        </li>
+
+        <!-- Page numbers -->
+        <li class="page-item"
+            th:each="pageNo : ${#numbers.sequence(0, page.totalPages - 1)}"
+            th:if="${pageNo >= page.number - 2 and pageNo <= page.number + 2}"
+            th:classappend="${pageNo == page.number} ? 'active'">
+            <a class="page-link"
+               th:href="@{${path} (page=${pageNo})}"
+               th:text="${pageNo + 1}"></a>
+        </li>
+
+        <!-- Next page link -->
+        <li class="page-item" th:classappend="${page.last} ? 'disabled'">
+            <a class="page-link"
+               th:href="@{${path} (page=${page.number + 1})}"
+               th:if="${!page.last}">Trang sau</a>
+            <span class="page-link" th:if="${page.last}">Trang sau</span>
+        </li>
+    </ul>
+</nav>
+</html>

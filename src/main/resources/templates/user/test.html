@@ -1,0 +1,1340 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="https://www.thymeleaf.org/thymeleaf-extras-springsecurity6">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Đặt vé tàu online</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link th:href="@{/img/favicon.ico}" rel="shortcut icon" type="image/x-icon">
+    <!-- Bootstrap v5.0.1 -->
+    <link th:href="@{/css/bootstrap.css}" type="text/css" rel="stylesheet">
+    <script th:src="@{/js/bootstrap.bundle.js}" type="text/javascript"></script>
+    <!-- Bootstrap Icons v1.5.0 -->
+    <link th:href="@{/static/css/bootstrap-icons.css}" type="text/css" rel="stylesheet">
+    <!-- Custom Styles -->
+    <link th:href="@{/css/styles.css}" type="text/css" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/css/bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/css/layout.css}">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-KyZXEJ10x8bH8tQy4bm8a7Unw7CkCz7Y2pA8a6vFtvbA0hZTkNffpV8V4jeIm9xr" crossorigin="anonymous">
+    <!-- Bootstrap Icons (optional, for the account icon) -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <script>
+        var changeLanguage = function (dom) {
+            window.location.href = '?lang=' + dom.value;
+        }
+    </script>
+    <style>
+        body {
+            /*background: url('/img/backG.png') no-repeat center center/cover;*/
+            background: url('/img/backG.png') ;
+            min-height: 100vh;
+            font-family: sans-serif;
+            /*padding-top: 70px;*/
+        }
+
+        .booking-form {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 10px;
+            padding: 40px;
+        }
+
+        .form-section {
+            max-width: 1000px;
+            margin: 100px auto 30px;
+
+        }
+
+        .title {
+            color: white;
+            text-shadow: 1px 1px 2px black;
+        }
+
+        footer {
+            background: white;
+            /*padding: 20px;*/
+            text-align: center;
+        }
+
+        /* New beautiful form styles */
+        .beautiful-form-container {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+            padding: 40px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            margin: 20px auto;
+            margin-top: 2cm;
+            max-width: 900px;
+        }
+
+        .form-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .form-title {
+            font-size: 2.2rem;
+            color: #333;
+            margin-bottom: 10px;
+            font-weight: 700;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .form-subtitle {
+            color: #666;
+            font-size: 1.1rem;
+        }
+
+        .ticket-type {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 30px;
+            justify-content: center;
+        }
+
+        .ticket-option {
+            position: relative;
+        }
+
+        .ticket-option input[type="radio"] {
+            display: none;
+        }
+
+        .ticket-option label {
+            display: flex;
+            align-items: center;
+            padding: 15px 25px;
+            background: #f8f9fa;
+            border: 2px solid #e9ecef;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 500;
+            color: #495057;
+        }
+
+        .ticket-option input[type="radio"]:checked + label {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border-color: #667eea;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .form-group {
+            position: relative;
+        }
+
+        .form-group.full-width {
+            grid-column: 1 / -1;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+            font-size: 0.95rem;
+        }
+
+        .form-input, .form-select, .beautiful-input {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e9ecef;
+            border-radius: 12px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            background: #fff;
+            color: #495057;
+        }
+
+        .form-input:focus, .form-select:focus, .beautiful-input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+            transform: translateY(-1px);
+        }
+
+        .date-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .return-date {
+            opacity: 0.5;
+            pointer-events: none;
+            transition: all 0.3s ease;
+        }
+
+        .return-date.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .quantity-group {
+            display: flex;
+            gap: 15px;
+        }
+
+        .quantity-item {
+            flex: 1;
+        }
+        .search-btn {
+            width: 100%;
+            padding: 18px;
+            background: linear-gradient(135deg, #ff6b6b, #ee5a52);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 1.2rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 8px 20px rgba(238, 90, 82, 0.3);
+        }
+
+        .search-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 25px rgba(238, 90, 82, 0.4);
+        }
+
+        .search-btn:active {
+            transform: translateY(0);
+        }
+
+        .swap-btn {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            z-index: 10;
+            box-shadow: 0 4px 10px rgba(102, 126, 234, 0.3);
+        }
+
+        .swap-btn:hover {
+            background: #5a6fd8;
+            transform: translate(-50%, -50%) rotate(180deg);
+        }
+
+        .stations-container {
+            position: relative;
+        }
+
+        .icon {
+            margin-right: 8px;
+            font-weight: bold;
+        }
+
+        @media (max-width: 768px) {
+            .beautiful-form-container {
+                padding: 30px 20px;
+                margin: 10px;
+            }
+
+            .form-title {
+                font-size: 1.8rem;
+            }
+
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .ticket-type {
+                flex-direction: column;
+                gap: 15px;
+            }
+
+            .date-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .quantity-group {
+                flex-direction: column;
+                gap: 15px;
+            }
+        }
+    </style>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .date-picker-container {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 24px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
+            max-width: 500px;
+            width: 100%;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .date-picker-container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #4f46e5, #06b6d4, #10b981);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 32px;
+        }
+
+        .header h2 {
+            color: #1f2937;
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            background: linear-gradient(135deg, #4f46e5, #06b6d4);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .header p {
+            color: #6b7280;
+            font-size: 16px;
+        }
+
+        .date-group, .form-group {
+            margin-bottom: 24px;
+            position: relative;
+        }
+
+        .date-group label, .form-label {
+            display: block;
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 8px;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .quantity-group {
+            position: relative;
+        }
+
+        .ticket-selector {
+            width: 100%;
+            padding: 16px 20px;
+            border: 2px solid #e5e7eb;
+            border-radius: 16px;
+            font-size: 16px;
+            font-weight: 500;
+            color: #1f2937;
+            background: white;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .ticket-selector:hover {
+            border-color: #9ca3af;
+            transform: translateY(-1px);
+        }
+
+        .ticket-selector:focus {
+            outline: none;
+            border-color: #4f46e5;
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+        }
+
+        .dropdown-arrow {
+            color: #6b7280;
+            transition: transform 0.3s ease;
+        }
+
+        .ticket-selector.active .dropdown-arrow {
+            transform: rotate(180deg);
+        }
+
+        .ticket-dropdown {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: white;
+            border: 2px solid #e5e7eb;
+            border-radius: 16px;
+            padding: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            z-index: 100;
+            margin-top: 8px;
+            backdrop-filter: blur(20px);
+            border-top: none;
+            border-top-left-radius: 0;
+            border-top-right-radius: 0;
+        }
+
+        .ticket-dropdown.hidden {
+            display: none;
+        }
+
+        .ticket-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 0;
+            border-bottom: 1px solid #f3f4f6;
+        }
+
+        .ticket-row:last-child {
+            border-bottom: none;
+        }
+
+        .ticket-info {
+            flex: 1;
+        }
+
+        .ticket-type {
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 4px;
+            font-size: 15px;
+        }
+
+        .ticket-desc {
+            color: #6b7280;
+            font-size: 13px;
+        }
+
+        .discount {
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+            color: white;
+            padding: 2px 6px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 600;
+            margin-left: 8px;
+        }
+
+        .ticket-controls {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .ticket-btn {
+            width: 36px;
+            height: 36px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            background: white;
+            color: #374151;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .ticket-btn:hover {
+            border-color: #4f46e5;
+            background: #f8fafc;
+            transform: scale(1.05);
+        }
+
+        .ticket-btn:active {
+            transform: scale(0.95);
+        }
+
+        .ticket-btn.decrease:hover {
+            background: #fef2f2;
+            border-color: #ef4444;
+            color: #dc2626;
+        }
+
+        .ticket-btn.increase:hover {
+            background: #f0fdf4;
+            border-color: #22c55e;
+            color: #16a34a;
+        }
+
+        .ticket-count {
+            font-weight: 600;
+            color: #1f2937;
+            min-width: 20px;
+            text-align: center;
+            font-size: 16px;
+        }
+
+        .date-input-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .date-input {
+            width: 100%;
+            padding: 16px 20px 16px 50px;
+            border: 2px solid #e5e7eb;
+            border-radius: 16px;
+            font-size: 16px;
+            font-weight: 500;
+            color: #1f2937;
+            background: white;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .date-input:focus {
+            outline: none;
+            border-color: #4f46e5;
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+            transform: translateY(-1px);
+        }
+
+        .date-input:hover {
+            border-color: #9ca3af;
+            transform: translateY(-1px);
+        }
+
+        .date-icon {
+            position: absolute;
+            left: 16px;
+            color: #6b7280;
+            font-size: 20px;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .swap-button {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, #4f46e5, #7c3aed);
+            border: none;
+            border-radius: 50%;
+            color: white;
+            font-size: 20px;
+            cursor: pointer;
+            margin: 16px auto;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(79, 70, 229, 0.3);
+        }
+
+        .swap-button:hover {
+            transform: rotate(180deg) scale(1.1);
+            box-shadow: 0 6px 20px rgba(79, 70, 229, 0.4);
+        }
+
+        .swap-button:active {
+            transform: rotate(180deg) scale(0.95);
+        }
+
+        .search-button {
+            width: 100%;
+            padding: 18px;
+            background: linear-gradient(135deg, #4f46e5, #7c3aed);
+            border: none;
+            border-radius: 16px;
+            color: white;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 32px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .search-button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        .search-button:hover::before {
+            left: 100%;
+        }
+
+        .search-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(79, 70, 229, 0.4);
+        }
+
+        .search-button:active {
+            transform: translateY(0);
+        }
+
+        .trip-type {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 24px;
+            background: #f9fafb;
+            padding: 6px;
+            border-radius: 12px;
+        }
+
+        .trip-type input[type="radio"] {
+            display: none;
+        }
+
+        .trip-type label {
+            flex: 1;
+            text-align: center;
+            padding: 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 500;
+            color: #6b7280;
+            transition: all 0.3s ease;
+            margin: 0;
+            text-transform: none;
+            letter-spacing: normal;
+        }
+
+        .trip-type input[type="radio"]:checked + label {
+            background: linear-gradient(135deg, #4f46e5, #7c3aed);
+            color: white;
+            box-shadow: 0 2px 10px rgba(79, 70, 229, 0.3);
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .date-picker-container {
+            animation: fadeInUp 0.6s ease-out;
+        }
+
+        @media (max-width: 480px) {
+            .date-picker-container {
+                padding: 24px;
+                margin: 10px;
+            }
+
+            .header h2 {
+                font-size: 24px;
+            }
+
+            .date-input {
+                padding: 14px 16px 14px 44px;
+                font-size: 15px;
+            }
+        }
+    </style>
+
+</head>
+<body class="bg-cover bg-center min-h-screen"
+      style="background-image: url('https://res.ivivu.com/train/images/bg-train.jpg');">
+
+<!-- Navbar-->
+<nav class="navbar navbar-expand-lg navbar-dark bg-primary fixed-top">
+    <div class="container-fluid px-5 ">
+        <a class="navbar-brand" href="#">TrainTicket</a>
+        <div class="navbar-nav">
+            <a class="nav-link text-white" th:href="@{/user/home}"
+               th:classappend="${menu == 'userHome'} ? 'active' ">Home</a>
+            <a class="nav-link text-white" th:href="@{/user/trip/list}"
+               th:classappend="${menu == 'trip'} ? 'active'">Trip</a>
+            <a class="nav-link text-white" href="#">Train Seat</a>
+            <a class="nav-link text-white" th:href="@{/user/support}"
+               th:classappend="${menu == 'support'} ? 'active'">Support</a>
+            <a class="nav-link text-white" href="#">Q&A</a>
+        </div>
+
+        <div class="d-flex text-white ms-auto">
+            <!--            <button class="btn btn-light" type="button">-->
+            <a th:href="@{/user/trip/list}" class="nav-link text-white">
+                <i class="bi bi-cart "> Đơn hàng</i>
+            </a>
+            <div class="dropdown">
+                <!-- Nút icon tài khoản -->
+                <button class="btn btn-light" type="button" id="accountDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                    <i class="bi bi-person"></i>
+                    <span th:if="${currentUser != null}"
+                          th:text="${currentUser.fullname}"></span>
+                    <span th:if="${currentUser == null}">Tài khoản</span>
+                </button>
+
+                <!-- Danh sách tùy chọn -->
+                <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="accountDropdown">
+                    <!-- Nếu đã đăng nhập -->
+                    <li th:if="${currentUser != null}">
+                        <a class="dropdown-item text-primary" th:each="role : ${currentUser.role}"
+                           th:if="${role == 'ADMIN'}"
+                           th:href="@{/admin/home}">ADMIN</a>
+                        <hr class="" >
+                    </li>
+                    <li th:if="${currentUser != null}">
+                        <a class="dropdown-item" th:href="@{/cart/checkout}">Checkout</a>
+                    </li>
+                    <li th:if="${currentUser != null}">
+                        <a class="dropdown-item" th:href="@{/cart/checkout-vnpay}">VNPAY</a>
+                    </li>
+                    <li th:if="${currentUser != null}">
+                        <a class="dropdown-item" th:href="@{/orders}">Đơn hàng</a>
+                    </li>
+                    <li th:if="${currentUser != null}">
+                        <a class="dropdown-item" th:href="@{/wishlist}">Yêu thích</a>
+                    </li>
+                    <li th:if="${currentUser != null}">
+                        <a class="dropdown-item" th:href="@{/logout}">Đăng xuất</a>
+                    </li>
+
+                    <!-- Nếu chưa đăng nhập -->
+                    <li th:if="${currentUser == null}">
+                        <a class="dropdown-item" th:href="@{/login}">Đăng nhập</a>
+                    </li>
+                    <li th:if="${currentUser == null}">
+                        <a class="dropdown-item" th:href="@{/register}">Tạo tài khoản</a>
+                    </li>
+
+                </ul>
+            </div>
+
+
+        </div>
+    </div>
+</nav>
+
+<div class="bg-black/5 min-h-screen flex items-center justify-center px-4">
+    <div class="beautiful-form-container">
+        <div class="form-header">
+            <h1 class="form-title">🚂 Đặt vé tàu hỏa online</h1>
+            <p class="form-subtitle">
+                Nhận ngay vé điện tử - lên tàu nhanh!
+                <span class="ml-4 bg-red-100 text-red-600 px-3 py-1 rounded-full text-sm font-medium">
+                    🔥 1000 khách đặt vé trong 24 giờ qua
+                </span>
+            </p>
+            <span class="ml-3 text-white bg-green-600 rounded px-2 font-semibold"
+                  th:text="${averageRating}">9.6</span>
+            <a th:href="@{/user/review/list}"
+               class="underline text-blue-600 ml-1"
+               th:text="${reviewCount} + ' đánh giá'">37 đánh giá</a>
+        </div>
+
+        <!-- Beautiful Form -->
+        <form id="trainBookingForm" method="get" th:action="@{/user/trip/search}">
+            <!-- Loại vé -->
+            <div class="ticket-type">
+                <div class="ticket-option">
+                    <input type="radio" id="roundtrip" name="tripType" value="roundtrip">
+                    <label for="roundtrip">
+                        <span class="icon">⇄</span>
+                        Khứ hồi
+                    </label>
+                </div>
+                <div class="ticket-option">
+                    <input type="radio" id="oneway" name="tripType" value="oneway" checked>
+                    <label for="oneway">
+                        <span class="icon">→</span>
+                        Một chiều
+                    </label>
+                </div>
+            </div>
+
+            <!-- Ga đi và ga đến -->
+            <div class="stations-container">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label class="form-label" for="departure">🚉 Ga đi</label>
+                        <input list="stationF" type="text" name="departureName"
+                               placeholder="Chọn ga đi"
+                               class="beautiful-input" required>
+                        <datalist id="stationF">
+                            <option th:each="station : ${stations}"
+                                    th:text="${station.name}">
+                            </option>
+                        </datalist>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="destination">🎯 Ga đến</label>
+                        <input list="stationT" type="text" name="arrivalName"
+                               placeholder="Chọn ga đến"
+                               class="beautiful-input" required>
+                        <datalist id="stationT">
+                            <option th:each="station : ${stations}"
+                                    th:text="${station.name}">
+                            </option>
+                        </datalist>
+                    </div>
+                </div>
+                <button type="button" class="swap-btn" onclick="swapStations()">⇄</button>
+            </div>
+
+            <!-- Ngày đi và ngày về -->
+            <div class="date-grid">
+                <div class="form-group">
+                    <label class="form-label" for="departureDate">📅 Ngày đi</label>
+                    <input type="date" class="beautiful-input" id="departureDate" name="departureDate" required>
+                </div>
+                <div class="form-group return-date" id="returnDateGroup">
+                    <label class="form-label" for="returnDate">📅 Ngày về</label>
+                    <input type="date" class="beautiful-input" id="returnDate" name="returnDate">
+                </div>
+            </div>
+
+
+
+            <!-- Số lượng vé theo loại -->
+<!--            <div class="form-group full-width">-->
+<!--                <label class="form-label">👥 Số lượng vé</label>-->
+<!--                <div class="quantity-group">-->
+<!--                    <button id="ticketToggle" type="button" class="ticket-selector">-->
+<!--                        <span id="totalTicketCount">1 vé</span>-->
+<!--                        <span class="dropdown-arrow">▼</span>-->
+<!--                    </button>-->
+
+<!--                    <div id="ticketDropdown" class="ticket-dropdown hidden">-->
+<!--                        &lt;!&ndash; Người lớn &ndash;&gt;-->
+<!--                        <div class="ticket-row">-->
+<!--                            <div class="ticket-info">-->
+<!--                                <p class="ticket-type">Người lớn</p>-->
+<!--                                <p class="ticket-desc">Từ 11 - 59 tuổi</p>-->
+<!--                            </div>-->
+<!--                            <div class="ticket-controls">-->
+<!--                                <button type="button" class="ticket-btn decrease" data-type="adult">−</button>-->
+<!--                                <span class="ticket-count" id="adultCount">1</span>-->
+<!--                                <button type="button" class="ticket-btn increase" data-type="adult">+</button>-->
+<!--                                <input type="hidden" name="adult" value="1">-->
+<!--                            </div>-->
+<!--                        </div>-->
+
+<!--                        &lt;!&ndash; Trẻ em &ndash;&gt;-->
+<!--                        <div class="ticket-row">-->
+<!--                            <div class="ticket-info">-->
+<!--                                <p class="ticket-type">Trẻ em <span class="discount">-25%</span></p>-->
+<!--                                <p class="ticket-desc">Từ 6 - 10 tuổi</p>-->
+<!--                            </div>-->
+<!--                            <div class="ticket-controls">-->
+<!--                                <button type="button" class="ticket-btn decrease" data-type="child">−</button>-->
+<!--                                <span class="ticket-count" id="childCount">0</span>-->
+<!--                                <button type="button" class="ticket-btn increase" data-type="child">+</button>-->
+<!--                                <input type="hidden" name="child" value="0">-->
+<!--                            </div>-->
+<!--                        </div>-->
+
+<!--                        &lt;!&ndash; Người cao tuổi &ndash;&gt;-->
+<!--                        <div class="ticket-row">-->
+<!--                            <div class="ticket-info">-->
+<!--                                <p class="ticket-type">Người cao tuổi <span class="discount">-15%</span></p>-->
+<!--                                <p class="ticket-desc">Từ 60 tuổi</p>-->
+<!--                            </div>-->
+<!--                            <div class="ticket-controls">-->
+<!--                                <button type="button" class="ticket-btn decrease" data-type="senior">−</button>-->
+<!--                                <span class="ticket-count" id="seniorCount">0</span>-->
+<!--                                <button type="button" class="ticket-btn increase" data-type="senior">+</button>-->
+<!--                                <input type="hidden" name="senior" value="0">-->
+<!--                            </div>-->
+<!--                        </div>-->
+
+<!--                        &lt;!&ndash; Sinh viên &ndash;&gt;-->
+<!--                        <div class="ticket-row">-->
+<!--                            <div class="ticket-info">-->
+<!--                                <p class="ticket-type">Sinh viên <span class="discount">-10%</span></p>-->
+<!--                                <p class="ticket-desc">Thẻ SV</p>-->
+<!--                            </div>-->
+<!--                            <div class="ticket-controls">-->
+<!--                                <button type="button" class="ticket-btn decrease" data-type="student">−</button>-->
+<!--                                <span class="ticket-count" id="studentCount">0</span>-->
+<!--                                <button type="button" class="ticket-btn increase" data-type="student">+</button>-->
+<!--                                <input type="hidden" name="student" value="0">-->
+<!--                            </div>-->
+<!--                        </div>-->
+<!--                    </div>-->
+<!--                </div>-->
+<!--            </div>-->
+
+            <!-- Số lượng vé theo loại -->
+            <div class="form-group full-width">
+                <label class="form-label">👥 Số lượng vé</label>
+                <div class="quantity-group">
+                    <button id="ticketToggle" type="button" class="ticket-selector">
+                        <span id="totalTicketCount">1 vé</span>
+                        <span class="dropdown-arrow">▼</span>
+                    </button>
+
+                    <div id="ticketDropdown" class="ticket-dropdown hidden">
+                        <!-- Người lớn -->
+                        <div class="ticket-row">
+                            <div class="ticket-info">
+                                <p class="ticket-type">Người lớn (11 - 59 tuổi)</p>
+<!--                                <p class="ticket-desc">Từ 11 - 59 tuổi</p>-->
+<!--                                <h6>Người lớn ( 11 - 59 tuổi)</h6>-->
+<!--                                <p>Từ 11 - 59 tuổi</p>-->
+                            </div>
+                            <div class="ticket-controls">
+                                <button type="button" class="ticket-btn ticket-decrease" data-type="adult">−</button>
+                                <span class="ticket-count" id="adultCount">1</span>
+                                <button type="button" class="ticket-btn ticket-increase" data-type="adult">+</button>
+                                <input type="hidden" name="adultQuantity" value="1">
+                            </div>
+                        </div>
+
+                        <!-- Trẻ em -->
+                        <div class="ticket-row">
+                            <div class="ticket-info">
+                                <p class="ticket-type">Trẻ em (từ 6 - 10 tuổi) <span class="discount">-25%</span></p>
+<!--                                <p class="ticket-desc">Từ 6 - 10 tuổi</p>-->
+                            </div>
+                            <div class="ticket-controls">
+                                <button type="button" class="ticket-btn ticket-decrease" data-type="child">−</button>
+                                <span class="ticket-count" id="childCount">0</span>
+                                <button type="button" class="ticket-btn ticket-increase" data-type="child">+</button>
+                                <input type="hidden" name="childQuantity" value="0">
+                            </div>
+                        </div>
+
+                        <!-- Người cao tuổi -->
+                        <div class="ticket-row">
+                            <div class="ticket-info">
+                                <p class="ticket-type">Người cao tuổi (>60 tuổi) <span class="discount">-15%</span></p>
+<!--                                <p class="ticket-desc">Từ 60 tuổi</p>-->
+                            </div>
+                            <div class="ticket-controls">
+                                <button type="button" class="ticket-btn ticket-decrease" data-type="senior">−</button>
+                                <span class="ticket-count" id="seniorCount">0</span>
+                                <button type="button" class="ticket-btn ticket-increase" data-type="senior">+</button>
+                                <input type="hidden" name="seniorQuantity" value="0">
+                            </div>
+                        </div>
+
+                        <!-- Sinh viên -->
+                        <div class="ticket-row">
+                            <div class="ticket-info">
+                                <p class="ticket-type">Sinh viên (thẻ SV)<span class="discount">-10%</span></p>
+<!--                                <p class="ticket-desc">Thẻ SV</p>-->
+                            </div>
+                            <div class="ticket-controls">
+                                <button type="button" class="ticket-btn ticket-decrease" data-type="student">−</button>
+                                <span class="ticket-count" id="studentCount">0</span>
+                                <button type="button" class="ticket-btn ticket-increase" data-type="student">+</button>
+                                <input type="hidden" name="studentQuantity" value="0">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+
+            <!-- Nút tìm kiếm -->
+            <button type="submit" class="search-btn">
+                🔍 Tìm Chuyến Đi
+            </button>
+        </form>
+    </div>
+</div>
+
+
+<!-- Footer / Support -->
+<footer>
+    <div class="form-section row">
+        <div class="col-md-4">
+            <p>🚆 Tìm chuyến tàu phù hợp<br /><small>Lựa chọn lịch trình linh hoạt</small></p>
+        </div>
+        <div class="col-md-4">
+            <p>📩 Đặt vé nhanh, dễ dàng<br /><small>Nhận vé ngay sau khi đặt</small></p>
+        </div>
+        <div class="col-md-4">
+            <p>📞 Luôn sẵn sàng hỗ trợ<br /><small>Phản hồi trong 15 phút qua điện thoại, Zalo</small></p>
+        </div>
+    </div>
+</footer>
+
+<div class="container-fluid px-5">
+    <div class="px-5"><h1>Bản đồ tuyến đường sắt Việt Nam </h1></div>
+    <h5 class="px-5 text-dark">Xem thông tin chi tiết về các tuyến tàu hỏa, lịch trình và điểm dừng</h5>
+    <img th:src="@{/img/mapVN.png}" class="img-fluid px-5" >
+</div>
+
+<div class="container-fluid px-5">
+    <div class="px-5"><h1>Đánh giá của khách hàng sử dụng dịch vụ đặt vé tàu hỏa iVIVU</h1></div>
+</div>
+
+<!--active-->
+<script>
+    const links = document.querySelectorAll('.nav-link');
+
+    links.forEach(link => {
+        link.addEventListener('click', function () {
+            links.forEach(l => l.classList.remove('active')); // Bỏ active ở tất cả các mục
+            this.classList.add('active'); // Thêm active cho mục vừa click
+        });
+    });
+</script>
+// Xử lý chuyển đổi giữa một chiều và khứ hồi
+<script>
+    const ticketTypeRadios = document.querySelectorAll('input[name="tripType"]');
+    const returnDateGroup = document.getElementById('returnDateGroup');
+    const returnDateInput = document.getElementById('returnDate');
+
+    ticketTypeRadios.forEach(radio => {
+        radio.addEventListener('change', function() {
+            if (this.value === 'roundtrip') {
+                returnDateGroup.classList.add('active');
+                returnDateInput.required = true;
+            } else {
+                returnDateGroup.classList.remove('active');
+                returnDateInput.required = false;
+                returnDateInput.value = '';
+            }
+        });
+    });
+
+    // Thiết lập ngày tối thiểu là hôm nay
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('departureDate').min = today;
+    document.getElementById('returnDate').min = today;
+
+    // Cập nhật ngày về tối thiểu khi thay đổi ngày đi
+    document.getElementById('departureDate').addEventListener('change', function() {
+        document.getElementById('returnDate').min = this.value;
+        if (document.getElementById('returnDate').value < this.value) {
+            document.getElementById('returnDate').value = '';
+        }
+    });
+
+    // Hàm đổi chỗ ga đi và ga đến
+    function swapStations() {
+        const departure = document.querySelector("input[name='departureName']");
+        const destination = document.querySelector("input[name='arrivalName']");
+
+        const temp = departure.value;
+        departure.value = destination.value;
+        destination.value = temp;
+    }
+
+    // Tự động chuyển sang khứ hồi khi chọn ngày về
+    returnDateInput.addEventListener("change", () => {
+        if (returnDateInput.value) {
+            document.getElementById('roundtrip').checked = true;
+            returnDateGroup.classList.add('active');
+            returnDateInput.required = true;
+        }
+    });
+
+    // Hiệu ứng focus cho các input
+    const inputs = document.querySelectorAll('.beautiful-input');
+    inputs.forEach(input => {
+        input.addEventListener('focus', function() {
+            this.parentElement.style.transform = 'translateY(-2px)';
+        });
+
+        input.addEventListener('blur', function() {
+            this.parentElement.style.transform = 'translateY(0)';
+        });
+    });
+</script>
+// Xử lý dropdown số lượng vé
+<!--<script>-->
+<!--    const ticketToggle = document.getElementById('ticketToggle');-->
+<!--    const ticketDropdown = document.getElementById('ticketDropdown');-->
+
+<!--    ticketToggle.addEventListener('click', function() {-->
+<!--        ticketDropdown.classList.toggle('hidden');-->
+<!--        ticketToggle.classList.toggle('active');-->
+<!--    });-->
+
+<!--    // Đóng dropdown khi click bên ngoài-->
+<!--    document.addEventListener('click', function(e) {-->
+<!--        if (!ticketToggle.contains(e.target) && !ticketDropdown.contains(e.target)) {-->
+<!--            ticketDropdown.classList.add('hidden');-->
+<!--            ticketToggle.classList.remove('active');-->
+<!--        }-->
+<!--    });-->
+
+<!--    // Xử lý tăng/giảm số lượng vé-->
+<!--    const ticketCounts = {-->
+<!--        adult: 1,-->
+<!--        child: 0,-->
+<!--        senior: 0,-->
+<!--        student: 0-->
+<!--    };-->
+
+<!--    document.querySelectorAll('.ticket-btn').forEach(btn => {-->
+<!--        btn.addEventListener('click', function() {-->
+<!--            const type = this.dataset.type;-->
+<!--            const isIncrease = this.classList.contains('increase');-->
+
+<!--            if (isIncrease) {-->
+<!--                if (getTotalTickets() < 9) { // Giới hạn tối đa 9 vé-->
+<!--                    ticketCounts[type]++;-->
+<!--                }-->
+<!--            } else {-->
+<!--                if (ticketCounts[type] > 0) {-->
+<!--                    // Đảm bảo luôn có ít nhất 1 vé-->
+<!--                    if (getTotalTickets() > 1) {-->
+<!--                        ticketCounts[type]&#45;&#45;;-->
+<!--                    }-->
+<!--                }-->
+<!--            }-->
+
+<!--            updateTicketDisplay();-->
+<!--        });-->
+<!--    });-->
+
+<!--    function getTotalTickets() {-->
+<!--        return Object.values(ticketCounts).reduce((sum, count) => sum + count, 0);-->
+<!--    }-->
+
+<!--    function updateTicketDisplay() {-->
+<!--        // Cập nhật hiển thị số lượng từng loại-->
+<!--        document.getElementById('adultCount').textContent = ticketCounts.adult;-->
+<!--        document.getElementById('childCount').textContent = ticketCounts.child;-->
+<!--        document.getElementById('seniorCount').textContent = ticketCounts.senior;-->
+<!--        document.getElementById('studentCount').textContent = ticketCounts.student;-->
+
+<!--        // Cập nhật hidden inputs-->
+<!--        document.querySelector('input[name="adult"]').value = ticketCounts.adult;-->
+<!--        document.querySelector('input[name="child"]').value = ticketCounts.child;-->
+<!--        document.querySelector('input[name="senior"]').value = ticketCounts.senior;-->
+<!--        document.querySelector('input[name="student"]').value = ticketCounts.student;-->
+
+<!--        // Cập nhật tổng số vé-->
+<!--        const total = getTotalTickets();-->
+<!--        document.getElementById('totalTicketCount').textContent = `${total} vé`;-->
+<!--    }-->
+<!--    const today = new Date().toISOString().split('T')[0];-->
+<!--    document.getElementById('departure-date').min = today;-->
+<!--    document.getElementById('return-date').min = today;-->
+
+<!--    // Thiết lập ngày mặc định-->
+<!--    document.getElementById('departure-date').value = today;-->
+
+<!--    const tomorrow = new Date();-->
+<!--    tomorrow.setDate(tomorrow.getDate() + 1);-->
+<!--    document.getElementById('return-date').value = tomorrow.toISOString().split('T')[0];-->
+
+<!--    // Xử lý thay đổi loại chuyến đi-->
+<!--    document.querySelectorAll('input[name="tripType"]').forEach(radio => {-->
+<!--        radio.addEventListener('change', function() {-->
+<!--            const returnGroup = document.getElementById('return-date-group');-->
+<!--            const returnInput = document.getElementById('return-date');-->
+
+<!--            if (this.value === 'oneway') {-->
+<!--                returnGroup.style.opacity = '0.5';-->
+<!--                returnGroup.style.pointerEvents = 'none';-->
+<!--                returnInput.required = false;-->
+<!--            } else {-->
+<!--                returnGroup.style.opacity = '1';-->
+<!--                returnGroup.style.pointerEvents = 'auto';-->
+<!--                returnInput.required = true;-->
+<!--            }-->
+<!--        });-->
+<!--    });-->
+
+<!--    // Cập nhật ngày về tối thiểu khi thay đổi ngày đi-->
+<!--    document.getElementById('departure-date').addEventListener('change', function() {-->
+<!--        const returnDate = document.getElementById('return-date');-->
+<!--        returnDate.min = this.value;-->
+
+<!--        // Nếu ngày về nhỏ hơn ngày đi, cập nhật ngày về-->
+<!--        if (returnDate.value && returnDate.value < this.value) {-->
+<!--            const nextDay = new Date(this.value);-->
+<!--            nextDay.setDate(nextDay.getDate() + 1);-->
+<!--            returnDate.value = nextDay.toISOString().split('T')[0];-->
+<!--        }-->
+<!--    });-->
+
+<!--    function swapDates() {-->
+<!--        const departureInput = document.getElementById('departure-date');-->
+<!--        const returnInput = document.getElementById('return-date');-->
+
+<!--        const temp = departureInput.value;-->
+<!--        departureInput.value = returnInput.value;-->
+<!--        returnInput.value = temp;-->
+
+<!--        // Cập nhật ngày tối thiểu-->
+<!--        returnInput.min = departureInput.value;-->
+<!--    }-->
+
+<!--    function searchTrains() {-->
+<!--        const departureDate = document.getElementById('departure-date').value;-->
+<!--        const returnDate = document.getElementById('return-date').value;-->
+<!--        const tripType = document.querySelector('input[name="tripType"]:checked').value;-->
+
+<!--        if (!departureDate) {-->
+<!--            alert('Vui lòng chọn ngày đi!');-->
+<!--            return;-->
+<!--        }-->
+
+<!--        if (tripType === 'roundtrip' && !returnDate) {-->
+<!--            alert('Vui lòng chọn ngày về!');-->
+<!--            return;-->
+<!--        }-->
+
+<!--        // Hiệu ứng loading-->
+<!--        const button = document.querySelector('.search-button');-->
+<!--        const originalText = button.innerHTML;-->
+<!--        button.innerHTML = '⏳ Đang tìm kiếm...';-->
+<!--        button.disabled = true;-->
+
+<!--        setTimeout(() => {-->
+<!--            button.innerHTML = originalText;-->
+<!--            button.disabled = false;-->
+
+<!--            // Hiển thị thông tin đã chọn-->
+<!--            let message = `Tìm kiếm chuyến tàu:\n`;-->
+<!--            message += `Ngày đi: ${formatDate(departureDate)}\n`;-->
+<!--            if (tripType === 'roundtrip') {-->
+<!--                message += `Ngày về: ${formatDate(returnDate)}\n`;-->
+<!--            }-->
+<!--            message += `Loại vé: ${tripType === 'roundtrip' ? 'Khứ hồi' : 'Một chiều'}\n`;-->
+
+<!--            // Thêm thông tin số lượng vé-->
+<!--            message += `Số lượng vé:\n`;-->
+<!--            if (ticketCounts.adult > 0) message += `- Người lớn: ${ticketCounts.adult}\n`;-->
+<!--            if (ticketCounts.child > 0) message += `- Trẻ em: ${ticketCounts.child}\n`;-->
+<!--            if (ticketCounts.senior > 0) message += `- Người cao tuổi: ${ticketCounts.senior}\n`;-->
+<!--            if (ticketCounts.student > 0) message += `- Sinh viên: ${ticketCounts.student}\n`;-->
+<!--            message += `Tổng: ${getTotalTickets()} vé`;-->
+
+<!--            alert(message);-->
+<!--        }, 1500);-->
+<!--    }-->
+
+<!--    function formatDate(dateString) {-->
+<!--        const date = new Date(dateString);-->
+<!--        return date.toLocaleDateString('vi-VN', {-->
+<!--            weekday: 'long',-->
+<!--            year: 'numeric',-->
+<!--            month: 'long',-->
+<!--            day: 'numeric'-->
+<!--        });-->
+<!--    }-->
+
+<!--    // Hiệu ứng hover cho input-->
+<!--    document.querySelectorAll('.date-input').forEach(input => {-->
+<!--        input.addEventListener('focus', function() {-->
+<!--            this.parentElement.style.transform = 'scale(1.02)';-->
+<!--        });-->
+
+<!--        input.addEventListener('blur', function() {-->
+<!--            this.parentElement.style.transform = 'scale(1)';-->
+<!--        });-->
+<!--    });-->
+<!--</script>-->
+
+<!--thể loại vé(form)-->
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const toggleBtn = document.getElementById("ticketToggle");
+        const dropdown = document.getElementById("ticketDropdown");
+        const totalText = document.getElementById("totalTicketCount");
+
+        // Mở/đóng dropdown chọn loại vé
+        toggleBtn.addEventListener("click", () => {
+            dropdown.classList.toggle("hidden");
+        });
+
+        // Cập nhật tổng số vé
+        const updateTotal = () => {
+            const types = ["adult", "child", "senior", "student"];
+            let total = 0;
+
+            types.forEach(type => {
+                const count = parseInt(document.getElementById(type + "Count").textContent);
+                total += count;
+            });
+
+            totalText.textContent = `${total} vé`;
+        };
+
+        // Tăng số lượng vé
+        document.querySelectorAll(".ticket-increase").forEach(button => {
+            button.addEventListener("click", () => {
+                const type = button.dataset.type;
+                const countSpan = document.getElementById(type + "Count");
+                let count = parseInt(countSpan.textContent);
+                count++;
+                countSpan.textContent = count;
+
+                // Gán lại giá trị vào input ẩn
+                const hiddenInput = document.querySelector(`input[name="${type}Quantity"]`);
+                if (hiddenInput) hiddenInput.value = count;
+
+                updateTotal();
+            });
+        });
+
+        // Giảm số lượng vé
+        document.querySelectorAll(".ticket-decrease").forEach(button => {
+            button.addEventListener("click", () => {
+                const type = button.dataset.type;
+                const countSpan = document.getElementById(type + "Count");
+                let count = parseInt(countSpan.textContent);
+                if (count > 0) count--;
+                countSpan.textContent = count;
+
+                // Gán lại giá trị vào input ẩn
+                const hiddenInput = document.querySelector(`input[name="${type}Quantity"]`);
+                if (hiddenInput) hiddenInput.value = count;
+
+                updateTotal();
+            });
+        });
+
+        // Gọi ngay từ đầu để hiển thị tổng vé ban đầu
+        updateTotal();
+    });
+</script>
+
+
+</body>
+</html>

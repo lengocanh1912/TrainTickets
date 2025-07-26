@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Đơn đặt vé của bạn</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}" />
+    <style>
+        .order-container {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            padding: 20px;
+        }
+
+        .order-card {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            justify-content: space-between;
+            border: 1px solid #ddd;
+            border-radius: 12px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+            padding: 20px;
+            background-color: #fff;
+            transition: 0.3s ease-in-out;
+        }
+
+        .order-card:hover {
+            box-shadow: 0 6px 12px rgba(0,0,0,0.1);
+            transform: translateY(-3px);
+        }
+
+        .order-info-left {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .order-info-right {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 6px;
+        }
+
+        .order-header {
+            font-weight: bold;
+            font-size: 16px;
+        }
+
+        .seat-details {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            margin-top: 6px;
+        }
+
+        .seat-item {
+            font-size: 14px;
+        }
+
+        .status {
+            font-weight: bold;
+            color: red;
+        }
+
+        .status.paid {
+            color: green;
+        }
+
+        .time {
+            color: #00BFFF;
+            font-weight: bold;
+        }
+
+        .pagination {
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .pagination a {
+            margin: 0 5px;
+            padding: 8px 14px;
+            background-color: #f5f5f5;
+            border-radius: 5px;
+            text-decoration: none;
+            color: #333;
+            font-weight: bold;
+        }
+
+        .pagination a.active {
+            background-color: #007bff;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h2 style="text-align: center;">Đơn đặt vé của bạn</h2>
+
+    <div class="order-container">
+        <div class="order-card" th:each="order : ${orders}">
+            <!-- Bên trái -->
+            <div class="order-info-left">
+                <div class="order-header">
+                    Mã đơn hàng: <span th:text="${order.orderCode}"></span>
+                </div>
+                <div>
+                    <span th:text="${order.departureStation}"></span> → <span th:text="${order.arrivalStation}"></span>
+                </div>
+                <div>
+                    <span class="departure-info"><span class="time text-lg font-semibold" th:text="${#temporals.format(order.departureAt, 'HH:mm')}"></span><span class="date text-gray-500 text-sm">
+                        <span th:text="${#temporals.format(order.departureAt, 'dd')}"></span>
+                        <span> tháng </span>
+                        <span th:text="${#temporals.format(order.departureAt, 'MM')}"></span></span></span>
+                        →
+                    <span class="departure-info"><span class="time text-lg font-semibold" th:text="${#temporals.format(order.arrivalAt, 'HH:mm')}"></span><span class="date text-gray-500 text-sm">
+                        <span th:text="${#temporals.format(order.arrivalAt, 'dd')}"></span>
+                        <span> tháng </span>
+                        <span th:text="${#temporals.format(order.arrivalAt, 'MM')}"></span></span></span>
+
+<!--                    <span class="time" style="display: flex; flex-direction: column; align-items: start;">-->
+<!--    <span style="font-weight: bold;" th:text="${#temporals.format(order.arrivalAt, 'HH:mm')}"></span>-->
+<!--    <span class="text-gray-500">-->
+<!--        <span th:text="${#temporals.format(order.arrivalAt, 'dd')}"></span>-->
+<!--        <span> tháng </span>-->
+<!--        <span th:text="${#temporals.format(order.arrivalAt, 'MM')}"></span>-->
+<!--    </span>-->
+<!--</span>-->
+
+                </div>
+<!--                <div th:text="${#temporals.format(order.departureAt, 'dd \'tháng\' MM')}"></div>-->
+
+
+                <div th:text="'Tàu ' + ${order.trainName}"></div>
+            </div>
+
+            <!-- Bên phải -->
+            <div class="order-info-right">
+                <div class="seat-details">
+<!--                    <div th:each="ticket : ${orders}" class="seat-item">-->
+                        <div>
+                        <span th:text="'Toa ' + ${order.coachCode} + ', Ghế ' + ${order.seatCode} + ', '
+                                      + ${#numbers.formatDecimal(order.price, 0, 'POINT', 0, 'COMMA')} + ' VND'"></span>
+                    </div>
+                </div>
+                <div class="status" th:classappend="${order.ticketStatus == 1} ? 'paid'"
+                     th:text="${order.ticketStatus == 1} ? 'Đã thanh toán' : 'Hết hạn thanh toán'"></div>
+            </div>
+        </div>
+    </div>
+
+
+
+
+    <div class="order-container">
+        <div class="order-card" th:each="order : ${orders}" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; align-items: start;">
+
+            <!-- Cột 1: Ga đi -->
+            <div class="order-info-left">
+                <div><strong>Ga đi:</strong> <span th:text="${order.departureStation}"></span></div>
+                <div><strong>Ngày đi:</strong>
+                    <span th:text="${#temporals.format(order.departureAt, 'dd/MM/yyyy')}"></span>
+                </div>
+                <div><strong>Giờ đi:</strong>
+                    <span th:text="${#temporals.format(order.departureAt, 'HH:mm')}"></span>
+                </div>
+            </div>
+
+            <!-- Cột 2: Ga đến -->
+            <div>
+                <div><strong>Ga đến:</strong> <span th:text="${order.arrivalStation}"></span></div>
+                <div><strong>Ngày đến:</strong>
+                    <span th:text="${#temporals.format(order.arrivalAt, 'dd/MM/yyyy')}"></span>
+                </div>
+                <div><strong>Giờ đến:</strong>
+                    <span th:text="${#temporals.format(order.arrivalAt, 'HH:mm')}"></span>
+                </div>
+            </div>
+
+            <!-- Cột 3: Chi tiết vé -->
+            <div class="seat-details" th:each="ticketGroup : ${order.ticketGroups}">
+                <div>
+                    <strong th:text="${ticketGroup.ticketType} + ':'"></strong>
+                    <ul style="margin: 4px 0 8px 16px;">
+                        <li th:each="ticket : ${ticketGroup.tickets}">
+                            <span th:text="'Toa ' + ${ticket.coachCode} + ', Ghế ' + ${ticket.seatCode} + ', ' + ${#numbers.formatDecimal(ticket.price, 0, 'POINT', 0, 'COMMA')} + ' VND'"></span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Cột 4: Hành động -->
+            <div class="order-info-right">
+                <div>
+                <span class="status" th:classappend="${order.ticketStatus == 1} ? 'paid'"
+                      th:text="${order.ticketStatus == 1} ? 'Đã thanh toán' : 'Chưa thanh toán'"></span>
+                </div>
+
+                <div th:if="${order.ticketStatus == 0}">
+                    <a th:href="@{'/payment/' + ${order.id}}" class="btn-pay">Thanh toán</a>
+                </div>
+
+                <div th:if="${order.ticketStatus == 1}">
+                    <a th:href="@{'/rating/' + ${order.id}}" class="btn-rate">Đánh giá</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Phân trang -->
+    <div class="pagination">
+        <a th:if="${currentPage > 0}" th:href="@{/user/view(page=${currentPage - 1}, size=${pageSize})}">« Trước</a>
+
+        <span th:each="i : ${#numbers.sequence(0, totalPages - 1)}">
+            <a th:href="@{/user/view(page=${i}, size=${pageSize})}" th:text="${i + 1}"
+               th:classappend="${i == currentPage} ? 'active' : ''"></a>
+        </span>
+
+        <a th:if="${currentPage + 1 < totalPages}" th:href="@{/user/view(page=${currentPage + 1}, size=${pageSize})}">Sau »</a>
+    </div>
+</div>
+</body>
+</html>

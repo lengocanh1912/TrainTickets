@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <title>Trang quản trị - TrainTickets</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- Bootstrap -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" th:href="@{/css/styles.css}">
+  <link th:href="@{'/img/favicon.ico'}" rel="shortcut icon" type="image/x-icon">
+  <!-- Bootstrap v5.0.1 -->
+  <link th:href="@{'/css/bootstrap.css'}" type="text/css" rel="stylesheet">
+  <script th:src="@{'/js/bootstrap.bundle.js'}" type="text/javascript"></script>
+  <!-- Bootstrap Icons v1.5.0 -->
+  <link th:href="@{'/css/bootstrap-icons.css'}" type="text/css" rel="stylesheet">
+  <!-- Custom Styles -->
+  <link th:href="@{'/css/styles.css'}" type="text/css" rel="stylesheet">
+  <script>
+    var changeLanguage = function (dom) {
+      window.location.href = '?lang=' + dom.value;
+    }
+  </script>
+</head>
+
+<body style="padding-top: 55px;">
+<!--header frag-->
+<div th:replace="/admin/common/fragments :: header_nav"> </div>
+<!-- Sidebar Fragment -->
+<div th:replace="/admin/common/fragments :: side_navbar"> </div>
+<!-- Main Content -->
+<!--<header th:replace="/admin/common/layout :: header()"></header>-->
+<div class="main-content">
+  <div class="container-fluid">
+
+    <header class="d-flex justify-content-between align-items-center py-3">
+      <div class="col-lg-4 col-xl-5">
+        <form th:action="@{'/admin/train/search'}" method="GET" class="flex-grow-1" style="max-width: 400px;">
+          <div class="input-group">
+            <input type="text" name="keyword" class="form-control"
+                   placeholder="Nhập từ khóa..." aria-label="Search"
+                   th:value="${param.keyword}">
+            <button class="btn btn-primary" type="submit">
+              <i class="bi bi-search"></i>
+            </button>
+          </div>
+        </form>
+      </div>
+    </header>
+    <header class="d-flex justify-content-between align-items-center py-3">
+      <h3 class="mb-0">Danh sách các tàu</h3>
+      <a class="btn btn-primary" th:href="@{'/admin/train/create'}">Thêm tàu</a>
+    </header>
+
+    <h3 class="text-danger" th:text="${message}"></h3>
+
+    <main class="table-responsive mb-5">
+      <table class="table table-bordered table-hover align-middle">
+        <thead class="table-dark text-center">
+        <tr>
+          <th>ID</th>
+          <th>Tên tàu</th>
+          <th>Mã tàu</th>
+          <th>Sức chứa</th>
+          <th>Ngày tạo</th>
+          <th>Ngày cập nhật</th>
+          <th>Hành động</th>
+        </tr>
+        </thead>
+        <tbody class="text-center">
+        <tr th:each="train : ${trains}">
+          <td th:text="${train.id}"></td>
+          <td th:text="${train.name}"></td>
+          <td th:text="${train.code}"></td>
+          <td th:text="${train.capacity}"></td>
+          <td th:text="${#dates.format(train.createdAt, 'dd/MM/yyyy HH:mm')}"></td>
+          <td th:text="${train.updatedAt != null ? #dates.format(train.updatedAt, 'dd/MM/yyyy HH:mm') : 'Chưa cập nhật'}"></td>
+          <td class="text-nowrap text-center">
+            <a class="btn btn-primary btn-sm me-1"
+               th:href="@{'/admin/train/detail?id=' + ${train.id}}">Xem</a>
+            <a class="btn btn-success btn-sm me-1"
+               th:href="@{/admin/train/update/{id}(id=${train.id})}">Sửa</a>
+            <a class="btn btn-danger btn-sm"
+               th:href="@{'/admin/train/delete?id=' + ${train.id}}"
+               onclick="return confirm('Bạn có muốn xóa chuyến tàu này?')">Xóa</a>
+          </td>
+        </tr>
+        <!-- Dòng trống để làm đủ 5 hàng, chỉ hiển thị ở trang cuối -->
+<!--        <tr th:if="${page.last}"-->
+<!--            th:each="i : ${#numbers.sequence(1, page.size - page.getContent().size())}">-->
+<!--          <td colspan="8" style="height: 50px;">&nbsp;</td>-->
+<!--        </tr>-->
+        </tbody>
+      </table>
+      <!-- Gọi phân trang -->
+<!--      <nav th:replace="/admin/common/fragments :: paginationid()"></nav>-->
+    </main>
+  </div>
+</div>
+</body>
+</html>
+
+

@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <title>Thêm chuyến đi</title>
+  <link rel="stylesheet" th:href="@{/css/bootstrap.css}">
+</head>
+<body>
+<div class="container mt-4">
+  <h3>Thêm chuyến đi mới</h3>
+
+  <form th:action="@{${actionUrl}}" th:object="${trip}" method="post">
+
+    <!-- Chọn tàu -->
+    <div class="mb-3">
+      <label for="trainId" class="form-label">Tàu</label>
+      <select class="form-select" id="trainId" th:field="*{trainId}" required>
+        <option value="">-- Chọn tàu --</option>
+        <option th:each="train : ${trains}" th:value="${train.id}" th:text="${train.name}"></option>
+      </select>
+      <div class="text-danger" th:if="${#fields.hasErrors('trainId')}" th:errors="*{trainId}"></div>
+    </div>
+
+    <!-- Chọn tuyến đường -->
+    <div class="mb-3">
+      <label for="routeId" class="form-label">Tuyến đường</label>
+      <select class="form-select" id="routeId" th:field="*{routeId}" required>
+        <option value="">-- Chọn tuyến --</option>
+        <option th:each="route : ${routes}" th:value="${route.id}"
+                th:text="${route.departure.name + ' → ' + route.arrival.name}"></option>
+      </select>
+      <div class="text-danger" th:if="${#fields.hasErrors('routeId')}" th:errors="*{routeId}"></div>
+    </div>
+
+    <!-- Giá vé -->
+    <div class="mb-3">
+      <label for="price" class="form-label">Giá vé</label>
+      <input type="number" class="form-control" id="price" th:field="*{price}" required min="0" step="0.1">
+      <div class="text-danger" th:if="${#fields.hasErrors('price')}" th:errors="*{price}"></div>
+    </div>
+
+    <!-- Thời gian xuất phát -->
+    <div class="mb-3">
+      <label for="departureAt" class="form-label">Thời gian xuất phát</label>
+      <input type="datetime-local" class="form-control" id="departureAt" th:field="*{departureAt}" required>
+      <div class="text-danger" th:if="${#fields.hasErrors('departureAt')}" th:errors="*{departureAt}"></div>
+    </div>
+
+    <!-- Thời gian đến -->
+    <div class="mb-3">
+      <label for="arrivalAt" class="form-label">Thời gian đến</label>
+      <input type="datetime-local" class="form-control" id="arrivalAt" th:field="*{arrivalAt}" required>
+      <div class="text-danger" th:if="${#fields.hasErrors('arrivalAt')}" th:errors="*{arrivalAt}"></div>
+    </div>
+
+    <!-- Nút thao tác -->
+    <div class="text-end">
+      <button class="btn btn-primary" type="submit">Tạo chuyến đi</button>
+      <a class="btn btn-secondary" th:href="@{/admin/trip/view}">Hủy</a>
+    </div>
+
+    <!-- Thông báo lỗi chung -->
+    <div th:if="${#fields.hasErrors('*')}" class="alert alert-danger mt-3">
+      <ul>
+        <li th:each="err : ${#fields.errors('*')}" th:text="${err}"></li>
+      </ul>
+    </div>
+  </form>
+
+  <!-- Thông báo thành công -->
+  <div th:if="${message}" class="alert alert-info mt-3" th:text="${message}"></div>
+</div>
+</body>
+</html>

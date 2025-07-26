@@ -1,26 +1,51 @@
 package t3h.edu.vn.traintickets.entities;
 
 import jakarta.persistence.*;
-import lombok.Data;
+import jakarta.validation.constraints.NotNull;
+import lombok.Getter;
+import lombok.Setter;
 
-@Data
+@Getter
+@Setter
 @Entity
 @Table(name = "order_ticket")
 public class OrderTicket {
-
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY) // auto increment
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id", nullable = false)
     private Long id;
 
-    @ManyToOne
-    @JoinColumn(name = "orderId", referencedColumnName = "id", nullable = false)
-    private Order order;
+    @NotNull
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "orderId", nullable = false)
+    private t3h.edu.vn.traintickets.entities.Order order;
 
-    @ManyToOne
-    @JoinColumn(name = "ticketId", referencedColumnName = "id", nullable = false)
-    private Ticket ticket;
+    @NotNull
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "ticketId", nullable = false)
+    private t3h.edu.vn.traintickets.entities.Ticket ticket;
 
-    // No need for explicit UNIQUE constraint in Java, the database will enforce it
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public Order getOrder() {
+        return order;
+    }
+
+    public void setOrder(Order order) {
+        this.order = order;
+    }
+
+    public Ticket getTicket() {
+        return ticket;
+    }
+
+    public void setTicket(Ticket ticket) {
+        this.ticket = ticket;
+    }
 }
-

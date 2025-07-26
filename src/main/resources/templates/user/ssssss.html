@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Date Picker Component</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .vicon {
+            font-size: 18px;
+            color: #6b7280;
+        }
+        .v_field {
+            display: flex;
+            align-items: center;
+            padding: 8px 12px;
+            border: 1px solid #d1d5db;
+            background-color: white;
+            height: 48px;
+            cursor: pointer;
+        }
+        .v_field:hover {
+            border-color: #9ca3af;
+        }
+        .v_field__icon-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-right: 8px;
+        }
+        .v_field__description {
+            font-size: 12px;
+            color: #6b7280;
+            line-height: 1;
+        }
+        .v_field__text {
+            font-size: 14px;
+            font-weight: 500;
+            color: #111827;
+        }
+        .arrow button {
+            background: none;
+            border: none;
+            color: #6b7280;
+            cursor: pointer;
+            padding: 4px 8px;
+        }
+        .arrow button:hover {
+            color: #374151;
+        }
+        .t-input {
+            position: absolute;
+            opacity: 0;
+            pointer-events: none;
+        }
+        .nights {
+            position: relative;
+            height: 18px;
+        }
+        .night {
+            position: absolute;
+            top: -12px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 10px;
+            color: #3b82f6;
+            white-space: nowrap;
+        }
+        .calendar {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            z-index: 1000;
+            background: white;
+            border: 1px solid #d1d5db;
+            border-radius: 4px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            padding: 10px;
+            width: 300px;
+            margin-top: 5px;
+        }
+        .calendar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .calendar-title {
+            font-weight: bold;
+        }
+        .calendar-nav {
+            display: flex;
+            gap: 10px;
+        }
+        .calendar-nav button {
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 0 5px;
+        }
+        .calendar-weekdays {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            text-align: center;
+            font-size: 12px;
+            margin-bottom: 5px;
+        }
+        .calendar-days {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 5px;
+        }
+        .calendar-day {
+            padding: 5px;
+            text-align: center;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+        .calendar-day:hover {
+            background-color: #f3f4f6;
+        }
+        .calendar-day.selected {
+            background-color: #3b82f6;
+            color: white;
+        }
+        .calendar-day.disabled {
+            color: #d1d5db;
+            cursor: not-allowed;
+        }
+        .calendar-day.today {
+            font-weight: bold;
+        }
+        .calendar-container {
+            position: relative;
+        }
+    </style>
+</head>
+<body>
+<div class="container mx-auto p-4">
+    <div class="dates flex flex-col md:flex-row w-full">
+        <input type="hidden" id="showfare" name="showfare" value="false">
+
+        <div class="check-in flex w-full md:w-1/2 mb-2 md:mb-0 md:pr-1 calendar-container">
+            <div class="t-dates v_field t-date-check-in w-full rounded-l-md md:rounded-r-none" style="border-radius: 4px 0 0 4px;">
+                <div class="v_field__icon-container flex flex-col items-center mr-2">
+                    <i class="vicon vicon-check-in icon"></i>
+                    <i class="vicon vicon-check-out icon"></i>
+                </div>
+                <div class="v_field__content flex-grow">
+                    <label class="t-date-info-title"></label>
+                    <div class="v_field__description">08-06-2025,</div>
+                    <div class="v_field__text">
+                        <span class="t-day-check-in">Sunday</span>
+                    </div>
+                </div>
+            </div>
+            <div class="v_field__end hidden md:flex items-center bg-white border border-l-0 border-gray-300 rounded-r-md px-2">
+                    <span class="arrow flex">
+                        <button class="btn-departDate prev-departDate" data-check="check-in">
+                            <i class="fas fa-chevron-left"></i>
+                        </button>
+                        <button class="btn-departDate next-departDate" data-check="check-in">
+                            <i class="fas fa-chevron-right"></i>
+                        </button>
+                    </span>
+            </div>
+            <input type="text" class="t-input t-input-check-in" value="2025-06-08" name="t-start" readonly>
+        </div>
+
+        <div class="check-out flex w-full md:w-1/2 md:pl-1 calendar-container">
+            <div class="t-dates v_field t-date-check-out w-full rounded-r-md">
+                <div class="v_field__icon-container flex flex-col items-center mr-2 relative">
+                    <div class="nights">
+                        <span class="night">0 night</span>
+                        <i class="vicon vicon-free-night-stay icon"></i>
+                    </div>
+                    <i class="vicon vicon-check-in icon"></i>
+                    <i class="vicon vicon-check-out icon"></i>
+                </div>
+                <div class="v_field__content flex-grow">
+                    <label class="t-date-info-title"></label>
+                    <div class="v_field__description">08-06-2025,</div>
+                    <div class="v_field__text">
+                        <span class="t-day-check-out">Sunday</span>
+                    </div>
+                </div>
+            </div>
+            <div class="v_field__end hidden md:flex items-center bg-white border border-l-0 border-gray-300 rounded-r-md px-2">
+                    <span class="arrow flex">
+                        <button class="btn-departDate prev-departDate" data-check="check-out">
+                            <i class="fas fa-chevron-left"></i>
+                        </button>
+                        <button class="btn-departDate next-departDate" data-check="check-out">
+                            <i class="fas fa-chevron-right"></i>
+                        </button>
+                    </span>
+            </div>
+            <input type="text" class="t-input t-input-check-out" value="2025-06-08" name="t-end" readonly>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Format dates and days
+        function formatDate(date) {
+            const day = date.getDate().toString().padStart(2, '0');
+            const month = (date.getMonth() + 1).toString().padStart(2, '0');
+            const year = date.getFullYear();
+            return `${day}-${month}-${year}`;
+        }
+
+        function getDayName(date) {
+            const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+            return days[date.getDay()];
+        }
+
+        // Initialize dates
+        let checkInDate = new Date('2025-06-08');
+        let checkOutDate = new Date('2025-06-08');
+        let currentCalendar = null; // 'check-in' or 'check-out'
+        let currentMonth = new Date().getMonth();
+        let currentYear = new Date().getFullYear();
+
+        function updateDisplay() {
+            // Update check-in display
+            document.querySelector('.t-date-check-in .v_field__description').textContent = formatDate(checkInDate) + ',';
+            document.querySelector('.t-day-check-in').textContent = getDayName(checkInDate);
+            document.querySelector('.t-input-check-in').value = checkInDate.toISOString().split('T')[0];
+
+            // Update check-out display
+            document.querySelector('.t-date-check-out .v_field__description').textContent = formatDate(checkOutDate) + ',';
+            document.querySelector('.t-day-check-out').textContent = getDayName(checkOutDate);
+            document.querySelector('.t-input-check-out').value = checkOutDate.toISOString().split('T')[0];
+
+            // Calculate and display nights
+            const nights = Math.round((checkOutDate - checkInDate) / (1000 * 60 * 60 * 24));
+            document.querySelector('.night').textContent = nights + (nights === 1 ? ' night' : ' nights');
+        }
+
+        // Button event handlers
+        document.querySelectorAll('.btn-departDate').forEach(button => {
+            button.addEventListener('click', function() {
+                const type = this.getAttribute('data-check');
+                const direction = this.querySelector('.fa-chevron-left') ? -1 : 1;
+
+                if (type === 'check-in') {
+                    checkInDate.setDate(checkInDate.getDate() + direction);
+                    // Ensure check-out is not before check-in
+                    if (checkInDate > checkOutDate) {
+                        checkOutDate = new Date(checkInDate);
+                    }
+                } else {
+                    checkOutDate.setDate(checkOutDate.getDate() + direction);
+                    // Ensure check-out is not before check-in
+                    if (checkOutDate < checkInDate) {
+                        checkInDate = new Date(checkOutDate);
+                    }
+                }
+
+                updateDisplay();
+            });
+        });
+
+        // Calendar functions
+        function renderCalendar(month, year, type) {
+            const firstDay = new Date(year, month, 1);
+            const lastDay = new Date(year, month + 1, 0);
+            const daysInMonth = lastDay.getDate();
+            const startingDay = firstDay.getDay();
+
+            const monthNames = ["January", "February", "March", "April", "May", "June",
+                "July", "August", "September", "October", "November", "December"];
+
+            let calendarHTML = `
+                    <div class="calendar">
+                        <div class="calendar-header">
+                            <span class="calendar-title">${monthNames[month]} ${year}</span>
+                            <div class="calendar-nav">
+                                <button class="calendar-prev"><i class="fas fa-chevron-left"></i></button>
+                                <button class="calendar-next"><i class="fas fa-chevron-right"></i></button>
+                            </div>
+                        </div>
+                        <div class="calendar-weekdays">
+                            <div>Sun</div>
+                            <div>Mon</div>
+                            <div>Tue</div>
+                            <div>Wed</div>
+                            <div>Thu</div>
+                            <div>Fri</div>
+                            <div>Sat</div>
+                        </div>
+                        <div class="calendar-days">
+                `;
+
+            // Add empty cells for days before the first day of the month
+            for (let i = 0; i < startingDay; i++) {
+                calendarHTML += `<div class="calendar-day disabled"></div>`;
+            }
+
+            // Add days of the month
+            const today = new Date();
+            for (let day = 1; day <= daysInMonth; day++) {
+                const date = new Date(year, month, day);
+                let dayClass = "calendar-day";
+
+                // Highlight today
+                if (date.toDateString() === today.toDateString()) {
+                    dayClass += " today";
+                }
+
+                // Highlight selected dates
+                if (type === 'check-in' && date.toDateString() === checkInDate.toDateString()) {
+                    dayClass += " selected";
+                } else if (type === 'check-out' && date.toDateString() === checkOutDate.toDateString()) {
+                    dayClass += " selected";
+                }
+
+                // Disable past dates
+                if (date < new Date(today.getFullYear(), today.getMonth(), today.getDate())) {
+                    dayClass += " disabled";
+                }
+
+                calendarHTML += `<div class="${dayClass}" data-day="${day}" data-month="${month}" data-year="${year}">${day}</div>`;
+            }
+
+            calendarHTML += `</div></div>`;
+
+            // Remove existing calendar if any
+            const existingCalendar = document.querySelector('.calendar');
+            if (existingCalendar) {
+                existingCalendar.remove();
+            }
+
+            // Add new calendar
+            const container = document.querySelector(`.${type}.calendar-container`);
+            container.insertAdjacentHTML('beforeend', calendarHTML);
+
+            // Add event listeners for calendar navigation
+            document.querySelector('.calendar-prev')?.addEventListener('click', function(e) {
+                e.stopPropagation();
+                if (month === 0) {
+                    month = 11;
+                    year--;
+                } else {
+                    month--;
+                }
+                renderCalendar(month, year, type);
+            });
+
+            document.querySelector('.calendar-next')?.addEventListener('click', function(e) {
+                e.stopPropagation();
+                if (month === 11) {
+                    month = 0;
+                    year++;
+                } else {
+                    month++;
+                }
+                renderCalendar(month, year, type);
+            });
+
+            // Add event listeners for day selection
+            document.querySelectorAll('.calendar-day:not(.disabled)').forEach(day => {
+                day.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    const selectedDay = parseInt(this.getAttribute('data-day'));
+                    const selectedMonth = parseInt(this.getAttribute('data-month'));
+                    const selectedYear = parseInt(this.getAttribute('data-year'));
+
+                    const selectedDate = new Date(selectedYear, selectedMonth, selectedDay);
+
+                    if (type === 'check-in') {
+                        checkInDate = selectedDate;
+                        // If check-out is before new check-in, update check-out too
+                        if (checkOutDate < checkInDate) {
+                            checkOutDate = new Date(checkInDate);
+                        }
+                    } else {
+                        checkOutDate = selectedDate;
+                        // If check-in is after new check-out, update check-in too
+                        if (checkInDate > checkOutDate) {
+                            checkInDate = new Date(checkOutDate);
+                        }
+                    }
+
+                    updateDisplay();
+                    document.querySelector('.calendar')?.remove();
+                });
+            });
+        }
+
+        // Show calendar when clicking date fields
+        document.querySelector('.t-date-check-in').addEventListener('click', function(e) {
+            e.stopPropagation();
+            const today = new Date();
+            renderCalendar(today.getMonth(), today.getFullYear(), 'check-in');
+            currentCalendar = 'check-in';
+        });
+
+        document.querySelector('.t-date-check-out').addEventListener('click', function(e) {
+            e.stopPropagation();
+            const today = new Date();
+            renderCalendar(today.getMonth(), today.getFullYear(), 'check-out');
+            currentCalendar = 'check-out';
+        });
+
+        // Close calendar when clicking outside
+        document.addEventListener('click', function() {
+            document.querySelector('.calendar')?.remove();
+            currentCalendar = null;
+        });
+
+        // Initialize display
+        updateDisplay();
+
+        // Add hover effects
+        document.querySelectorAll('.v_field').forEach(field => {
+            field.addEventListener('mouseenter', function() {
+                this.style.borderColor = '#9ca3af';
+            });
+            field.addEventListener('mouseleave', function() {
+                this.style.borderColor = '#d1d5db';
+            });
+        });
+    });
+</script>
+</body>
+</html>

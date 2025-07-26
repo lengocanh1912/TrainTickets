@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Danh sách đánh giá</title>
+    <link rel="stylesheet" th:href="@{/css/bootstrap.min.css}" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link th:href="@{/img/favicon.ico}" rel="shortcut icon" type="image/x-icon">
+    <!-- Bootstrap v5.0.1 -->
+    <link th:href="@{/css/bootstrap.css}" type="text/css" rel="stylesheet">
+    <script th:src="@{/js/bootstrap.bundle.js}" type="text/javascript"></script>
+    <!-- Bootstrap Icons v1.5.0 -->
+    <link th:href="@{/static/css/bootstrap-icons.css}" type="text/css" rel="stylesheet">
+    <!-- Custom Styles -->
+    <link th:href="@{/css/styles.css}" type="text/css" rel="stylesheet">
+<!--    <link rel="stylesheet" th:href="@{/css/bootstrap.min.css}">-->
+    <link rel="stylesheet" th:href="@{/css/layout.css}">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-KyZXEJ10x8bH8tQy4bm8a7Unw7CkCz7Y2pA8a6vFtvbA0hZTkNffpV8V4jeIm9xr" crossorigin="anonymous">
+    <!-- Bootstrap Icons (optional, for the account icon) -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            background-color: #f8f9fa;
+        }
+        .review-card {
+            border-radius: 16px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+            padding: 20px;
+            margin-bottom: 24px;
+            background-color: #fff;
+        }
+        .review-images {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .review-images img {
+            width: 100px;
+            height: 100px;
+            object-fit: cover;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+        }
+        .review-stars {
+            font-size: 18px;
+        }
+        .star-filled {
+            color: #ffc107;
+        }
+        .star-empty {
+            color: #e4e5e9;
+        }
+    </style>
+</head>
+<body>
+<!-- Navbar-->
+<nav class="navbar navbar-expand-lg navbar-dark bg-primary fixed-top">
+    <div class="container-fluid px-5 ">
+        <a class="navbar-brand" href="#">TrainTicket</a>
+        <div class="navbar-nav">
+            <a class="nav-link text-white" th:href="@{/user/home}"
+               th:classappend="${menu == 'userHome'} ? 'active' ">Home</a>
+            <a class="nav-link text-white" th:href="@{/user/trip/list}"
+               th:classappend="${menu == 'trip'} ? 'active'">Trip</a>
+            <a class="nav-link text-white" href="#">Train Seat</a>
+            <a class="nav-link text-white" th:href="@{/user/support}"
+               th:classappend="${menu == 'support'} ? 'active'">Support</a>
+            <a class="nav-link text-white" href="#">Q&A</a>
+        </div>
+
+        <div class="d-flex text-white ms-auto">
+            <!--            <button class="btn btn-light" type="button">-->
+            <a th:href="@{/user/order/view}" class="nav-link text-white">
+                <i class="bi bi-cart "> Đơn hàng</i>
+            </a>
+            <div class="dropdown">
+                <!-- Nút icon tài khoản -->
+                <button class="btn btn-light" type="button" id="accountDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                    <i class="bi bi-person"></i>
+                    <span th:if="${currentUser != null}"
+                          th:text="${currentUser.fullname}"></span>
+                    <span th:if="${currentUser == null}">Tài khoản</span>
+                </button>
+
+                <!-- Danh sách tùy chọn -->
+                <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="accountDropdown">
+                    <!-- Nếu đã đăng nhập -->
+                    <li th:if="${currentUser != null}">
+                        <a class="dropdown-item text-primary" th:each="role : ${currentUser.role}"
+                           th:if="${role == 'ADMIN'}"
+                           th:href="@{/admin/home}">ADMIN</a>
+                        <hr class="" >
+                    </li>
+                    <li th:if="${currentUser != null}">
+                        <a class="dropdown-item" th:href="@{/cart/checkout}">Checkout</a>
+                    </li>
+                    <li th:if="${currentUser != null}">
+                        <a class="dropdown-item" th:href="@{/cart/checkout-vnpay}">VNPAY</a>
+                    </li>
+                    <li th:if="${currentUser != null}">
+                        <a class="dropdown-item" th:href="@{/orders}">Đơn hàng</a>
+                    </li>
+                    <li th:if="${currentUser != null}">
+                        <a class="dropdown-item" th:href="@{/wishlist}">Yêu thích</a>
+                    </li>
+                    <li th:if="${currentUser != null}">
+                        <a class="dropdown-item" th:href="@{/logout}">Đăng xuất</a>
+                    </li>
+
+                    <!-- Nếu chưa đăng nhập -->
+                    <li th:if="${currentUser == null}">
+                        <a class="dropdown-item" th:href="@{/login}">Đăng nhập</a>
+                    </li>
+                    <li th:if="${currentUser == null}">
+                        <a class="dropdown-item" th:href="@{/register}">Tạo tài khoản</a>
+                    </li>
+
+                </ul>
+            </div>
+
+
+        </div>
+    </div>
+</nav>
+
+<div class="container mt-20">
+    <h1 class="mb-4 text-center ">Đánh giá từ người dùng</h1>
+
+    <div class="row">
+        <div class="col-12" th:each="review : ${reviews}">
+            <div class="review-card">
+                <!-- Header -->
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <strong th:text="${review.userFullName}">Tên người dùng</strong>
+                    <small class="text-muted" th:text="${#temporals.format(review.createdAt, 'dd/MM/yyyy')}">26/07/2025</small>
+                </div>
+
+                <!-- Trip info -->
+                <div class="mb-2">
+                    <span class="badge bg-primary">
+                        <span th:text="${review.departureStationName}">Ga A</span>
+                        →
+                        <span th:text="${review.arrivalStationName}">Ga B</span>
+                    </span>
+                    <span class="text-muted ms-2">
+                        Ngày đi:
+                        <span th:text="${#temporals.format(review.departureTime, 'dd/MM/yyyy')}">25/07/2025</span>
+                    </span>
+                    <span class="text-muted ms-2">
+                        - Tàu:
+                        <strong th:text="${review.trainName}">SE1</strong>
+                    </span>
+                </div>
+
+                <!-- Rating -->
+                <div class="review-stars mb-2">
+                    <span th:each="i : ${#numbers.sequence(1, 5)}"
+                        th:text="${i <= review.rating ? '⭐' : '☆'}"></span>
+                </div>
+
+
+
+                <!-- Comment -->
+                <p class="mb-2" th:text="${review.comment}">Nội dung đánh giá ở đây...</p>
+
+                <!-- Images (optional) -->
+                <div class="review-images mt-2" th:if="${review.imagePaths != null}">
+                    <img th:each="imgPath : ${review.imagePaths}"
+                         th:src="@{${imgPath}}"
+                         alt="Ảnh đánh giá"
+                         onerror="this.src='/images/default-image.png'" />
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!--active-->
+<script>
+    const links = document.querySelectorAll('.nav-link');
+
+    links.forEach(link => {
+        link.addEventListener('click', function () {
+            links.forEach(l => l.classList.remove('active')); // Bỏ active ở tất cả các mục
+            this.classList.add('active'); // Thêm active cho mục vừa click
+        });
+    });
+</script>
+</body>
+</html>

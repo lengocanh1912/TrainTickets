@@ -1,28 +1,35 @@
 package t3h.edu.vn.traintickets.entities;
 
-
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
-import lombok.Data;
+import jakarta.validation.constraints.Size;
+import lombok.Getter;
+import lombok.Setter;
 
-@Data
+import java.time.Instant;
+
+@Getter
+@Setter
 @Entity
 @Table(name = "payment")
 public class Payment {
-
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY) // auto increment
     @Column(name = "id", nullable = false)
     private Long id;
 
-    @ManyToOne
-    @JoinColumn(name = "orderId", referencedColumnName = "id", nullable = false)
+    @NotNull
+    @OneToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "orderId", nullable = false)
     private Order order;
 
+    @Size(max = 30)
+    @NotNull
     @Column(name = "method", nullable = false, length = 30)
     private String method;
 
-    @Column(name = "status", nullable = false, length = 20)
+    @NotNull
+    @Lob
+    @Column(name = "status", nullable = false)
     private String status;
 
     @NotNull
@@ -30,6 +37,10 @@ public class Payment {
     private Float amount;
 
     @Column(name = "paidAt")
-    private java.util.Date paidAt;
-}
+    private Instant paidAt;
 
+    @Size(max = 100)
+    @Column(name = "transactionId", length = 100)
+    private String transactionId;
+
+}

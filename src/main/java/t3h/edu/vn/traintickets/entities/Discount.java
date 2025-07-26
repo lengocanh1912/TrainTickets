@@ -1,23 +1,29 @@
 package t3h.edu.vn.traintickets.entities;
 
-import jakarta.persistence.*;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
+import org.hibernate.annotations.ColumnDefault;
 
-@Data
+import java.time.Instant;
+
+@Getter
+@Setter
 @Entity
 @Table(name = "discount")
 public class Discount {
-
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY) // auto increment
     @Column(name = "id", nullable = false)
     private Long id;
 
     @Size(max = 30)
     @NotNull
-    @Column(name = "code", nullable = false, length = 30, unique = true)
+    @Column(name = "code", nullable = false, length = 30)
     private String code;
 
     @Size(max = 100)
@@ -36,12 +42,22 @@ public class Discount {
     @Column(name = "maxDiscount")
     private Float maxDiscount;
 
+    @Column(name = "minOrderAmount")
+    private Float minOrderAmount;
+
+    @Column(name = "quantityAvailable")
+    private Integer quantityAvailable;
+
+    @ColumnDefault("1")
+    @Column(name = "isActive")
+    private Boolean isActive;
+
     @NotNull
     @Column(name = "expiredAt", nullable = false)
-    private java.util.Date expiredAt;
+    private Instant expiredAt;
 
     @NotNull
     @Column(name = "createdAt", nullable = false)
-    private java.util.Date createdAt;
+    private Instant createdAt;
 
 }

@@ -1,0 +1,1021 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Đặt vé tàu</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link th:href="@{/img/favicon.ico}" rel="shortcut icon" type="image/x-icon">
+  <!-- Bootstrap v5.0.1 -->
+  <link th:href="@{/css/bootstrap.css}" type="text/css" rel="stylesheet">
+  <script th:src="@{/js/bootstrap.bundle.js}" type="text/javascript"></script>
+  <!-- Bootstrap Icons v1.5.0 -->
+  <link th:href="@{/static/css/bootstrap-icons.css}" type="text/css" rel="stylesheet">
+  <!-- Custom Styles -->
+  <link th:href="@{/css/styles.css}" type="text/css" rel="stylesheet">
+  <link rel="stylesheet" th:href="@{/css/bootstrap.min.css}">
+<!--  <link rel="stylesheet" th:href="@{/css/layout.css}">-->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+  <!-- Bootstrap CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-KyZXEJ10x8bH8tQy4bm8a7Unw7CkCz7Y2pA8a6vFtvbA0hZTkNffpV8V4jeIm9xr" crossorigin="anonymous">
+  <!-- Bootstrap Icons (optional, for the account icon) -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <script>
+    var changeLanguage = function (dom) {
+      window.location.href = '?lang=' + dom.value;
+    }
+  </script>
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f3f7fa;
+      margin: 0;
+    }
+
+    .container {
+      margin-top: 80px;
+      padding: 0 5cm; /* Cách đều 2 bên 5cm */
+      max-width: 100%;
+      box-sizing: border-box;
+    }
+    .route-days-wrapper {
+      margin-top: 20px;
+      display: flex;
+      align-items: center;
+    }
+
+    .day-button {
+      background: #fff;
+      border: 1px solid #ccc;
+      border-radius: 50%;
+      width: 36px;
+      height: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      margin: 0 8px;
+    }
+
+    .route-days {
+      display: flex;
+      gap: 12px;
+      overflow-x: auto;
+      white-space: nowrap;
+      flex-grow: 1;
+    }
+
+    .day {
+      flex: 0 0 auto;
+      background: #fff;
+      padding: 8px 12px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      min-width: 110px;
+      text-align: center;
+    }
+
+    .day strong {
+      display: block;
+    }
+
+    @media (max-width: 768px) {
+      .container {
+        padding: 0 16px;
+      }
+    }
+  </style>
+<!--  modal form-->
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 20px;
+    }
+
+    button {
+      padding: 10px 10px;
+      font-size: 16px;
+    }
+
+    /* Overlay nền mờ */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgb(52, 64, 64);
+      z-index: 999;
+      overflow-y: auto;
+    }
+    .modal-backdrop {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background-color: rgba(255, 255, 255, 0.71); /* mờ nền */
+      display: flex;
+      justify-content: center;  /* căn giữa ngang */
+      align-items: center;      /* căn giữa dọc */
+      z-index: 1000;
+    }
+
+    /* Bảng nội dung */
+    .modal-content {
+      background: white;
+      padding: 20px;
+      margin-top: 80px;
+      border-radius: 8px;
+      max-width: 70%;
+      box-shadow: 0 2px 10px rgb(52, 64, 64)
+    }
+
+    .close-btn {
+      float: right;
+      font-size: 20px;
+      cursor: pointer;
+      color: #888;
+    }
+
+    .close-btn:hover {
+      color: #000;
+    }
+  </style>
+<!--render seat-->
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+    }
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      /*padding: 10px 20px;*/
+      border-bottom: 1px solid #ccc;
+    }
+    .train-info {
+      text-align: center;
+      font-weight: bold;
+      font-size: 20px;
+    }
+    .close-btn {
+      font-size: 24px;
+      cursor: pointer;
+    }
+    .coach-selector {
+      display: flex;
+      overflow-x: auto;
+      /*padding: 10px;*/
+      align-items: center;
+    }
+    .coach-card {
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      padding: 10px;
+      margin-right: 10px;
+      cursor: pointer;
+      min-width: 200px;
+      background-color: white;
+    }
+    .coach-card.active {
+      border-color: #00BCD4;
+      background-color: #E0F7FA;
+    }
+    .coach-layout {
+      /*padding: 20px;*/
+    }
+    .compartment-label {
+      font-weight: bold;
+      margin-bottom: 10px;
+    }
+    .seat-grid {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 10px;
+      max-width: 400px;
+      margin: auto;
+    }
+    .seat {
+      width: 50px;
+      height: 50px;
+      background-color: white;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      text-align: center;
+      line-height: 50px;
+      font-size: 14px;
+      cursor: pointer;
+    }
+    .seat.sold {
+      background-color: #e9ecef;
+      cursor: not-allowed;
+    }
+    .seat.selected {
+      background-color: #b2ebf2;
+      border-color: #00ACC1;
+    }
+    .ticket-summary {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 20px;
+      border-top: 1px solid #ccc;
+    }
+    .legend {
+      display: flex;
+      gap: 10px;
+    }
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .legend-icon {
+      width: 20px;
+      height: 20px;
+      border-radius: 4px;
+    }
+    .legend-icon.empty {
+      background-color: white;
+      border: 1px solid #ccc;
+    }
+    .legend-icon.sold {
+      background-color: #e9ecef;
+    }
+    .legend-icon.selected {
+      background-color: #b2ebf2;
+      border: 1px solid #00ACC1;
+    }
+    .checkout {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+    .checkout-btn {
+      padding: 10px 20px;
+      background-color: orange;
+      border: none;
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+      border-radius: 4px;
+    }
+  </style>
+<!--seat-->
+  <style>
+    .seat-map-4rows {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      align-items: center;
+    }
+
+    /* Grid chứa toàn bộ ghế - có 4 hàng */
+    #seatGrid {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      align-items: center;
+    }
+
+    /* Mỗi hàng */
+    .row-box {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+    }
+
+    /* Ghế */
+    .seat {
+      width: 50px;
+      height: 50px;
+      background-color: #fff;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      font-size: 13px;
+      text-align: center;
+      line-height: 50px;
+      cursor: pointer;
+      transition: background-color 0.2s ease;
+    }
+
+    .seat.sold {
+      background-color: #ccc;
+      cursor: not-allowed;
+    }
+
+    .seat.selected {
+      background-color: #2196f3;
+      color: white;
+    }
+
+  </style>
+<!--coach-->
+  <style>
+    .coach-scroll-container {
+      display: flex;
+      overflow-x: auto;
+      padding: 10px 0;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .train-head {
+      width: 60px;
+      height: auto;
+    }
+
+    .coach-card {
+      min-width: 80px;
+      height: 60px;
+      background-color: #f0f0f0;
+      border-radius: 6px;
+      text-align: center;
+      padding: 8px;
+      cursor: pointer;
+      border: 1px solid #ccc;
+      flex-shrink: 0;
+    }
+
+    .coach-card.active {
+      background-color: #cceeff;
+      border-color: #33aadd;
+    }
+  </style>
+<!--ticket render -->
+  <style>
+    #ticketList {
+      display: flex;
+      gap: 12px;
+      overflow-x: auto;
+      padding: 10px 0;
+      white-space: nowrap;
+    }
+
+    .ticket-card {
+      min-width: 120px;
+      background: #f3f3f3;
+      border: 1px solid #ccc;
+      padding: 10px;
+      border-radius: 8px;
+      text-align: center;
+      flex-shrink: 0;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+
+    .ticket-card.active {
+      border: 2px solid #007bff;
+      background-color: #e0f3ff;
+    }
+    .ticket-card.selected {
+      border: 2px solid #007bff;
+      background-color: #e6f0ff;
+    }
+
+  </style>
+</head>
+<body class="bg-gray-100 font-sans">
+
+<nav class="navbar navbar-expand-lg navbar-dark bg-primary fixed-top">
+  <div class="container-fluid px-5 ">
+    <a class="navbar-brand" href="#">TrainTicket</a>
+    <div class="navbar-nav">
+      <a class="nav-link text-white" th:href="@{/user/home}" th:classappend="${menu == 'userHome'} ? 'active' ">Home</a>
+      <a class="nav-link text-white" th:href="@{/user/trip/list}" th:classappend="${menu == 'trip'} ? 'active'">Trip</a>
+      <a class="nav-link text-white" href="#">Train Seat</a>
+      <a class="nav-link text-white" th:href="@{/user/support}" th:classappend="${menu == 'support'} ? 'active'">Support</a>
+      <a class="nav-link text-white" href="#">Q&A</a>
+    </div>
+
+    <div class="d-flex text-white ms-auto">
+      <!--            <button class="btn btn-light" type="button">-->
+      <a th:href="@{/user/trip/list}" class="nav-link text-white">
+        <i class="bi bi-cart "> Đơn hàng</i>
+      </a>
+      <div class="dropdown">
+        <!-- Nút icon tài khoản -->
+        <button class="btn btn-light" type="button" id="accountDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+          <i class="bi bi-person"></i>
+          <span th:if="${currentUser != null}" th:text="${currentUser.fullname}"></span>
+          <span th:if="${currentUser == null}">Tài khoản</span>
+        </button>
+
+        <!-- Danh sách tùy chọn -->
+        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="accountDropdown">
+
+          <!-- Nếu đã đăng nhập -->
+          <li th:if="${currentUser != null}">
+            <a class="dropdown-item text-primary" th:each="role : ${currentUser.role}"
+               th:if="${role == 'ADMIN'}"
+               th:href="@{/admin/home}">ADMIN</a>
+            <hr>
+          </li>
+          <li th:if="${currentUser != null}">
+            <a class="dropdown-item" th:href="@{/cart/checkout}">Checkout</a>
+          </li>
+          <li th:if="${currentUser != null}">
+            <a class="dropdown-item" th:href="@{/cart/checkout-vnpay}">VNPAY</a>
+          </li>
+          <li th:if="${currentUser != null}">
+            <a class="dropdown-item" th:href="@{/orders}">Đơn hàng</a>
+          </li>
+          <li th:if="${currentUser != null}">
+            <a class="dropdown-item" th:href="@{/wishlist}">Yêu thích</a>
+          </li>
+          <li th:if="${currentUser != null}">
+            <a class="dropdown-item" th:href="@{/logout}">Đăng xuất</a>
+          </li>
+
+          <!-- Nếu chưa đăng nhập -->
+          <li th:if="${currentUser == null}">
+            <a class="dropdown-item" th:href="@{/login}">Đăng nhập</a>
+          </li>
+          <li th:if="${currentUser == null}">
+            <a class="dropdown-item" th:href="@{/register}">Tạo tài khoản</a>
+          </li>
+
+        </ul>
+      </div>
+
+
+    </div>
+  </div>
+</nav>
+
+<div class="container">
+  <!--form search-->
+  <div class="bg-white shadow-md p-4">
+    <form class="bg-black/5 shadow-md p-4"
+          method="get"
+          th:action="@{/user/trip/search}">
+      <div class=" row flex justify-between items-center">
+        <div class="flex gap-4 ">
+          <!-- Loại vé -->
+          <div class="flex flex-col">
+            <label class="text-sm text-gray-600 mx-auto">Loại vé</label>
+            <select id="ticketType" name="tripType" class="border rounded px-3 py-1 text-sm">
+              <option value="oneway">Một chiều</option>
+              <option value="roundtrip">Khứ hồi</option>
+            </select>
+          </div>
+<!--          &lt;!&ndash; Số lượng vé &ndash;&gt;-->
+<!--          <div class="flex flex-col">-->
+<!--            <label class="text-sm text-gray-600 mx-auto">Số lượng vé</label>-->
+<!--            <input type="number" name="ticketQuantity" min="1" value="1"-->
+<!--                   class="border rounded-md px-2 py-1 w-24">-->
+<!--          </div>-->
+          <!-- Số lượng vé theo loại -->
+          <div class="flex flex-col relative">
+            <label class="text-sm text-gray-600 mx-auto"> Số vé</label>
+            <button id="ticketToggle" type="button"
+                    class="border rounded-md px-3 py-1 text-sm bg-white w-40 flex justify-between items-center">
+              <span id="totalTicketCount">1 vé</span>
+              <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M19 9l-7 7-7-7"/>
+              </svg>
+            </button>
+
+            <div id="ticketDropdown" class="absolute z-50 top-14 left-0 bg-white shadow-lg border rounded-md p-4 space-y-3 w-72 hidden">
+              <!-- Người lớn -->
+              <div class="flex justify-between items-center">
+                <div>
+                  <p class="font-medium">Người lớn</p>
+                  <p class="text-xs text-gray-500">Từ 11 - 59 tuổi</p>
+                </div>
+                <div class="flex items-center space-x-2">
+                  <button type="button" class="ticket-decrease px-2 py-1 bg-gray-200 rounded" data-type="adult">−</button>
+                  <span id="adultCount">0</span>
+                  <button type="button" class="ticket-increase px-2 py-1 bg-gray-200 rounded" data-type="adult">+</button>
+                  <input type="hidden" name="adultQuantity" value="0">
+                </div>
+              </div>
+
+              <!-- Trẻ em -->
+              <div class="flex justify-between items-center">
+                <div>
+                  <p class="font-medium">Trẻ em <span class="text-orange-500 text-xs">-25%</span></p>
+                  <p class="text-xs text-gray-500">Từ 6 - 10 tuổi</p>
+                </div>
+                <div class="flex items-center space-x-2">
+                  <button type="button" class="ticket-decrease px-2 py-1 bg-gray-200 rounded" data-type="child">−</button>
+                  <span id="childCount">0</span>
+                  <button type="button" class="ticket-increase px-2 py-1 bg-gray-200 rounded" data-type="child">+</button>
+                  <input type="hidden" name="childQuantity" value="0">
+                </div>
+              </div>
+
+              <!-- Người cao tuổi -->
+              <div class="flex justify-between items-center">
+                <div>
+                  <p class="font-medium">Người cao tuổi <span class="text-orange-500 text-xs">-15%</span></p>
+                  <p class="text-xs text-gray-500">Từ 60 tuổi</p>
+                </div>
+                <div class="flex items-center space-x-2">
+                  <button type="button" class="ticket-decrease px-2 py-1 bg-gray-200 rounded" data-type="senior">−</button>
+                  <span id="seniorCount">0</span>
+                  <button type="button" class="ticket-increase px-2 py-1 bg-gray-200 rounded" data-type="senior">+</button>
+                  <input type="hidden" name="seniorQuantity" value="0">
+                </div>
+              </div>
+
+              <!-- Sinh viên -->
+              <div class="flex justify-between items-center">
+                <div>
+                  <p class="font-medium">Sinh viên <span class="text-orange-500 text-xs">-10%</span></p>
+                  <p class="text-xs text-gray-500">Thẻ SV</p>
+                </div>
+                <div class="flex items-center space-x-2">
+                  <button type="button" class="ticket-decrease px-2 py-1 bg-gray-200 rounded" data-type="student">−</button>
+                  <span id="studentCount">0</span>
+                  <button type="button" class="ticket-increase px-2 py-1 bg-gray-200 rounded" data-type="student">+</button>
+                  <input type="hidden" name="studentQuantity" value="0">
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="flex flex-wrap md:flex-nowrap items-center justify-between gap-4">
+          <!-- Ga đi & đến -->
+          <div class="bg-white flex items-center gap-4 bg-gray-100 rounded-md p-2">
+            <div class="flex items-center gap-2">
+              <img src="https://res.ivivu.com/train/images/icon/ic_train.svg" alt="Ga đi" class="w-5 h-5">
+              <input list="stationF" type="text" name="departureName"
+                     placeholder="chọn ga đi "
+                     class="bg-transparent outline-none w-32" required>
+              <datalist id="stationF">
+                <option th:each="station : ${stations}"
+                        th:text="${station.name}">
+                </option>
+              </datalist>
+            </div>
+
+            <button type="button" class="bg-white rounded-full p-2 shadow-md">
+              <img src="https://res.ivivu.com/train/images/icon/ic_2wayarrow.svg" alt="Đổi chiều" class="w-4 h-4">
+            </button>
+
+            <div class="flex items-center gap-2">
+              <img src="https://res.ivivu.com/train/images/icon/ic_train.svg" alt="Ga đến" class="w-5 h-5">
+              <input list="stationT" type="text" name="arrivalName"
+                     placeholder="chọn ga đến "
+                     class="bg-transparent outline-none w-32" required>
+              <datalist id="stationT">
+                <option th:each="station : ${stations}"
+                        th:text="${station.name}">
+                </option>
+              </datalist>
+            </div>
+          </div>
+
+          <!-- Ngày đi -->
+          <div class="flex flex-col">
+            <label class="text-sm text-gray-600 mx-auto">Ngày đi</label>
+            <input type="date" id="departureDate" name="departureDate"
+                   placeholder="Hải Phòng"
+                   class="border rounded-md px-2 py-1" required>
+          </div>
+
+          <!-- Ngày về -->
+          <div class="flex flex-col">
+            <label class="text-sm text-gray-600 mx-auto">Ngày về </label>
+            <input type="date" id="returnDate" name="returnDate"
+                   class="border rounded-md px-2 py-1">
+          </div>
+          <!-- Nút tìm -->
+          <button class="bg-orange-500 hover:bg-yellow-400 text-white font-semibold px-6 py-2 rounded-md mx-auto w-1/4" type="submit">
+            Tìm chuyến
+          </button>
+        </div>
+
+      </div>
+    </form>
+  </div>
+  <!-- Lịch ngày đi -->
+<!--  <div class=" shadow-md mt-4 ">-->
+<!--    &lt;!&ndash; Thẻ 1 &ndash;&gt;-->
+<!--    <div class="bg-black/10 shadow-md p-2 m-0">-->
+<!--      <h2 class="font-semibold text-lg mb-2">Chọn chiều đi</h2>-->
+<!--    </div>-->
+<!--    &lt;!&ndash; Thẻ 2 &ndash;&gt;-->
+<!--    <div class="bg-white p-4 shadow-md m-0">-->
+<!--      &lt;!&ndash; Thanh chọn ngày &ndash;&gt;-->
+<!--      <div class="route-days-wrapper">-->
+<!--        <div class="day-button" onclick="prevWeek()">&lt;</div>-->
+<!--        <div class="route-days" id="routeDays"></div>-->
+<!--        <div class="day-button" onclick="nextWeek()">&gt;</div>-->
+<!--      </div>-->
+<!--    </div>-->
+<!--  </div>-->
+  <!--thông báo-->
+  <div class="mx-auto">
+    <div th:if="${departureTrips.isEmpty()}">
+      <div class="no-tickets ng-star-inserted">
+        <div class="flex justify-center pt-[25px]">
+          <img th:src="@{${image}}" alt="Sold Out"
+               class="w-[210px] h-[192px] v-margin-top-10 v-margin-bottom-10" />
+        </div>
+        <div class="title text-[18px] text-[#3f3b3b] flex justify-center pt-[25px]"
+             th:text="${message}"></div>
+        <div class="title text-[18px] text-[#3f3b3b] flex justify-center pt-[25px]"
+             th:text="${message1}"></div>
+      </div>
+    </div>
+  </div>
+  <!-- Danh sách tàu -->
+  <div class="bg-white mt-4 p-4 shadow-md space-y-4">
+    <!-- Wrapper hiển thị ngang -->
+    <div class="flex flex-row gap-4" id="roundTripWrapper">
+      <!-- Chiều đi -->
+      <div id="departureSection" class="flex-1 basis-7/10 transition-all duration-500">
+        <h2 class="text-xl font-bold mb-2 text-blue-600">Chiều đi: <span th:text="${departureTrips[0]?.departureStation + ' → ' + departureTrips[0]?.arrivalStation}"></span></h2>
+
+        <div class="bg-black/5 border p-4 rounded space-y-4">
+          <div th:each="trip : ${departureTrips}"
+               class="flex justify-between items-center bg-white rounded-lg shadow p-4 mb-4">
+            <!-- Cột 1: Tên tàu và số chỗ -->
+            <div>
+              <h3 style="margin-bottom: 16px;" class="font-semibold fs-3" th:text="${trip.trainName}"></h3>
+              <span style="margin-bottom: 16px;" class="text-sm text-yellow-600 bg-yellow-100 rounded px-2">Còn 127 chỗ</span>
+            </div>
+            <!-- Cột 2: Thông tin giờ ga đi, đến -->
+            <div class="text-sm text-center fs-5">
+              <div style="display: flex; justify-content: center; gap: 20px; width: 100%; max-width: 1000px; margin: 0 auto;">
+                <!-- Ga đi -->
+                <div style="width: 200px">
+                  <div style="margin-bottom: 16px;" th:text="${trip.departureStation}"></div>
+                  <div style="margin-bottom: 16px;">
+                    <strong th:text="${#temporals.format(trip.departureAt, 'HH:mm')}"></strong>
+                  </div>
+                  <span class="text-gray-500">
+                  <span th:text="${#temporals.format(trip.departureAt, 'dd')}"></span>
+                    <span> tháng </span>
+                     <span th:text="${#temporals.format(trip.departureAt, 'MM')}"></span></span>
+                </div>
+
+                <!-- Mũi tên và thời gian -->
+                <div style="display: flex; flex-direction: column; align-items: center; gap: 4px; margin: 0 52px;">
+                  <div style="font-weight: bold; font-size: 20px;">
+                    <span class="text-gray-500" th:text="${trip.duration}">0h00p</span>
+                  </div>
+                  <svg width="150" height="30" viewBox="0 0 150 30" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <line x1="0" y1="15" x2="120" y2="15" stroke="black" stroke-width="6"/>
+                    <polygon points="120,0 150,15 120,30" fill="black"/>
+                  </svg>
+                </div>
+
+                <!-- Ga đến -->
+                <div style="width: 200px">
+                  <div style="margin-bottom: 16px;" th:text="${trip.arrivalStation}"></div>
+                  <div style="margin-bottom: 16px;">
+                    <strong th:text="${#temporals.format(trip.arrivalAt, 'HH:mm')}"></strong>
+                  </div>
+                  <span class="text-gray-500">
+          <span th:text="${#temporals.format(trip.arrivalAt, 'dd')}"></span>
+          <span> tháng </span>
+          <span th:text="${#temporals.format(trip.arrivalAt, 'MM')}"></span>
+        </span>
+                </div>
+              </div>
+            </div>
+            <!-- Cột 3: Giá và nút chọn -->
+            <div class="text-right">
+              <div style="margin-bottom: 16px;">
+                <span>Từ </span>
+                <span class="text-orange-600 font-bold"
+                      th:text="${#numbers.formatDecimal(trip.price, 0, 'POINT', 0, 'COMMA')} + ' đ'"></span>
+              </div>
+<!--              <span th:text="${trip.id}">ID</span>-->
+              <button type="button"
+                      class="choose-seat-btn bg-orange-500 hover:bg-yellow-400 text-white font-semibold px-6 py-2 rounded-md"
+                      onclick="openModalFromAttr(this)"
+                      th:attr="data-trip-id=${trip.id},
+                               data-adult=${searchTripForm.adultQuantity},
+                               data-child=${searchTripForm.childQuantity},
+                               data-student=${searchTripForm.studentQuantity},
+                               data-senior=${searchTripForm.seniorQuantity}">
+                Chọn chỗ
+              </button>
+            </div>
+            <!-- Modal -->
+            <div id="myModal" class="modal-overlay">
+              <form id="bookingForm">
+
+                <div class="modal-backdrop">
+                  <div class="modal-content">
+                    <div class="header">
+                      <div class="route-info">
+                        <span id="modalDepartureStation">Nơi đi</span>
+                        <span class="route-arrow">→</span>
+                        <span id="modalArrivalStation">nơi đến</span>
+                        <span style="margin: 0 10px;">|</span>
+                        <span id="modalDepartureDate">ngày đi</span>
+                      </div>
+                      <div class="train-info" id="modalTrainName" th:text="trip.trainName">tên tàu</div>
+                      <span class="close-btn" onclick="closeModal()">&times;</span>
+                    </div>
+                    <!-- Hiển thị danh sách toa + đầu tàu -->
+                    <div class="coach-selector">
+                      <div class="coach-scroll-container" id="coachCards">
+                        <img class="train-head" src="/trainticket/img/head-train.png"  alt="Đầu tàu">
+                      </div>
+                    </div>
+                    <!-- Sơ đồ ghế -->
+                    <div class="coach-layout">
+                      <div class="compartment-label" id="selectedCoachName">Chọn toa để xem sơ đồ ghế</div>
+                      <div class="seat-grid-scroll">
+                        <div id="seatGrid"></div>
+                      </div>
+                    </div>
+                    <!-- Loại vé -->
+                    <div id="ticketList" style="display: flex; gap: 10px; overflow-x: auto;">
+                      <!-- Các vé sẽ được render động bằng JavaScript -->
+                    </div>
+                    <div class="ticket-summary">
+                      <div class="legend">
+                        <div class="legend-item">
+                          <div class="legend-icon empty"></div>
+                          <span>Chỗ trống</span>
+                        </div>
+                        <div class="legend-item">
+                          <div class="legend-icon sold"></div>
+                          <span>Chỗ đã bán</span>
+                        </div>
+                        <div class="legend-item">
+                          <div class="legend-icon selected"></div>
+                          <span>Chỗ đang chọn</span>
+                        </div>
+                      </div>
+                      <div class="checkout">
+                        <div class="selected-count" id="selectedCount"
+                             th:data-total="${totalTicket}">
+                          Đã chọn: 0/<span th:text="${totalTicket}">totalTicket</span> chỗ
+                        </div>
+                        <div class="text-orange-600 font-bold" id="totalPrice">
+                          Tổng tiền:<span></span> 0đ</div>
+
+                        <button type="button"
+                                th:data-trip-id="${trip.id}"
+                                onclick="selectDeparture(this)"
+                                class="bg-orange-500 hover:bg-yellow-400 text-white font-semibold px-6 py-2 rounded-md">
+                          đặt vé
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- Chiều về -->
+      <div id="returnSection" class="flex-1 basis-3/10 transition-all duration-500"
+           th:if="${tripType == 'roundtrip'}">
+        <h2 class="text-xl font-bold mb-2 text-blue-600">Chiều về: <span th:text="${returnTrips[0]?.departureStation + ' → ' + returnTrips[0]?.arrivalStation}"></span></h2>
+
+        <div id="returnPlaceholder">
+          <p class="text-gray-600 italic">Vui lòng chọn chuyến chiều đi để hiển thị các chuyến về.</p>
+        </div>
+
+        <div id="returnTrips" class="space-y-4 hidden">
+          <div th:each="trip : ${returnTrips}" class="bg-white border rounded p-3 shadow-sm">
+            <div class="flex justify-between">
+              <div>
+                <p class="font-bold text-lg" th:text="${trip.trainName}"></p>
+                <p th:text="${trip.departureStation + ' - ' + trip.arrivalStation}"></p>
+                <p>
+                  <span th:text="${#temporals.format(trip.departureAt, 'HH:mm')}"></span>
+                  &rarr;
+                  <span th:text="${#temporals.format(trip.arrivalAt, 'HH:mm')}"></span>
+                </p>
+                <p class="text-sm text-gray-500" th:text="${trip.duration}"></p>
+              </div>
+              <div class="text-right">
+                <p class="text-orange-600 font-bold" th:text="${#numbers.formatDecimal(trip.price, 0, 'POINT', 0, 'COMMA')} + ' đ'"></p>
+                <button class="bg-orange-500 hover:bg-yellow-400 text-white px-4 py-2 rounded mt-2">Chọn chỗ</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Modal -->
+<!--<div id="myModal" class="modal-overlay">-->
+<!--  <form id="bookingForm">-->
+
+<!--    <div class="modal-backdrop">-->
+<!--      <div class="modal-content">-->
+<!--        <div class="header">-->
+<!--          <div class="route-info">-->
+<!--            <span id="modalDepartureStation">Nơi đi</span>-->
+<!--            <span class="route-arrow">→</span>-->
+<!--            <span id="modalArrivalStation">nơi đến</span>-->
+<!--            <span style="margin: 0 10px;">|</span>-->
+<!--            <span id="modalDepartureDate">ngày đi</span>-->
+<!--          </div>-->
+<!--          <div class="train-info" id="modalTrainName" th:text="trip.trainName">tên tàu</div>-->
+<!--          <span class="close-btn" onclick="closeModal()">&times;</span>-->
+<!--        </div>-->
+<!--        &lt;!&ndash; Hiển thị danh sách toa + đầu tàu &ndash;&gt;-->
+<!--        <div class="coach-selector">-->
+<!--          <div class="coach-scroll-container" id="coachCards">-->
+<!--            <img class="train-head" src="/trainticket/img/head-train.png"  alt="Đầu tàu">-->
+<!--          </div>-->
+<!--        </div>-->
+<!--        &lt;!&ndash; Sơ đồ ghế &ndash;&gt;-->
+<!--        <div class="coach-layout">-->
+<!--          <div class="compartment-label" id="selectedCoachName">Chọn toa để xem sơ đồ ghế</div>-->
+<!--          <div class="seat-grid-scroll">-->
+<!--            <div id="seatGrid"></div>-->
+<!--          </div>-->
+<!--        </div>-->
+<!--        &lt;!&ndash; Loại vé &ndash;&gt;-->
+<!--        <div id="ticketList" style="display: flex; gap: 10px; overflow-x: auto;">-->
+<!--          &lt;!&ndash; Các vé sẽ được render động bằng JavaScript &ndash;&gt;-->
+<!--        </div>-->
+<!--        <div class="ticket-summary">-->
+<!--            <div class="legend">-->
+<!--              <div class="legend-item">-->
+<!--                <div class="legend-icon empty"></div>-->
+<!--                <span>Chỗ trống</span>-->
+<!--              </div>-->
+<!--              <div class="legend-item">-->
+<!--                <div class="legend-icon sold"></div>-->
+<!--                <span>Chỗ đã bán</span>-->
+<!--              </div>-->
+<!--              <div class="legend-item">-->
+<!--                <div class="legend-icon selected"></div>-->
+<!--                <span>Chỗ đang chọn</span>-->
+<!--              </div>-->
+<!--            </div>-->
+<!--            <div class="checkout">-->
+<!--              <div class="selected-count" id="selectedCount"-->
+<!--                   th:data-total="${totalTicket}">-->
+<!--                Đã chọn: 0/<span th:text="${totalTicket}">totalTicket</span> chỗ-->
+<!--              </div>-->
+<!--              <div id="totalPrice">Tổng tiền: 0đ</div>-->
+
+<!--                <button type="button"-->
+<!--                        th:data-trip-id="${trip.id}"-->
+<!--                        onclick="selectDeparture(this)"-->
+<!--                        class="bg-orange-500 hover:bg-yellow-400 text-white font-semibold px-6 py-2 rounded-md">-->
+<!--                  đặt vé-->
+<!--                </button>-->
+<!--            </div>-->
+<!--          </div>-->
+<!--      </div>-->
+<!--    </div>-->
+<!--  </form>-->
+<!--</div>-->
+
+<!--<script>-->
+<!--  function closeModal() {-->
+<!--    document.getElementById("bookingModal").style.display = "none";-->
+<!--  }-->
+<!--  function selectCoach(toa) {-->
+<!--    // logic thay đổi toa và load ghế tương ứng-->
+<!--    console.log("Toa được chọn:", toa);-->
+<!--  }-->
+<!--</script>-->
+
+<!--thời gian đi-->
+<script>
+  let startDate = new Date(); // Ngày đầu tiên được hiển thị
+
+  function formatDate(date) {
+    return date.toLocaleDateString('vi-VN', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+    });
+  }
+
+  function getDayOfWeek(date) {
+    return date.toLocaleDateString('vi-VN', { weekday: 'short' });
+  }
+
+  function renderDays() {
+    const container = document.getElementById("routeDays");
+    container.innerHTML = "";
+
+    for (let i = 0; i < 8; i++) {
+      const current = new Date(startDate);
+      current.setDate(current.getDate() + i);
+
+      const dayDiv = document.createElement("div");
+      dayDiv.className = "day";
+      dayDiv.innerHTML = `
+          <strong>${formatDate(current)}</strong>
+          ${getDayOfWeek(current)}
+        `;
+      container.appendChild(dayDiv);
+    }
+  }
+
+  function prevWeek() {
+    startDate.setDate(startDate.getDate() - 7);
+    renderDays();
+  }
+
+  function nextWeek() {
+    startDate.setDate(startDate.getDate() + 7);
+    renderDays();
+  }
+
+  // Lần đầu render
+  renderDays();
+</script>
+<!--chuyển loại vé-->
+<script>
+  const ticketTypeSelect = document.getElementById("ticketType");
+  const returnDateInput = document.getElementById("returnDate");
+
+  returnDateInput.addEventListener("change", () => {
+    if (ticketTypeSelect.value === "oneway" && returnDateInput.value) {
+      ticketTypeSelect.value = "roundtrip";
+    }
+  });
+</script>
+
+<script th:src="@{/js/user/test.js}"></script>
+
+<!--thể loại vé(form)-->
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const toggleBtn = document.getElementById("ticketToggle");
+    const dropdown = document.getElementById("ticketDropdown");
+    const totalText = document.getElementById("totalTicketCount");
+
+    // Mở/đóng dropdown chọn loại vé
+    toggleBtn.addEventListener("click", () => {
+      dropdown.classList.toggle("hidden");
+    });
+
+    // Cập nhật tổng số vé
+    const updateTotal = () => {
+      const types = ["adult", "child", "senior", "student"];
+      let total = 0;
+
+      types.forEach(type => {
+        const count = parseInt(document.getElementById(type + "Count").textContent);
+        total += count;
+      });
+
+      totalText.textContent = `${total} vé`;
+    };
+
+    // Tăng số lượng vé
+    document.querySelectorAll(".ticket-increase").forEach(button => {
+      button.addEventListener("click", () => {
+        const type = button.dataset.type;
+        const countSpan = document.getElementById(type + "Count");
+        let count = parseInt(countSpan.textContent);
+        count++;
+        countSpan.textContent = count;
+
+        // Gán lại giá trị vào input ẩn
+        const hiddenInput = document.querySelector(`input[name="${type}Quantity"]`);
+        if (hiddenInput) hiddenInput.value = count;
+
+        updateTotal();
+      });
+    });
+
+    // Giảm số lượng vé
+    document.querySelectorAll(".ticket-decrease").forEach(button => {
+      button.addEventListener("click", () => {
+        const type = button.dataset.type;
+        const countSpan = document.getElementById(type + "Count");
+        let count = parseInt(countSpan.textContent);
+        if (count > 0) count--;
+        countSpan.textContent = count;
+
+        // Gán lại giá trị vào input ẩn
+        const hiddenInput = document.querySelector(`input[name="${type}Quantity"]`);
+        if (hiddenInput) hiddenInput.value = count;
+
+        updateTotal();
+      });
+    });
+
+    // Gọi ngay từ đầu để hiển thị tổng vé ban đầu
+    updateTotal();
+  });
+</script>
+
+</body>
+</html>

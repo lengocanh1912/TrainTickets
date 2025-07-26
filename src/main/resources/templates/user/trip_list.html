@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="https://www.thymeleaf.org/thymeleaf-extras-springsecurity6">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Đặt vé tàu online</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link th:href="@{/img/favicon.ico}" rel="shortcut icon" type="image/x-icon">
+  <!-- Bootstrap v5.0.1 -->
+  <link th:href="@{/css/bootstrap.css}" type="text/css" rel="stylesheet">
+  <script th:src="@{/js/bootstrap.bundle.js}" type="text/javascript"></script>
+  <!-- Bootstrap Icons v1.5.0 -->
+  <link th:href="@{/static/css/bootstrap-icons.css}" type="text/css" rel="stylesheet">
+  <!-- Custom Styles -->
+  <link th:href="@{/css/styles.css}" type="text/css" rel="stylesheet">
+  <link rel="stylesheet" th:href="@{/css/bootstrap.min.css}">
+  <link rel="stylesheet" th:href="@{/css/layout.css}">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+  <!-- Bootstrap CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-KyZXEJ10x8bH8tQy4bm8a7Unw7CkCz7Y2pA8a6vFtvbA0hZTkNffpV8V4jeIm9xr" crossorigin="anonymous">
+  <!-- Bootstrap Icons (optional, for the account icon) -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    var changeLanguage = function (dom) {
+      window.location.href = '?lang=' + dom.value;
+    }
+  </script>
+  <style>
+    body {
+      /*background: url('/img/backG.png') no-repeat center center/cover;*/
+      background: url('/img/backG.png') ;
+      min-height: 100vh;
+      font-family: sans-serif;
+    }
+
+    .booking-form {
+      background: rgba(255, 255, 255, 0.95);
+      border-radius: 10px;
+      padding: 40px;
+    }
+
+    .form-section {
+      max-width: 1000px;
+      margin: 100px auto 30px;
+
+    }
+
+    .title {
+      color: white;
+      text-shadow: 1px 1px 2px black;
+    }
+
+    footer {
+      background: white;
+      padding: 20px;
+      text-align: center;
+    }
+  </style>
+  <style>
+    .container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 24px;
+    }
+
+    .card {
+      width: 300px;
+      background: white;
+      padding: 16px;
+      border-radius: 8px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    }
+  </style>
+  <script>
+    const links = document.querySelectorAll('.nav-link');
+
+    links.forEach(link => {
+      link.addEventListener('click', function () {
+        links.forEach(l => l.classList.remove('active')); // Bỏ active ở tất cả các mục
+        this.classList.add('active'); // Thêm active cho mục vừa click
+      });
+    });
+  </script>
+</head>
+<body>
+
+<!-- Navbar -->
+<nav class="navbar navbar-expand-lg navbar-dark bg-primary fixed-top">
+  <div class="container-fluid px-5 ">
+    <a class="navbar-brand" href="#">TrainTicket</a>
+    <div class="navbar-nav">
+      <a class="nav-link text-white" th:href="@{/user/home}" th:classappend="${menu == 'userHome'} ? 'active' ">Home</a>
+      <a class="nav-link text-white" th:href="@{/user/trip/list}" th:classappend="${menu == 'trip'} ? 'active'">Trip</a>
+      <a class="nav-link text-white" href="#">Train Seat</a>
+      <a class="nav-link text-white" th:href="@{/user/trip/list}">Support</a>
+      <a class="nav-link text-white" href="#">Q&A</a>
+    </div>
+
+    <div class="d-flex text-white ms-auto">
+      <!--            <button class="btn btn-light" type="button">-->
+      <a th:href="@{/user/trip/list}" class="nav-link text-white">
+        <i class="bi bi-cart "> Đơn hàng</i>
+      </a>
+      <div class="dropdown">
+        <!-- Nút icon tài khoản -->
+        <button class="btn btn-light" type="button" id="accountDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+          <i class="bi bi-person"></i>
+          <span th:if="${currentUser != null}" th:text="${currentUser.fullname}"></span>
+          <span th:if="${currentUser == null}">Tài khoản</span>
+        </button>
+
+        <!-- Danh sách tùy chọn -->
+        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="accountDropdown">
+
+          <!-- Nếu đã đăng nhập -->
+          <li th:if="${currentUser != null}">
+            <a class="dropdown-item text-primary" th:each="role : ${currentUser.role}"
+               th:if="${role == 'ADMIN'}"
+               th:href="@{/admin/home}">ADMIN</a>
+            <hr>
+          </li>
+          <li th:if="${currentUser != null}">
+            <a class="dropdown-item" th:href="@{/cart/checkout}">Checkout</a>
+          </li>
+          <li th:if="${currentUser != null}">
+            <a class="dropdown-item" th:href="@{/cart/checkout-vnpay}">VNPAY</a>
+          </li>
+          <li th:if="${currentUser != null}">
+            <a class="dropdown-item" th:href="@{/orders}">Đơn hàng</a>
+          </li>
+          <li th:if="${currentUser != null}">
+            <a class="dropdown-item" th:href="@{/wishlist}">Yêu thích</a>
+          </li>
+          <li th:if="${currentUser != null}">
+            <a class="dropdown-item" th:href="@{/logout}">Đăng xuất</a>
+          </li>
+
+          <!-- Nếu chưa đăng nhập -->
+          <li th:if="${currentUser == null}">
+            <a class="dropdown-item" th:href="@{/login}">Đăng nhập</a>
+          </li>
+          <li th:if="${currentUser == null}">
+            <a class="dropdown-item" th:href="@{/register}">Tạo tài khoản</a>
+          </li>
+
+        </ul>
+      </div>
+
+
+    </div>
+  </div>
+</nav>
+
+<!-- Form Section -->
+<div class="form-section text-center">
+
+  <div class="p-6 bg-[#f3f9fd]">
+    <h2 class="text-3xl font-bold mb-2">Các hành trình tàu hỏa phổ biến</h2>
+    <p class="text-gray-600 mb-6">Khám phá những tuyến đường được yêu thích nhất và đặt vé ngay với giá ưu đãi!</p>
+
+    <!-- Bắt đầu lặp trips -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div th:each="trip : ${trips}" class="bg-white rounded-lg shadow p-4 w-full">
+        <!-- Tên tàu -->
+        <span class="inline-block bg-blue-100 text-blue-700 text-sm font-medium px-3 py-1 rounded-full mb-2"
+              th:text="${trip.trainName}">Tên tàu</span>
+
+        <!-- Thông tin hành trình -->
+        <div class="flex justify-between items-center text-lg font-medium">
+          <span th:text="${trip.departureStation}">Ga đi</span>
+          <span class="text-sm text-gray-500" th:text="${trip.duration}">Thời gian →</span>
+          <span th:text="${trip.arrivalStation}">Ga đến</span>
+        </div>
+
+        <!-- Giá vé -->
+<!--        <div class="mt-3 text-cyan-600 text-xl font-bold"-->
+<!--             th:text="${trip.price} + ' đ'">-->
+<!--          th:text="${#numbers.formatDecimal(trip.price, 0, 'POINT', 0, 'COMMA')} + ' đ'"-->
+<!--          Giá-->
+<!--        </div>-->
+        <div class="mt-3 text-cyan-600 text-xl font-bold"
+             th:text="${#numbers.formatDecimal(trip.price, 0, 'POINT', 0, 'COMMA')} + ' đ'">
+
+          Giá
+        </div>
+        <!-- Nút xem -->
+        <a th:href="@{'/user/trip/detail?id=' + ${trip.id}}"
+           class="mt-4 block bg-orange-500 text-white font-semibold py-2 rounded hover:bg-orange-600 text-center">
+          Xem
+        </a>
+      </div>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

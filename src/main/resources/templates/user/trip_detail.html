@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đặt vé tàu</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link th:href="@{/img/favicon.ico}" rel="shortcut icon" type="image/x-icon">
+    <!-- Bootstrap v5.0.1 -->
+    <link th:href="@{/css/bootstrap.css}" type="text/css" rel="stylesheet">
+    <script th:src="@{/js/bootstrap.bundle.js}" type="text/javascript"></script>
+    <!-- Bootstrap Icons v1.5.0 -->
+    <link th:href="@{/static/css/bootstrap-icons.css}" type="text/css" rel="stylesheet">
+    <!-- Custom Styles -->
+    <link th:href="@{/css/styles.css}" type="text/css" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/css/bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/css/layout.css}">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-KyZXEJ10x8bH8tQy4bm8a7Unw7CkCz7Y2pA8a6vFtvbA0hZTkNffpV8V4jeIm9xr" crossorigin="anonymous">
+    <!-- Bootstrap Icons (optional, for the account icon) -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <script>
+        var changeLanguage = function (dom) {
+            window.location.href = '?lang=' + dom.value;
+        }
+    </script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f3f7fa;
+            margin: 0;
+        }
+
+        .container {
+            margin-top: 80px;
+            padding: 0 5cm; /* Cách đều 2 bên 5cm */
+            max-width: 100%;
+            box-sizing: border-box;
+        }
+        .route-days-wrapper {
+            margin-top: 20px;
+            display: flex;
+            align-items: center;
+        }
+
+        .day-button {
+            background: #fff;
+            border: 1px solid #ccc;
+            border-radius: 50%;
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            margin: 0 8px;
+        }
+
+        .route-days {
+            display: flex;
+            gap: 12px;
+            overflow-x: auto;
+            white-space: nowrap;
+            flex-grow: 1;
+        }
+
+        .day {
+            flex: 0 0 auto;
+            background: #fff;
+            padding: 8px 12px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            min-width: 110px;
+            text-align: center;
+        }
+
+        .day strong {
+            display: block;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 0 16px;
+            }
+        }
+    </style>
+
+</head>
+<body class="bg-gray-100 font-sans">
+
+<nav class="navbar navbar-expand-lg navbar-dark bg-primary fixed-top">
+    <div class="container-fluid px-5 ">
+        <a class="navbar-brand" href="#">TrainTicket</a>
+        <div class="navbar-nav">
+            <a class="nav-link text-white" th:href="@{/user/home}" th:classappend="${menu == 'userHome'} ? 'active' ">Home</a>
+            <a class="nav-link text-white" th:href="@{/user/trip/list}" th:classappend="${menu == 'trip'} ? 'active'">Trip</a>
+            <a class="nav-link text-white" href="#">Train Seat</a>
+            <a class="nav-link text-white" th:href="@{/user/support}" th:classappend="${menu == 'support'} ? 'active'">Support</a>
+            <a class="nav-link text-white" href="#">Q&A</a>
+        </div>
+
+        <div class="d-flex text-white ms-auto">
+            <!--            <button class="btn btn-light" type="button">-->
+            <a th:href="@{/user/trip/list}" class="nav-link text-white">
+                <i class="bi bi-cart "> Đơn hàng</i>
+            </a>
+            <div class="dropdown">
+                <!-- Nút icon tài khoản -->
+                <button class="btn btn-light" type="button" id="accountDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                    <i class="bi bi-person"></i>
+                    <span th:if="${currentUser != null}" th:text="${currentUser.fullname}"></span>
+                    <span th:if="${currentUser == null}">Tài khoản</span>
+                </button>
+
+                <!-- Danh sách tùy chọn -->
+                <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="accountDropdown">
+
+                    <!-- Nếu đã đăng nhập -->
+                    <li th:if="${currentUser != null}">
+                        <a class="dropdown-item text-primary" th:each="role : ${currentUser.role}"
+                           th:if="${role == 'ADMIN'}"
+                           th:href="@{/admin/home}">ADMIN</a>
+                        <hr>
+                    </li>
+                    <li th:if="${currentUser != null}">
+                        <a class="dropdown-item" th:href="@{/cart/checkout}">Checkout</a>
+                    </li>
+                    <li th:if="${currentUser != null}">
+                        <a class="dropdown-item" th:href="@{/cart/checkout-vnpay}">VNPAY</a>
+                    </li>
+                    <li th:if="${currentUser != null}">
+                        <a class="dropdown-item" th:href="@{/orders}">Đơn hàng</a>
+                    </li>
+                    <li th:if="${currentUser != null}">
+                        <a class="dropdown-item" th:href="@{/wishlist}">Yêu thích</a>
+                    </li>
+                    <li th:if="${currentUser != null}">
+                        <a class="dropdown-item" th:href="@{/logout}">Đăng xuất</a>
+                    </li>
+
+                    <!-- Nếu chưa đăng nhập -->
+                    <li th:if="${currentUser == null}">
+                        <a class="dropdown-item" th:href="@{/login}">Đăng nhập</a>
+                    </li>
+                    <li th:if="${currentUser == null}">
+                        <a class="dropdown-item" th:href="@{/register}">Tạo tài khoản</a>
+                    </li>
+
+                </ul>
+            </div>
+
+
+        </div>
+    </div>
+</nav>
+
+<div class="container">
+<!-- Thanh chọn loại vé-->
+    <div class="bg-white shadow-md p-4">
+        <div class="bg-black/5 shadow-md p-4">
+            <div class=" row flex justify-between items-center">
+
+                <div class="flex gap-4 p-4">
+                    <select id="ticketType" class="border rounded px-3 py-1 text-sm">
+                        <option value="oneway">Một chiều</option>
+                        <option value="roundtrip">Khứ hồi</option>
+                    </select>
+                    <select id="passengerCount" class="border rounded px-3 py-1 text-sm">
+                        <option>1 khách</option>
+                        <option>2 khách</option>
+                        <option>3 khách</option>
+                    </select>
+                </div>
+
+                <div class="flex flex-wrap md:flex-nowrap items-center justify-between gap-4">
+                        <!-- Ga đi & đến -->
+                        <div class="bg-white flex items-center gap-4 bg-gray-100 rounded-md p-2">
+                            <div class="flex items-center gap-2">
+                                <img src="https://res.ivivu.com/train/images/icon/ic_train.svg" alt="Ga đi" class="w-5 h-5">
+                                <input type="text" placeholder="Hà Nội (HNO)" class="bg-transparent outline-none w-32">
+                            </div>
+
+                            <button class="bg-white rounded-full p-2 shadow-md">
+                                <img src="https://res.ivivu.com/train/images/icon/ic_2wayarrow.svg" alt="Đổi chiều" class="w-4 h-4">
+                            </button>
+
+                            <div class="flex items-center gap-2">
+                                <img src="https://res.ivivu.com/train/images/icon/ic_train.svg" alt="Ga đến" class="w-5 h-5">
+                                <input type="text" placeholder="Hải Phòng (HPH)" class="bg-transparent outline-none w-32">
+                            </div>
+                        </div>
+
+                        <!-- Ngày đi -->
+                        <div class="flex flex-col">
+                            <label class="text-sm text-gray-600">Ngày đi</label>
+                            <input type="date" class="border rounded-md px-2 py-1" id="departureDate">
+                        </div>
+
+                        <!-- Ngày về (luôn hiển thị) -->
+                        <div class="flex flex-col">
+                            <label class="text-sm text-gray-600">Ngày về (khứ hồi)</label>
+                            <input type="date" class="border rounded-md px-2 py-1" id="returnDate">
+                        </div>
+                    <!-- Nút tìm -->
+                    <button class="bg-orange-500 hover:bg-yellow-400 text-white font-semibold px-6 py-2 rounded-md">
+                        Tìm
+                    </button>
+                </div>
+
+            </div>
+        </div>
+    </div>
+<!-- Lịch ngày đi -->
+    <div class=" shadow-md mt-4 ">
+        <!-- Thẻ 1 -->
+        <div class="bg-black/10 shadow-md p-2 m-0">
+            <h2 class="font-semibold text-lg mb-2">Chọn chiều đi</h2>
+        </div>
+
+        <!-- Thẻ 2 -->
+        <div class="bg-white p-4 shadow-md m-0">
+            <!-- Thanh chọn ngày -->
+            <div class="route-days-wrapper">
+                <div class="day-button" onclick="prevWeek()">&lt;</div>
+                <div class="bg-black/5 route-days" id="routeDays"></div>
+                <div class="day-button" onclick="nextWeek()">&gt;</div>
+            </div>
+        </div>
+    </div>
+    <!-- Danh sách tàu -->
+    <div class="bg-white mt-4 p-4 shadow-md space-y-4">
+        <div th:each="trip : ${trips}" class="bg-black/5 border p-4 rounded">
+            <div class="flex justify-between items-center">
+                <!-- Cột 1: Tên tàu và số chỗ -->
+                <div>
+                    <h3 class="font-semibold" th:text="${trip.trainName}">Tàu Hoa Phượng Đỏ - HP1</h3>
+                    <span class="text-sm text-yellow-600 bg-yellow-100 rounded px-2">
+                    Còn 127 chỗ
+                </span>
+                </div>
+
+                <!-- Cột 2: Thông tin giờ ga đi đến -->
+                <div class="text-sm text-center">
+                    <span th:text="${trip.departureStation}">Ga Hà Nội</span>
+                    <strong>06:00</strong> →
+                    <span th:text="${trip.arrivalStation}">Ga Hải Phòng</span>
+                    <strong>08:25</strong><br>
+                    <span class="text-gray-500">28 tháng 05</span>
+                </div>
+
+                <!-- Cột 3: Giá và nút chọn -->
+                <div class="text-right">
+                    <div class="text-orange-600 font-bold"
+                         th:text="'Từ ' + ${trip.price} + ' đ'">
+                        Từ 105.000 đ
+                    </div>
+                    <a th:href="@{'/user/trip/detail?id=' + ${trip.id}}"
+                       class="bg-orange-500 text-white px-4 py-1 mt-1 rounded hover:bg-orange-600 inline-block">
+                        Chọn chỗ
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let startDate = new Date(); // Ngày đầu tiên được hiển thị
+
+    function formatDate(date) {
+        return date.toLocaleDateString('vi-VN', {
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric',
+        });
+    }
+
+    function getDayOfWeek(date) {
+        return date.toLocaleDateString('vi-VN', { weekday: 'short' });
+    }
+
+    function renderDays() {
+        const container = document.getElementById("routeDays");
+        container.innerHTML = "";
+
+        for (let i = 0; i < 8; i++) {
+            const current = new Date(startDate);
+            current.setDate(current.getDate() + i);
+
+            const dayDiv = document.createElement("div");
+            dayDiv.className = "day";
+            dayDiv.innerHTML = `
+          <strong>${formatDate(current)}</strong>
+          ${getDayOfWeek(current)}
+        `;
+            container.appendChild(dayDiv);
+        }
+    }
+
+    function prevWeek() {
+        startDate.setDate(startDate.getDate() - 7);
+        renderDays();
+    }
+
+    function nextWeek() {
+        startDate.setDate(startDate.getDate() + 7);
+        renderDays();
+    }
+
+    // Lần đầu render
+    renderDays();
+</script>
+<script>
+    const ticketTypeSelect = document.getElementById("ticketType");
+    const returnDateInput = document.getElementById("returnDate");
+
+    returnDateInput.addEventListener("change", () => {
+        if (ticketTypeSelect.value === "oneway" && returnDateInput.value) {
+            ticketTypeSelect.value = "roundtrip";
+        }
+    });
+</script>
+
+</body>
+</html>

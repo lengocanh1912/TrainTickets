@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns="http://www.w3.org/1999/html">
+<head>
+    <meta charset="UTF-8">
+    <title>Trang quản trị - TrainTickets</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Bootstrap -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Custom styles -->
+    <link rel="stylesheet" th:href="@{/css/styles.css}">
+    <style>
+        .seat-badge {
+            display: inline-block;
+            background-color: #41cbd0; /* màu xanh bootstrap */
+            color: white;
+            border-radius: 4px;
+            padding: 4px 8px;
+            margin: 4px 6px 4px 0;
+            font-weight: 600;
+            user-select: none;
+            cursor: default;
+        }
+
+    </style>
+</head>
+
+<body style="padding-top: 55px;">
+<!--header frag-->
+<div th:replace="/admin/common/fragments :: header_nav"> </div>
+<!-- Sidebar Fragment -->
+<div th:replace="/admin/common/fragments :: side_navbar"> </div>
+<!-- Main Content -->
+<div class="main-content">
+    <div class="container p-4">
+        <h3 class="mb-4">Tạo tàu mới</h3>
+
+        <!-- Step 1: Nhập thông tin cơ bản -->
+        <div id="trainInfo">
+            <div class="mb-3">
+                <label for="trainName" class="form-label">Tên tàu</label>
+                <input type="text" id="trainName" class="form-control">
+            </div>
+            <div class="mb-3">
+                <label for="trainCode" class="form-label">Mã tàu</label>
+                <input type="text" id="trainCode" class="form-control">
+            </div>
+            <div class="mb-3">
+                <label for="coachCount" class="form-label">Số lượng toa</label>
+                <input type="number" id="coachCount" class="form-control" min="1">
+            </div>
+        </div>
+
+        <!-- Step 2: Cài đặt từng toa -->
+<!--        <div id="coachSetup" style="display: none;">-->
+            <div id="coachSetup" class="card p-4 mt-4" style="display: none; border-radius: 8px; box-shadow: 0 0 8px rgba(0,0,0,0.1); background-color: #fff;">
+
+<!--            <hr>-->
+            <h5 id="coachTitle">Cài đặt toa 1</h5>
+
+            <div class="mb-3">
+                <label for="coachType" class="form-label">Loại toa</label>
+                <select id="coachType" class="form-select" onchange="updateCoachCode()">
+                    <option value="standard">Standard</option>
+                    <option value="vip">VIP</option>
+                </select>
+            </div>
+
+            <div class="mb-3">
+                <label for="coachCapacity" class="form-label">Số lượng chỗ</label>
+                <input type="number" id="coachCapacity" class="form-control" min="1">
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Mã toa: </label>
+                <span id="coachCode" class="fw-bold"></span>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Danh sách mã chỗ ngồi</label>
+                <div id="seatCodes" class="d-flex flex-wrap"></div>
+            </div>
+
+            <div class="d-flex gap-2 mt-4 mb-3">
+                <button class="btn btn-secondary" onclick="prevCoach()" id="prevBtn" style="display:none;">Trước</button>
+                <button class="btn btn-primary" onclick="nextCoach()" id="nextBtn" disabled>Tiếp</button>
+            </div>
+            <!-- ✅ Thêm vào phần này ngay sau nút "Tiếp" -->
+            <div id="coachCompletedMsg" class="alert alert-success mt-3" style="display: none;">
+                Đã nhập đủ thông tin cho tất cả các toa. Hãy ấn nút <strong>Tạo tàu</strong>.
+            </div>
+
+        </div>
+
+        <!-- Submit buttons -->
+        <div id="finalButtons" class="d-flex gap-2 mt-4" style="display: none;">
+            <button class="btn btn-secondary" id="submitBtn" onclick="submitTrain()">Tạo tàu</button>
+            <button class="btn btn-danger" onclick="location.reload()">Hủy</button>
+        </div>
+    </div>
+
+    <script>
+        let train = {
+            name: "",
+            code: "",
+            coachCount: 0,
+            coaches: []
+        };
+
+        let currentCoachIndex = 0;
+
+        document.addEventListener("DOMContentLoaded", function () {
+            const coachInput = document.getElementById("coachCount");
+            coachInput.addEventListener("keypress", function (event) {
+                if (event.key === "Enter") {
+                    event.preventDefault();
+                    handleCoachCountConfirm();
+                }
+            });
+
+            const capacityInput = document.getElementById("coachCapacity");
+            capacityInput.addEventListener("keypress", function (event) {
+                if (event.key === "Enter") {
+                    event.preventDefault();
+                    updateCoachSeats();
+                }
+            });
+        });
+
+        function handleCoachCountConfirm() {
+            const name = document.getElementById("trainName").value.trim();
+            const code = document.getElementById("trainCode").value.trim();
+            const count = parseInt(document.getElementById("coachCount").value);
+
+            if (!name || !code || !count || count <= 0) {
+                return;
+            }
+
+            train.name = name;
+            train.code = code;
+            train.coachCount = count;
+            train.coaches = new Array(count).fill({}).map(() => ({
+                type: "standard",
+                capacity: 0,
+                code: "",
+                seats: []
+            }));
+
+            document.getElementById("coachSetup").style.display = "block";
+            document.getElementById("finalButtons").style.display = "none";
+            document.getElementById("coachCompletedMsg").style.display = "none";
+
+            renderCoachForm();
+        }
+
+        function updateCoachCode() {
+            const type = document.getElementById("coachType").value;
+            const prefix = type === "vip" ? "V" : "S";
+            const coachCode = prefix + (currentCoachIndex + 1);
+            document.getElementById("coachCode").innerText = coachCode;
+        }
+
+        function updateCoachSeats() {
+            const type = document.getElementById("coachType").value;
+            const capacity = parseInt(document.getElementById("coachCapacity").value || 0);
+
+            if (!capacity || capacity <= 0) {
+                alert("Số lượng chỗ phải lớn hơn 0!");
+                return;
+            }
+
+            const coachCode = (type === "vip" ? "V" : "T") + (currentCoachIndex + 1);
+            const seatList = [];
+            for (let i = 1; i <= capacity; i++) {
+                seatList.push(coachCode + i);
+            }
+
+            const seatContainer = document.getElementById("seatCodes");
+            seatContainer.innerHTML = "";
+            seatList.forEach(code => {
+                const span = document.createElement("span");
+                span.className = "seat-badge";
+                span.innerText = code;
+                seatContainer.appendChild(span);
+            });
+
+            train.coaches[currentCoachIndex] = {
+                type,
+                capacity,
+                code: coachCode,
+                seats: seatList
+            };
+
+            document.getElementById("nextBtn").disabled = false;
+            checkIfAllCoachesComplete();
+        }
+
+        function renderCoachForm() {
+            document.getElementById("coachTitle").innerText = `Cài đặt toa ${currentCoachIndex + 1}`;
+            document.getElementById("coachType").value = train.coaches[currentCoachIndex].type;
+            document.getElementById("coachCapacity").value = train.coaches[currentCoachIndex].capacity || "";
+            updateCoachCode();
+
+            const seats = train.coaches[currentCoachIndex].seats || [];
+            const seatContainer = document.getElementById("seatCodes");
+            seatContainer.innerHTML = "";
+            seats.forEach(code => {
+                const span = document.createElement("span");
+                span.className = "seat-badge";
+                span.innerText = code;
+                seatContainer.appendChild(span);
+            });
+
+            document.getElementById("prevBtn").style.display = currentCoachIndex > 0 ? "inline-block" : "none";
+            document.getElementById("nextBtn").innerText = "Tiếp";
+            document.getElementById("nextBtn").disabled = !train.coaches[currentCoachIndex].capacity;
+        }
+
+        function nextCoach() {
+            updateCoachSeats();
+
+            if (!train.coaches[currentCoachIndex].capacity) {
+                alert("Vui lòng nhập và xác nhận số chỗ (ấn Enter) cho toa.");
+                return;
+            }
+
+            if (currentCoachIndex < train.coachCount - 1) {
+                currentCoachIndex++;
+                renderCoachForm();
+            }
+
+            checkIfAllCoachesComplete();
+        }
+
+        function prevCoach() {
+            if (currentCoachIndex > 0) {
+                currentCoachIndex--;
+                renderCoachForm();
+            }
+        }
+
+        function checkIfAllCoachesComplete() {
+            const allFilled = train.coaches.every(c => c.capacity > 0 && c.code && c.seats.length > 0);
+            const completedMsg = document.getElementById("coachCompletedMsg");
+            const finalButtons = document.getElementById("finalButtons");
+            const submitBtn = document.getElementById("submitBtn");
+
+            if (allFilled) {
+                completedMsg.style.display = "block";
+                finalButtons.style.display = "flex";
+                submitBtn.classList.remove("btn-secondary");
+                submitBtn.classList.add("btn-success");
+            } else {
+                completedMsg.style.display = "none";
+                finalButtons.style.display = "none";
+                submitBtn.classList.remove("btn-success");
+                submitBtn.classList.add("btn-secondary");
+            }
+        }
+        function submitTrain() {
+            // In ra dữ liệu trước khi gửi
+            console.log(JSON.stringify(train, null, 2));
+
+            fetch("/trainticket/api/admin/trains", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(train)
+            })
+                .then(response => {
+                    if (response.ok) {
+                        alert("Tạo tàu thành công!");
+                        window.location.href = "/trainticket/admin/train/view";
+                    } else {
+                        alert("Tạo tàu thất bại!");
+                    }
+                })
+                .catch(error => {
+                    console.error("Lỗi:", error);
+                    alert("Đã xảy ra lỗi khi gửi dữ liệu.");
+                });
+        }
+
+    </script>
+
+</div>
+
+</body>
+</html>

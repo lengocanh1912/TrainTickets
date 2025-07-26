@@ -1,0 +1,73 @@
+<div class="bg-white mt-4 p-4 shadow-md space-y-4">
+    <div class="bg-black/5 border p-4 rounded">
+        <div th:each="trip : ${departureTrips}">
+            <div class="flex justify-between items-center">
+                <!-- Cột 1: Tên tàu và số chỗ -->
+                <div>
+                    <h3 style="margin-bottom: 16px;" class="font-semibold fs-3" th:text="${trip.trainName}"></h3>
+                    <span style="margin-bottom: 16px;" class="text-sm text-yellow-600 bg-yellow-100 rounded px-2">
+                    Còn 127 chỗ
+                </span>
+                </div>
+                <!-- Cột 2: Thông tin giờ ga đi, đến -->
+                <div class="text-sm text-center fs-5">
+                    <div style="display: flex; justify-content: center; gap: 20px; width: 100%; max-width: 1000px; margin: 0 auto;">
+
+                        <!-- Bên trái: Thông tin ga đi -->
+                        <div style="width: 200px">
+                            <div style="margin-bottom: 16px;" th:text="${trip.departureStation}"></div>
+                            <div style="margin-bottom: 16px;">
+                                <strong th:text="${#temporals.format(trip.departureAt, 'HH:mm')}"></strong>
+                            </div>
+                            <span class="text-gray-500">
+        <span th:text="${#temporals.format(trip.departureAt, 'dd')}"></span>
+        <span> tháng </span>
+        <span th:text="${#temporals.format(trip.departureAt, 'MM')}"></span>
+      </span>
+                        </div>
+
+                        <!-- Giữa: Thời gian đi + mũi tên -->
+                        <span>
+      <div style="display: flex; flex-direction: column; align-items: center; gap: 4px; margin: 0 52px;">
+        <div style="font-weight: bold; font-size: 20px;">
+          <span class="text-gray-500" th:text="${trip.duration}">0h00p</span>
+        </div>
+        <svg width="150" height="30" viewBox="0 0 150 30" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <line x1="0" y1="15" x2="120" y2="15" stroke="black" stroke-width="6"/>
+          <polygon points="120,0 150,15 120,30" fill="black"/>
+        </svg>
+      </div>
+    </span>
+
+                        <!-- Bên phải: Thông tin ga đến -->
+                        <div style="width: 200px">
+                            <div style="margin-bottom: 16px;" th:text="${trip.arrivalStation}"></div>
+                            <div style="margin-bottom: 16px;">
+                                <strong th:text="${#temporals.format(trip.arrivalAt, 'HH:mm')}"></strong>
+                            </div>
+                            <span class="text-gray-500">
+        <span th:text="${#temporals.format(trip.arrivalAt, 'dd')}"></span>
+        <span> tháng </span>
+        <span th:text="${#temporals.format(trip.arrivalAt, 'MM')}"></span>
+      </span>
+                        </div>
+
+                    </div>
+                </div>
+
+                <!-- Cột 3: Giá và nút chọn -->
+                <div class="text-right">
+                    <div style="margin-bottom: 16px;">
+                        <span>Từ</span>
+                        <span class="text-orange-600 font-bold"
+                              th:text="${#numbers.formatDecimal(trip.price, 0, 'POINT', 0, 'COMMA')} + ' đ'">
+               </span>
+                    </div>
+                    <button onclick="openModal()"
+                            class="bg-orange-500 hover:bg-yellow-400 text-white font-semibold
+                    px-6 py-2 rounded-md">chọn chỗ</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

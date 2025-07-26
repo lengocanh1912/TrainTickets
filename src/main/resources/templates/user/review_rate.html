@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Đánh giá chuyến đi</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f2f2f2;
+            margin: 0;
+            padding: 0;
+        }
+
+        .review-container {
+            max-width: 600px;
+            background: white;
+            margin: 40px auto;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        h2 {
+            text-align: center;
+            color: #333;
+        }
+
+        label {
+            display: block;
+            margin-top: 15px;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+
+        select, textarea, input[type="file"] {
+            width: 100%;
+            padding: 10px;
+            border-radius: 6px;
+            border: 1px solid #ccc;
+            box-sizing: border-box;
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .rating-stars {
+            display: flex;
+            flex-direction: row-reverse;
+            justify-content: flex-end;
+            margin-top: 5px;
+        }
+
+        .rating-stars input {
+            display: none;
+        }
+
+        .rating-stars label {
+            font-size: 25px;
+            color: #ccc;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+
+        .rating-stars input:checked ~ label,
+        .rating-stars label:hover,
+        .rating-stars label:hover ~ label {
+            color: #ffcc00;
+        }
+
+        .submit-btn {
+            display: block;
+            width: 100%;
+            padding: 12px;
+            margin-top: 20px;
+            background-color: #4CAF50;
+            color: white;
+            font-weight: bold;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+
+        .submit-btn:hover {
+            background-color: #45a049;
+        }
+
+        .file-note {
+            font-size: 12px;
+            color: gray;
+        }
+    </style>
+</head>
+<body>
+<div class="review-container">
+    <h2>Đánh giá chuyến đi</h2>
+    <form th:action="@{/user/review/submit}" method="post" enctype="multipart/form-data">
+        <input type="hidden" name="orderId" th:value="${orderId}" />
+
+        <label>Chọn số sao:</label>
+        <div class="rating-stars">
+            <input type="radio" id="star5" name="rating" value="5"><label for="star5">★</label>
+            <input type="radio" id="star4" name="rating" value="4"><label for="star4">★</label>
+            <input type="radio" id="star3" name="rating" value="3"><label for="star3">★</label>
+            <input type="radio" id="star2" name="rating" value="2"><label for="star2">★</label>
+            <input type="radio" id="star1" name="rating" value="1"><label for="star1">★</label>
+        </div>
+
+        <label>Nội dung đánh giá:</label>
+        <textarea name="content" placeholder="Hãy chia sẻ trải nghiệm chuyến đi của bạn..."></textarea>
+
+        <label>Ảnh minh chuyến đi (không bắt buộc):</label>
+        <input type="file" name="images" multiple accept="image/*" />
+        <div class="file-note">Bạn có thể chọn nhiều ảnh (tối đa 5)</div>
+
+        <button type="submit" class="submit-btn">Gửi đánh giá</button>
+    </form>
+</div>
+</body>
+</html>

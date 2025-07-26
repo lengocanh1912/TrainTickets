@@ -1,0 +1,1016 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org" xmlns:sec="https://www.thymeleaf.org/thymeleaf-extras-springsecurity6">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Đặt vé tàu online</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+
+
+  <script>
+    var changeLanguage = function (dom) {
+      window.location.href = '?lang=' + dom.value;
+    }
+  </script>
+
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      /*background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);*/
+      background-color: white !importan;
+      /*background: linear-gradient(to right, #d0eaff, #b3d9ff) ;*/
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* Background with train image */
+    .hero-bg {
+      background: linear-gradient(135deg, rgba(99, 102, 241, 0.85) 0%, rgba(139, 92, 246, 0.8) 100%),
+      url('https://res.ivivu.com/train/images/bg-train.jpg') center/cover;
+      min-height: 100vh;
+      position: relative;
+    }
+
+    /* Navbar */
+    .navbar {
+      background: rgba(13, 110, 253, 0.95) !important;
+      backdrop-filter: blur(20px);
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      padding: 1rem 0;
+    }
+
+    .navbar-brand {
+      font-weight: 800;
+      font-size: 1.75rem;
+      color: white !important;
+    }
+
+    .nav-link {
+      color: rgba(255, 255, 255, 0.9) !important;
+      font-weight: 500;
+      padding: 0.75rem 1rem !important;
+      border-radius: 0.75rem;
+      transition: all 0.3s ease;
+      margin: 0 0.25rem;
+    }
+
+    .nav-link:hover, .nav-link.active {
+      color: white !important;
+      background: rgba(255, 255, 255, 0.15);
+      transform: translateY(-1px);
+    }
+
+    .btn-light {
+      background: rgba(255, 255, 255, 0.9);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 0.75rem;
+      font-weight: 600;
+      padding: 0.75rem 1.25rem;
+      transition: all 0.3s ease;
+    }
+
+    .btn-light:hover {
+      background: white;
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+    }
+
+    /* Main content area */
+    .main-content {
+      padding-top: 120px;
+      padding-bottom: 60px;
+    }
+
+    /* Booking card */
+    .booking-card {
+      background: rgba(255, 255, 255, 0.98);
+      backdrop-filter: blur(20px);
+      border-radius: 2rem;
+      box-shadow: 0 32px 64px rgba(0, 0, 0, 0.15);
+      padding: 3rem;
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .booking-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: linear-gradient(90deg, #6366f1, #f59e0b, #10b981);
+    }
+
+    /* Header styling */
+    .booking-header h1 {
+      font-size: 2.5rem;
+      font-weight: 800;
+      color: #1e40af;
+      margin-bottom: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .stats-badge {
+      background: linear-gradient(135deg, #ef4444, #dc2626);
+      color: white;
+      padding: 0.5rem 1rem;
+      border-radius: 2rem;
+      font-size: 0.875rem;
+      font-weight: 600;
+      animation: pulse 2s infinite;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .rating-info {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin-top: 0.5rem;
+    }
+
+    .rating-badge {
+      background: #10b981;
+      color: white;
+      padding: 0.25rem 0.75rem;
+      border-radius: 0.5rem;
+      font-weight: 600;
+    }
+
+    /* Form styling */
+    .booking-form {
+      background: rgba(0, 0, 0, 0.03);
+      border-radius: 1.5rem;
+      padding: 2rem;
+      margin-top: 2rem;
+    }
+
+    .form-section {
+      background: white;
+      border: 2px solid #e5e7eb;
+      border-radius: 1rem;
+      padding: 1.5rem;
+      transition: all 0.3s ease;
+    }
+
+    .form-section:hover {
+      border-color: #6366f1;
+      transform: translateY(-2px);
+      box-shadow: 0 10px 25px rgba(99, 102, 241, 0.1);
+    }
+
+    /* Trip type and ticket quantity */
+    .trip-controls {
+      display: flex;
+      gap: 1.5rem;
+      margin-bottom: 2rem;
+    }
+
+    .control-group {
+      flex: 1;
+    }
+
+    .control-label {
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: #374151;
+      margin-bottom: 0.5rem;
+      display: block;
+      text-align: center;
+    }
+
+    .form-select, .form-control {
+      border: 2px solid #e5e7eb;
+      border-radius: 0.75rem;
+      padding: 0.75rem 1rem;
+      font-weight: 500;
+      transition: all 0.3s ease;
+    }
+
+    .form-select:focus, .form-control:focus {
+      border-color: #6366f1;
+      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+    }
+
+    /* Ticket dropdown */
+    .ticket-selector {
+      position: relative;
+    }
+
+    .ticket-toggle {
+      width: 100%;
+      background: white;
+      border: 2px solid #e5e7eb;
+      border-radius: 0.75rem;
+      padding: 0.75rem 1rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .ticket-toggle:hover {
+      border-color: #6366f1;
+    }
+
+    .ticket-dropdown {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      right: 0;
+      background: white;
+      border: 2px solid #e5e7eb;
+      border-radius: 1rem;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+      padding: 1.5rem;
+      z-index: 1000;
+      margin-top: 0.5rem;
+    }
+
+    .ticket-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem 0;
+      border-bottom: 1px solid #e5e7eb;
+    }
+
+    .ticket-row:last-child {
+      border-bottom: none;
+    }
+
+    .ticket-info h6 {
+      font-weight: 600;
+      color: #1f2937;
+      margin: 0 0 0.25rem 0;
+    }
+
+    .ticket-info p {
+      font-size: 0.8rem;
+      color: #6b7280;
+      margin: 0;
+    }
+
+    .quantity-controls {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .quantity-btn {
+      width: 2.5rem;
+      height: 2.5rem;
+      border: 2px solid #e5e7eb;
+      background: white;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .quantity-btn:hover {
+      border-color: #6366f1;
+      background: #6366f1;
+      color: white;
+    }
+
+    .quantity-display {
+      font-weight: 600;
+      color: #1f2937;
+      min-width: 2rem;
+      text-align: center;
+    }
+
+    /* Station selector */
+    .station-selector {
+      background: linear-gradient(145deg, #f8fafc, #e2e8f0);
+      border-radius: 1.5rem;
+      padding: 1.5rem;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      transition: all 0.3s ease;
+    }
+
+    .station-selector:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+    }
+
+    .station-input {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .station-icon {
+      width: 1.5rem;
+      height: 1.5rem;
+      color: #6366f1;
+    }
+
+    .station-input input {
+      border: none;
+      background: transparent;
+      outline: none;
+      font-weight: 500;
+      color: #1f2937;
+      width: 100%;
+    }
+
+    .station-input input::placeholder {
+      color: #9ca3af;
+    }
+
+    .swap-btn {
+      width: 3rem;
+      height: 3rem;
+      background: linear-gradient(135deg, #6366f1, #4f46e5);
+      border: none;
+      border-radius: 50%;
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.3s ease;
+      cursor: pointer;
+    }
+
+    .swap-btn:hover {
+      transform: rotate(180deg) scale(1.1);
+      box-shadow: 0 8px 25px rgba(99, 102, 241, 0.3);
+    }
+
+    /* Date selector */
+    .date-section {
+      display: flex;
+      gap: 2rem;
+      margin: 2rem 0;
+    }
+
+    .date-selector {
+      flex: 1;
+      background: white;
+      border: 2px solid #e5e7eb;
+      border-radius: 1rem;
+      padding: 1.25rem;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      position: relative;
+    }
+
+    .date-selector:hover {
+      border-color: #6366f1;
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(99, 102, 241, 0.15);
+    }
+
+    .date-selector input[type="date"] {
+      position: absolute;
+      inset: 0;
+      z-index: 10;
+      cursor: pointer;
+      background: transparent;
+      color: transparent;
+      border: none;
+    }
+
+
+    .date-icon {
+      width: 3rem;
+      height: 3rem;
+      background: linear-gradient(135deg, #f59e0b, #d97706);
+      border-radius: 0.75rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 1.25rem;
+      flex-shrink: 0;
+    }
+
+    .date-info {
+      flex: 1;
+    }
+
+    .date-info h4 {
+      font-size: 1rem;
+      font-weight: 600;
+      color: #1f2937;
+      margin: 0 0 0.25rem 0;
+    }
+
+    .date-info p {
+      font-size: 0.875rem;
+      color: #6b7280;
+      margin: 0;
+    }
+
+    /* Search button */
+    .search-btn {
+      background: linear-gradient(135deg, #f59e0b, #d97706);
+      border: none;
+      border-radius: 1rem;
+      padding: 1.25rem 2rem;
+      color: white;
+      font-size: 1.1rem;
+      font-weight: 700;
+      width: 100%;
+      margin-top: 1rem;
+      transition: all 0.3s ease;
+      box-shadow: 0 8px 25px rgba(245, 158, 11, 0.3);
+    }
+
+    .search-btn:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 15px 35px rgba(245, 158, 11, 0.4);
+      background: linear-gradient(135deg, #d97706, #f59e0b);
+    }
+
+    /* Footer */
+    .footer-section {
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(15px);
+      border-radius: 1.5rem;
+      padding: 2rem;
+      margin-top: 3rem;
+    }
+
+    .feature-item {
+      text-align: center;
+      padding: 1rem;
+    }
+
+    .feature-item p {
+      font-weight: 600;
+      color: #1f2937;
+      margin-bottom: 0.5rem;
+    }
+
+    .feature-item small {
+      color: #6b7280;
+    }
+
+    /* Map section */
+    .map-section {
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(15px);
+      border-radius: 1.5rem;
+      padding: 3rem;
+      margin-top: 3rem;
+    }
+
+    .map-section h1, .map-section h5 {
+      color: #1f2937;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .booking-header h1 {
+        font-size: 1.75rem;
+        flex-direction: column;
+        gap: 0.5rem;
+        text-align: center;
+      }
+
+      .trip-controls {
+        flex-direction: column;
+        gap: 1rem;
+      }
+
+      .station-selector {
+        flex-direction: column;
+        gap: 1.5rem;
+      }
+
+      .swap-btn {
+        transform: rotate(90deg);
+      }
+
+      .date-section {
+        flex-direction: column;
+        gap: 1rem;
+      }
+
+      .booking-card {
+        padding: 1.5rem;
+        margin: 1rem;
+      }
+    }
+
+    /* Animations */
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    .form-input, .form-select, .beautiful-input {
+      width: 100%;
+      padding: 15px;
+      border: 2px solid #e9ecef;
+      border-radius: 12px;
+      font-size: 1rem;
+      transition: all 0.3s ease;
+      background: #fff;
+      color: #495057;
+    }
+
+    .form-input:focus, .form-select:focus, .beautiful-input:focus {
+      outline: none;
+      border-color: #667eea;
+      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+      transform: translateY(-1px);
+    }
+    .date-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+    .date-grid {
+      grid-template-columns: 1fr;
+    }
+  </style>
+</head>
+
+<body class="hero-bg">
+<!-- Navbar -->
+<nav class="navbar navbar-expand-lg navbar-dark fixed-top">
+  <div class="container-fluid px-5">
+    <a class="navbar-brand" href="#">TrainTicket</a>
+    <div class="navbar-nav">
+      <a class="nav-link" th:href="@{/user/home}" th:classappend="${menu == 'userHome'} ? 'active'">Home</a>
+      <a class="nav-link" th:href="@{/user/trip/list}" th:classappend="${menu == 'trip'} ? 'active'">Trip</a>
+      <a class="nav-link" href="#">Train Seat</a>
+      <a class="nav-link" th:href="@{/user/support}" th:classappend="${menu == 'support'} ? 'active'">Support</a>
+      <a class="nav-link" href="#">Q&A</a>
+    </div>
+
+    <div class="d-flex text-white ms-auto">
+      <a th:href="@{/user/order/view}" class="nav-link text-white">
+        <i class="bi bi-cart"> Đơn hàng</i>
+      </a>
+      <div class="dropdown">
+        <button class="btn btn-light" type="button" id="accountDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+          <i class="bi bi-person"></i>
+          <span th:if="${currentUser != null}" th:text="${currentUser.fullname}"></span>
+          <span th:if="${currentUser == null}">Tài khoản</span>
+        </button>
+
+        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="accountDropdown">
+          <!-- Nếu đã đăng nhập -->
+          <li th:if="${currentUser != null}">
+            <a class="dropdown-item text-primary" th:each="role : ${currentUser.role}"
+               th:if="${role == 'ADMIN'}" th:href="@{/admin/home}">ADMIN</a>
+            <hr class="">
+          </li>
+          <li th:if="${currentUser != null}">
+            <a class="dropdown-item" th:href="@{/cart/checkout}">Checkout</a>
+          </li>
+          <li th:if="${currentUser != null}">
+            <a class="dropdown-item" th:href="@{/cart/checkout-vnpay}">VNPAY</a>
+          </li>
+          <li th:if="${currentUser != null}">
+            <a class="dropdown-item" th:href="@{/orders}">Đơn hàng</a>
+          </li>
+          <li th:if="${currentUser != null}">
+            <a class="dropdown-item" th:href="@{/wishlist}">Yêu thích</a>
+          </li>
+          <li th:if="${currentUser != null}">
+            <a class="dropdown-item" th:href="@{/logout}">Đăng xuất</a>
+          </li>
+
+          <!-- Nếu chưa đăng nhập -->
+          <li th:if="${currentUser == null}">
+            <a class="dropdown-item" th:href="@{/login}">Đăng nhập</a>
+          </li>
+          <li th:if="${currentUser == null}">
+            <a class="dropdown-item" th:href="@{/register}">Tạo tài khoản</a>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<!-- Main Content -->
+<div class="main-content">
+  <div class="container">
+    <div class="row justify-content-center">
+      <div class="col-12 col-xl-10">
+        <div class="booking-card">
+          <!-- Header -->
+          <div class="booking-header">
+            <h1>
+              Đặt vé tàu hỏa online
+              <span class="stats-badge">
+                                    🔥 1000 khách đặt vé trong 24 giờ qua
+                                </span>
+            </h1>
+            <div class="rating-info">
+              <p class="text-muted mb-0">Nhận ngay vé điện tử - lên tàu nhanh!</p>
+              <span class="rating-badge">9.6</span>
+              <a href="#" class="text-decoration-none text-primary">37 đánh giá</a>
+            </div>
+          </div>
+
+          <!-- Booking Form -->
+          <form class="booking-form" method="get" th:action="@{/user/trip/search}">
+            <!-- Trip Type & Ticket Quantity -->
+            <div class="trip-controls">
+              <div class="control-group">
+                <label class="control-label">Loại vé</label>
+                <select id="ticketType" name="tripType" class="form-select">
+                  <option value="oneway">Một chiều</option>
+                  <option value="roundtrip">Khứ hồi</option>
+                </select>
+              </div>
+
+              <div class="control-group">
+                <label class="control-label">Số lượng vé</label>
+                <div class="ticket-selector">
+                  <button id="ticketToggle" type="button" class="ticket-toggle">
+                    <span id="totalTicketCount">1 vé</span>
+                    <i class="bi bi-chevron-down"></i>
+                  </button>
+
+                  <div id="ticketDropdown" class="ticket-dropdown hidden">
+                    <!-- Người lớn -->
+                    <div class="ticket-row">
+                      <div class="ticket-info">
+                        <h6>Người lớn</h6>
+                        <p>Từ 11 - 59 tuổi</p>
+                      </div>
+                      <div class="quantity-controls">
+                        <button type="button" class="quantity-btn ticket-decrease" data-type="adult">−</button>
+                        <span class="quantity-display" id="adultCount">1</span>
+                        <button type="button" class="quantity-btn ticket-increase" data-type="adult">+</button>
+                        <input type="hidden" name="adultQuantity" value="1">
+                      </div>
+                    </div>
+
+                    <!-- Trẻ em -->
+                    <div class="ticket-row">
+                      <div class="ticket-info">
+                        <h6>Trẻ em <span class="badge bg-warning text-dark">-25%</span></h6>
+                        <p>Từ 6 - 10 tuổi</p>
+                      </div>
+                      <div class="quantity-controls">
+                        <button type="button" class="quantity-btn ticket-decrease" data-type="child">−</button>
+                        <span class="quantity-display" id="childCount">0</span>
+                        <button type="button" class="quantity-btn ticket-increase" data-type="child">+</button>
+                        <input type="hidden" name="childQuantity" value="0">
+                      </div>
+                    </div>
+
+                    <!-- Người cao tuổi -->
+                    <div class="ticket-row">
+                      <div class="ticket-info">
+                        <h6>Người cao tuổi <span class="badge bg-info">-15%</span></h6>
+                        <p>Từ 60 tuổi</p>
+                      </div>
+                      <div class="quantity-controls">
+                        <button type="button" class="quantity-btn ticket-decrease" data-type="senior">−</button>
+                        <span class="quantity-display" id="seniorCount">0</span>
+                        <button type="button" class="quantity-btn ticket-increase" data-type="senior">+</button>
+                        <input type="hidden" name="seniorQuantity" value="0">
+                      </div>
+                    </div>
+
+                    <!-- Sinh viên -->
+                    <div class="ticket-row">
+                      <div class="ticket-info">
+                        <h6>Sinh viên <span class="badge bg-success">-10%</span></h6>
+                        <p>Thẻ SV</p>
+                      </div>
+                      <div class="quantity-controls">
+                        <button type="button" class="quantity-btn ticket-decrease" data-type="student">−</button>
+                        <span class="quantity-display" id="studentCount">0</span>
+                        <button type="button" class="quantity-btn ticket-increase" data-type="student">+</button>
+                        <input type="hidden" name="studentQuantity" value="0">
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Station Selector -->
+            <div class="form-section mb-4">
+              <div class="station-selector">
+                <div class="station-input">
+                  <i class="bi bi-train-front station-icon"></i>
+                  <input list="stationF" type="text" name="departureName"
+                         placeholder="Chọn ga đi" required>
+                  <datalist id="stationF">
+                    <option th:each="station : ${stations}" th:text="${station.name}"></option>
+                  </datalist>
+                </div>
+
+                <button type="button" class="swap-btn">
+                  <i class="bi bi-arrow-left-right"></i>
+                </button>
+
+                <div class="station-input">
+                  <i class="bi bi-geo-alt-fill station-icon"></i>
+                  <input list="stationT" type="text" name="arrivalName"
+                         placeholder="Chọn ga đến" required>
+                  <datalist id="stationT">
+                    <option th:each="station : ${stations}" th:text="${station.name}"></option>
+                  </datalist>
+                </div>
+              </div>
+            </div>
+
+<!--            &lt;!&ndash; Date Selection &ndash;&gt;-->
+<!--            <div class="date-section">-->
+<!--              <label for="departureDate" class="date-selector">-->
+<!--                <div class="date-icon">-->
+<!--                  <i class="bi bi-calendar-event"></i>-->
+<!--                </div>-->
+<!--                <div class="date-info">-->
+<!--                  <h4 id="departureDay">Thứ ...</h4>-->
+<!--                  <p id="departureFormatted">__/__/____</p>-->
+<!--                </div>-->
+<!--              </label>-->
+<!--              <input type="date" id="departureDate" name="departureDate" class="d-none">-->
+
+<!--              <label for="returnDate" class="date-selector">-->
+<!--                <div class="date-icon" style="background: linear-gradient(135deg, #10b981, #059669);">-->
+<!--                  <i class="bi bi-calendar-heart"></i>-->
+<!--                </div>-->
+<!--                <div class="date-info">-->
+<!--                  <h4 id="returnDay">Ngày về (Khứ hồi)</h4>-->
+<!--                  <p id="returnFormatted">Chọn nếu mua vé về</p>-->
+<!--                </div>-->
+<!--              </label>-->
+<!--              <input type="date" id="returnDate" name="returnDate" class="d-none">-->
+<!--            </div>-->
+
+            <!-- Ngày đi và ngày về -->
+            <div class="date-grid">
+              <div class="form-group">
+                <label class="form-label" for="departureDate">📅 Ngày đi</label>
+                <input type="date" class="beautiful-input" id="departureDate" name="departureDate" required>
+              </div>
+              <div class="form-group return-date" id="returnDateGroup">
+                <label class="form-label" for="returnDate">📅 Ngày về</label>
+                <input type="date" class="beautiful-input" id="returnDate" name="returnDate">
+              </div>
+            </div>
+
+            <button class="search-btn" type="submit">
+              <i class="bi bi-search me-2"></i>
+              Tìm chuyến
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Footer -->
+<div class="container">
+  <div class="footer-section">
+    <div class="row">
+      <div class="col-md-4">
+        <div class="feature-item">
+          <p>🚆 Tìm chuyến tàu phù hợp</p>
+          <small>Lựa chọn lịch trình linh hoạt</small>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="feature-item">
+          <p>📩 Đặt vé nhanh, dễ dàng</p>
+          <small>Nhận vé ngay sau khi đặt</small>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="feature-item">
+          <p>📞 Luôn sẵn sàng hỗ trợ</p>
+          <small>Phản hồi trong 15 phút qua điện thoại, Zalo</small>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Map Section -->
+<div class="container">
+  <div class="map-section">
+    <div class="px-3">
+      <h1>Bản đồ tuyến đường sắt Việt Nam</h1>
+      <h5 class="text-muted mb-4">Xem thông tin chi tiết về các tuyến tàu hỏa, lịch trình và điểm dừng</h5>
+      <div class="text-center bg-light rounded-4 p-5">
+        <i class="bi bi-map display-1 text-muted"></i>
+        <p class="text-muted mt-3">Bản đồ tuyến đường sắt sẽ hiển thị tại đây</p>
+        <img th:src="@{/img/mapVN.png}" class="img-fluid" style="max-width: 100%; height: auto; border-radius: 1rem;">
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Customer Reviews Section -->
+<div class="container">
+  <div class="map-section">
+    <div class="px-3">
+      <h1>Đánh giá của khách hàng sử dụng dịch vụ đặt vé tàu hỏa</h1>
+      <div class="text-center">
+        <p class="text-muted">Hàng nghìn khách hàng tin tưởng sử dụng dịch vụ của chúng tôi</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Scripts -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+<!-- Active nav script -->
+<script>
+  const links = document.querySelectorAll('.nav-link');
+  links.forEach(link => {
+    link.addEventListener('click', function () {
+      links.forEach(l => l.classList.remove('active'));
+      this.classList.add('active');
+    });
+  });
+</script>
+
+<!-- Trip type and return date script -->
+<script>
+  const ticketTypeSelect = document.getElementById("ticketType");
+  const returnDateInput = document.getElementById("returnDate");
+
+  returnDateInput.addEventListener("change", () => {
+    if (ticketTypeSelect.value === "oneway" && returnDateInput.value) {
+      ticketTypeSelect.value = "roundtrip";
+    }
+  });
+</script>
+
+<!-- Station swap script -->
+<script>
+  document.querySelector(".swap-btn").addEventListener("click", () => {
+    const from = document.querySelector("input[name='departureName']");
+    const to = document.querySelector("input[name='arrivalName']");
+    const temp = from.value;
+    from.value = to.value;
+    to.value = temp;
+  });
+</script>
+
+<!-- Ticket quantity dropdown script -->
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const toggleBtn = document.getElementById("ticketToggle");
+    const dropdown = document.getElementById("ticketDropdown");
+    const totalText = document.getElementById("totalTicketCount");
+
+    // Toggle dropdown
+    toggleBtn.addEventListener("click", () => {
+      dropdown.classList.toggle("hidden");
+    });
+
+    // Close dropdown when clicking outside
+    document.addEventListener("click", (e) => {
+      if (!toggleBtn.contains(e.target) && !dropdown.contains(e.target)) {
+        dropdown.classList.add("hidden");
+      }
+    });
+
+    // Update total count
+    const updateTotal = () => {
+      const types = ["adult", "child", "senior", "student"];
+      let total = 0;
+
+      types.forEach(type => {
+        const count = parseInt(document.getElementById(type + "Count").textContent);
+        total += count;
+      });
+
+      totalText.textContent = `${total} vé`;
+    };
+
+    // Increase quantity
+    document.querySelectorAll(".ticket-increase").forEach(button => {
+      button.addEventListener("click", () => {
+        const type = button.dataset.type;
+        const countSpan = document.getElementById(type + "Count");
+        let count = parseInt(countSpan.textContent);
+        count++;
+        countSpan.textContent = count;
+
+        // Update hidden input
+        const hiddenInput = document.querySelector(`input[name="${type}Quantity"]`);
+        if (hiddenInput) hiddenInput.value = count;
+
+        updateTotal();
+      });
+    });
+
+    // Decrease quantity
+    document.querySelectorAll(".ticket-decrease").forEach(button => {
+      button.addEventListener("click", () => {
+        const type = button.dataset.type;
+        const countSpan = document.getElementById(type + "Count");
+        let count = parseInt(countSpan.textContent);
+
+        // Don't allow adult count to go below 1
+        if (type === 'adult' && count <= 1) return;
+        if (count > 0) count--;
+
+        countSpan.textContent = count;
+
+        // Update hidden input
+        const hiddenInput = document.querySelector(`input[name="${type}Quantity"]`);
+        if (hiddenInput) hiddenInput.value = count;
+
+        updateTotal();
+      });
+    });
+
+    // Initialize total
+    updateTotal();
+  });
+</script>
+
+<!-- Date handling script -->
+<script>
+  function getWeekday(dateStr) {
+    const weekdays = ['Chủ nhật', 'Thứ hai', 'Thứ ba', 'Thứ tư', 'Thứ năm', 'Thứ sáu', 'Thứ bảy'];
+    const d = new Date(dateStr);
+    return weekdays[d.getDay()];
+  }
+
+  function formatDateVN(dateStr) {
+    const d = new Date(dateStr);
+    const day = String(d.getDate()).padStart(2, '0');
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const year = d.getFullYear();
+    return `${day}-${month}-${year}`;
+  }
+
+  // DOM Elements
+  const depInput = document.getElementById("departureDate");
+  const depDay = document.getElementById("departureDay");
+  const depFormatted = document.getElementById("departureFormatted");
+
+  const returnInput = document.getElementById("returnDate");
+  const returnDay = document.getElementById("returnDay");
+  const returnFormatted = document.getElementById("returnFormatted");
+
+  // Set today as default departure date
+  window.addEventListener("DOMContentLoaded", () => {
+    const today = new Date().toISOString().split("T")[0];
+    depInput.value = today;
+    depDay.textContent = getWeekday(today);
+    depFormatted.textContent = formatDateVN(today);
+  });
+
+  // Departure date change handler
+  depInput.addEventListener("change", function () {
+    if (this.value) {
+      depDay.textContent = getWeekday(this.value);
+      depFormatted.textContent = formatDateVN(this.value);
+    }
+  });
+
+  // Return date change handler
+  returnInput.addEventListener("change", function () {
+    if (this.value) {
+      returnDay.textContent = getWeekday(this.value);
+      returnFormatted.textContent = formatDateVN(this.value);
+      returnFormatted.classList.remove("text-muted");
+      returnFormatted.classList.add("text-dark", "fw-bold");
+    }
+  });
+</script>
+</body>
+</html>
