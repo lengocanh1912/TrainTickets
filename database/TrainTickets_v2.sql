@@ -33,7 +33,7 @@ CREATE TABLE IF NOT EXISTS train (
     id        BIGINT AUTO_INCREMENT PRIMARY KEY,
     name      VARCHAR(50)  NOT NULL,
     code      VARCHAR(20)  NOT NULL UNIQUE,
-    capacity  SMALLINT     NOT NULL,
+    capacity  int     NOT NULL,
     createdAt DATETIME     NOT NULL,
     updatedAt DATETIME
 );
@@ -87,6 +87,7 @@ CREATE TABLE IF NOT EXISTS route (
     FOREIGN KEY (arrivalId) REFERENCES station(id),
     UNIQUE (departureId, arrivalId)
 );
+ALTER TABLE route DROP COLUMN duration;
 
 -- 8. Chuyến tàu
 CREATE TABLE IF NOT EXISTS trip (
@@ -172,6 +173,23 @@ CREATE TABLE IF NOT EXISTS payment (
     transactionId VARCHAR(100),
     FOREIGN KEY (orderId) REFERENCES orders(id),
     UNIQUE (orderId)
+);
+
+-- 14. đánh giá 
+CREATE TABLE review (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    user_id BIGINT NOT NULL,
+    order_id BIGINT NOT NULL,
+    trip_id BIGINT NOT NULL,
+    rating INT NOT NULL CHECK (rating BETWEEN 1 AND 5),
+    comment TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+
+    UNIQUE (order_id),
+    FOREIGN KEY (user_id) REFERENCES user(id),
+    FOREIGN KEY (order_id) REFERENCES orders(id),
+    FOREIGN KEY (trip_id) REFERENCES trip(id)
 );
 
 

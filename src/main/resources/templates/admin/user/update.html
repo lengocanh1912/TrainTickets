@@ -82,13 +82,16 @@
 <!--                    <option th:selected="${user.role == 1}" value="1">ADMIN</option>-->
 <!--                    <option th:selected="${user.role == 2}" value="2">EMPLOYEE</option>-->
 <!--                    <option th:selected="${user.role == 3}" value="3">CUSTOMER</option>-->
-                    <option value="ADMIN">ADMIN</option>
-                    <option value="EMPLOYEE">EMPLOYEE</option>
-                    <option value="CUSTOMER">CUSTOMER</option>
+<!--                    <option value="ADMIN">ADMIN</option>-->
+<!--                    <option value="EMPLOYEE">EMPLOYEE</option>-->
+<!--                    <option value="CUSTOMER">CUSTOMER</option>-->
+                    <option th:selected="${user.role == 'ADMIN'}" value="ADMIN">ADMIN</option>
+                    <option th:selected="${user.role == 'CUSTOMER'}" value="CUSTOMER">CUSTOMER</option>
+
                 </select>
             </div>
-            <button type="submit" class="btn btn-primary">Cập nhật tài khoản</button>
-            <a class="btn btn-primary" th:href="@{'/admin/user/view'}">hủy</a>
+            <button type="submit" class="btn btn-success">Cập nhật tài khoản</button>
+            <a class="btn btn-danger" th:href="@{'/admin/user/view'}">hủy</a>
         </form>
 
     </div>

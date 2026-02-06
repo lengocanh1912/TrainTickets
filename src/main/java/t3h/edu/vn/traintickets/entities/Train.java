@@ -5,8 +5,10 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.Getter;
 import lombok.Setter;
+import t3h.edu.vn.traintickets.enums.TrainState;
 
 import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -38,13 +40,20 @@ public class Train {
 
     @NotNull
     @Column(name = "createdAt", nullable = false)
-    private Instant createdAt;
+    private LocalDateTime createdAt;
 
     @Column(name = "updatedAt")
-    private Instant updatedAt;
+    private LocalDateTime updatedAt;
 
-    @OneToMany(mappedBy = "train", fetch = FetchType.LAZY ,cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "train",
+            fetch = FetchType.LAZY ,
+            cascade = CascadeType.ALL,
+            orphanRemoval = true)
     private List<Coach> coaches = new ArrayList<>();
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "state", nullable = false, length = 20)
+    private TrainState state = TrainState.ACTIVE;
 
     public Long getId() {
         return id;
@@ -78,19 +87,19 @@ public class Train {
         this.capacity = capacity;
     }
 
-    public @NotNull Instant getCreatedAt() {
+    public @NotNull LocalDateTime getCreatedAt() {
         return createdAt;
     }
 
-    public void setCreatedAt(@NotNull Instant createdAt) {
+    public void setCreatedAt(@NotNull LocalDateTime createdAt) {
         this.createdAt = createdAt;
     }
 
-    public Instant getUpdatedAt() {
+    public LocalDateTime getUpdatedAt() {
         return updatedAt;
     }
 
-    public void setUpdatedAt(Instant updatedAt) {
+    public void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
     }
 
@@ -101,4 +110,22 @@ public class Train {
     public void setCoaches(List<Coach> coaches) {
         this.coaches = coaches;
     }
+
+    public TrainState getState() {
+        return state;
+    }
+
+    public void setState(TrainState state) {
+        this.state = state;
+    }
+
+    public void addCoach(Coach coach) {
+        coach.setTrain(this);
+        this.coaches.add(coach);
+    }
+
+    public void clearCoaches() {
+        this.coaches.clear();
+    }
+
 }

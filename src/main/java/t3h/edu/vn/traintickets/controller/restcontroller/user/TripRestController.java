@@ -9,10 +9,13 @@ import org.springframework.web.bind.annotation.*;
 import t3h.edu.vn.traintickets.dto.BookingRequest;
 import t3h.edu.vn.traintickets.dto.TripDetailDto;
 import t3h.edu.vn.traintickets.entities.*;
+import t3h.edu.vn.traintickets.enums.OrderStatus;
+import t3h.edu.vn.traintickets.enums.TicketStatus;
 import t3h.edu.vn.traintickets.repository.*;
 import t3h.edu.vn.traintickets.service.OrderService;
 import t3h.edu.vn.traintickets.service.TripDtoService;
 
+import java.math.BigDecimal;
 import java.security.Principal;
 import java.time.LocalDateTime;
 import java.util.*;
@@ -45,7 +48,8 @@ public class TripRestController {
 
     @PostMapping("/booking")
     @PreAuthorize("isAuthenticated()") // hoặc hasAnyRole('USER', 'ADMIN')
-    public ResponseEntity<?> bookTickets(@RequestBody BookingRequest request, Principal principal) {
+    public ResponseEntity<?> bookTickets(@RequestBody BookingRequest request,
+                                         Principal principal) {
         try {
             System.out.println("🔍 Booking request received: " + request);
             System.out.println("🔍 Trip ID: " + request.getTripId());
@@ -60,7 +64,8 @@ public class TripRestController {
             User user = userRepository.findByUsername(username);
             if (user == null) {
                 System.err.println("❌ User not found: " + username);
-                return ResponseEntity.badRequest().body(Map.of("error", "User không tồn tại"));
+                return ResponseEntity.badRequest().body(Map.of("error",
+                        "User không tồn tại"));
             }
             System.out.println("✅ User found: " + user.getId());
 
@@ -68,7 +73,8 @@ public class TripRestController {
             Optional<Trip> tripOpt = tripRepository.findById(request.getTripId());
             if (!tripOpt.isPresent()) {
                 System.err.println("❌ Trip not found: " + request.getTripId());
-                return ResponseEntity.badRequest().body(Map.of("error", "Chuyến đi không tồn tại"));
+                return ResponseEntity.badRequest().body(Map.of("error",
+                        "Chuyến đi không tồn tại"));
             }
             Trip trip = tripOpt.get();
             System.out.println("✅ Trip found: " + trip.getId());
@@ -80,49 +86,64 @@ public class TripRestController {
                 Float price = request.getPrices().get(i);
                 Byte ticketType = request.getTicketTypes().get(i);
 
-                System.out.println("🔍 Processing seat " + i + ": ID=" + seatId + ", Price=" + price + ", Type=" + ticketType);
-
-                // Kiểm tra Seat có tồn tại không
                 Optional<Seat> seatOpt = seatRepository.findById(seatId);
                 if (!seatOpt.isPresent()) {
-                    System.err.println("❌ Seat not found: " + seatId);
                     return ResponseEntity.badRequest().body(Map.of("error", "Ghế không tồn tại: " + seatId));
                 }
                 Seat seat = seatOpt.get();
-                System.out.println("✅ Seat found: " + seat.getId() + " - " + seat.getSeatCode());
 
-                // Kiểm tra ghế đã được đặt chưa
-                boolean isBooked = ticketRepository.existsBySeatAndTripAndStatusNot(seat, trip, (byte) 2); // 2 = cancelled
+                // 🔹 Kiểm tra ticket đã đặt ACTIVE (PENDING/PAID) chưa
+                boolean isBooked = ticketRepository.existsBySeatAndTripAndStatusIn(
+                        seat, trip, List.of(TicketStatus.PENDING, TicketStatus.PAID)
+                );
                 if (isBooked) {
-                    System.err.println("❌ Seat already booked: " + seat.getSeatCode());
                     return ResponseEntity.badRequest().body(Map.of("error", "Ghế " + seat.getSeatCode() + " đã được đặt"));
                 }
 
-                Ticket ticket = new Ticket();
-                ticket.setUser(user);
-                ticket.setTrip(trip);
-                ticket.setSeat(seat);
-                ticket.setPrice(price);
-                ticket.setStatus((byte) 0); // chưa thanh toán
-                ticket.setTicketType(ticketType);
-                ticket.setCreatedAt(LocalDateTime.now());
+                // 🔹 Tái sử dụng ticket CANCELLED nếu có
+                Optional<Ticket> oldTicketOpt = ticketRepository.findBySeatAndTripAndStatus(seat,
+                        trip, TicketStatus.CANCELLED);
+                Ticket ticket;
+                if (oldTicketOpt.isPresent()) {
+                    ticket = oldTicketOpt.get();
+                    ticket.setStatus(TicketStatus.PENDING);
+                    ticket.setPrice(price);
+                    ticket.setTicketType(ticketType);
+                    ticket.setUpdatedAt(LocalDateTime.now());
+
+                    // ✅ FIX: Xóa các OrderTicket cũ của ticket trước khi gán vào đơn mới
+                    orderTicketRepository.deleteByTicketId(ticket.getId());
+                    System.out.println("🔹 Old OrderTicket deleted for ticket: " + ticket.getId());
+                } else {
+                    // Tạo ticket mới khi chưa có ticket nào
+                    ticket = new Ticket();
+                    ticket.setUser(user);
+                    ticket.setTrip(trip);
+                    ticket.setSeat(seat);
+                    ticket.setPrice(price);
+                    ticket.setStatus(TicketStatus.PENDING);
+                    ticket.setTicketType(ticketType);
+                    ticket.setCreatedAt(LocalDateTime.now());
+                }
 
                 Ticket savedTicket = ticketRepository.save(ticket);
-                System.out.println("✅ Ticket saved: " + savedTicket.getId());
                 savedTickets.add(savedTicket);
             }
+
 
             // 4. Tạo đơn hàng
             Order order = new Order();
             order.setUser(user);
-            float total = savedTickets.stream()
-                    .map(Ticket::getPrice)
-                    .reduce(0f, Float::sum);
+            BigDecimal total = savedTickets.stream()
+                    .map(ticket -> BigDecimal.valueOf(ticket.getPrice())) // chuyển từng giá vé từ float → BigDecimal
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
             order.setTotalAmount(total);
             order.setFinalAmount(total);
-            order.setStatus((byte) 0);
+            order.setStatus(OrderStatus.PENDING);
             order.setCreatedAt(LocalDateTime.now());
             order.setOrderCode(orderService.generateOrderCode());
+            // 🔹 Set thời gian giữ ghế, ví dụ 8 phút
+            order.setHoldUntil(LocalDateTime.now().plusMinutes(8));
 
             Order savedOrder = orderRepository.save(order);
             System.out.println("✅ Order saved: " + savedOrder.getId());

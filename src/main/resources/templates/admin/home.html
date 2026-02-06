@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="vi">
+<html lang="vi" xmlns:th="http://www.w3.org/1999/xhtml">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -19,8 +19,12 @@
             window.location.href = '?lang=' + dom.value;
         }
     </script>
+    <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
+
 </head>
 
+<!--<body style="padding-top: 55px;">-->
 <body style="padding-top: 55px;">
 <!--header frag-->
 <div th:replace="/admin/common/fragments :: header_nav"> </div>
@@ -42,9 +46,9 @@
 
         <div class="row g-4">
             <div class="col-md-3">
-    <!--        <div class="container-fluid">-->
+                <!--        <div class="container-fluid">-->
                 <div class="info-box bg-primary text-white">
-    <!--                <h5>Người dùng</h5>-->
+                    <!--                <h5>Người dùng</h5>-->
                     <a class="btn btn-primary btn-sm me-1" th:href="@{'/admin/user/view'}">Người dùng</a>
                     <h2 th:text="${userCount}"></h2>
                 </div>
@@ -52,21 +56,26 @@
 
             <div class="col-md-3">
                 <div class="info-box bg-success text-white">
-                    <h5>số lượng tàu</h5>
+                    <!--                    <h5>Số lượng tàu</h5>-->
+                    <a class="btn btn-success btn-sm me-1" th:href="@{'/admin/train/view'}" >Số lượng tàu</a>
                     <h2 th:text="${trainCount}"></h2>
                 </div>
             </div>
 
             <div class="col-md-3">
                 <div class="info-box bg-warning text-white">
-                    <h5>Vé đã bán</h5>
+                    <!--                    <h5>Vé đã bán</h5>-->
+                    <a class="btn btn-warning text-white btn-sm me-1 " th:href="@{'/admin/ticket/view'}" >Vé đã bán</a>
+
                     <h2 th:text="${ticketSold}"></h2>
                 </div>
             </div>
 
             <div class="col-md-3">
                 <div class="info-box bg-danger text-white">
-                    <h5>Đơn đặt vé</h5>
+                    <a class="btn btn-danger text-white btn-sm me-1"
+                       th:href="@{'/admin/order/view'}" >Đơn đặt vé</a>
+
                     <h2 th:text="${orderCount}"></h2>
                 </div>
             </div>
@@ -75,17 +84,18 @@
         <div class="row g-4 mt-4">
             <div class="col-md-3">
                 <div class="info-box bg-info text-white">
-                    <h5>Tuyến đường</h5>
+                    <a  class="btn-info text-white btn-sm me-1"
+                        th:href="@{'/admin/route/view'}">Tuyến đường</a>
                     <h2 th:text="${routeCount}"></h2>
                 </div>
             </div>
 
-            <div class="col-md-3">
-                <div class="info-box bg-dark text-white">
-                    <h5>Ghế còn lại</h5>
-                    <h2 th:text="${availableSeats}"></h2>
-                </div>
-            </div>
+            <!--            <div class="col-md-3">-->
+            <!--                <div class="info-box bg-dark text-white">-->
+            <!--                    <h5>Ghế còn lại</h5>-->
+            <!--                    <h2 th:text="${availableSeats}"></h2>-->
+            <!--                </div>-->
+            <!--            </div>-->
 
             <div class="col-md-3">
                 <div class="info-box bg-secondary text-white">
@@ -96,13 +106,72 @@
 
             <div class="col-md-3">
                 <div class="info-box bg-light text-dark">
-                    <h5>Doanh thu</h5>
-                    <h2 th:text="${totalRevenue}"></h2>
+                    <a class="btn btn-light btn-sm me-1" th:href="@{'/admin/revenue/view'}" >Doanh thu</a>
+                    <h2 th:text="${#numbers.formatInteger(totalRevenue, 3, 'POINT')} + ' đ'"></h2>
+
                 </div>
             </div>
         </div>
     </div>
 </div>
+
+
+<!--admin home-->
+<script th:if="${currentUser != null}" th:inline="javascript">
+    const currentUserId = [[${currentUser.id}]];
+
+    let stompUser = null;
+
+    function refreshAdminBadge() {
+        const badge = document.getElementById('admin-support-badge');
+        if (!badge) return;
+
+        fetch('/trainticket/admin/support/unread-count')
+            .then(res => res.json())
+            .then(count => {
+                if (count > 0) {
+                    badge.style.display = 'inline-block';
+                    badge.textContent = count > 9 ? '9+' : count;
+                } else {
+                    badge.style.display = 'none';
+                }
+            });
+    }
+
+    // ✅ FIX Ở ĐÂY
+    function connectUserWS() {
+        console.log('>>> Connecting USER WebSocket...');
+
+        const socket = new SockJS('/trainticket/ws-chat');
+        stompUser = Stomp.over(socket);
+        stompUser.debug = null;
+
+        stompUser.connect(
+            { userId: currentUserId }, // 🔥 QUAN TRỌNG
+            () => {
+                console.log('✅ USER WS CONNECTED, userId=', currentUserId);
+
+                // 🔔 admin có tin nhắn mới
+                stompUser.subscribe(
+                    `/queue/admin/${currentUserId}/notification`,
+                    () => refreshAdminBadge()
+                );
+
+                // 🔔 conversation mới WAITING
+                stompUser.subscribe(
+                    `/topic/admin/notification`,
+                    () => refreshAdminBadge()
+                );
+
+                // 🔥 load lại lần đầu cho chắc
+                refreshAdminBadge();
+            },
+            err => console.error('❌ USER WS ERROR', err)
+        );
+    }
+
+    document.addEventListener('DOMContentLoaded', connectUserWS);
+</script>
 
 </body>
 </html>

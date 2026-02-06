@@ -1,6 +1,10 @@
 package t3h.edu.vn.traintickets.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -31,19 +35,22 @@ public class ReviewService {
     @Autowired
     ReviewImageRepository reviewImageRepository;
 
-    public List<Review> searchReviewsByUser(String keyword) {
-        return reviewRepository.searchByUserFullname(keyword);
+    @Transactional
+    public List<ReviewDisplayDto> searchReviewsByUser(String keyword) {
+        List<ReviewDisplayDto> result = reviewRepository.searchByUserFullname(keyword);
+
+        // Load imagePaths cho từng DTO
+        for (ReviewDisplayDto dto : result) {
+            List<ReviewImage> images = reviewImageRepository.findByReviewId(dto.getReviewId());
+            List<String> paths = images.stream()
+                    .map(ReviewImage::getFilePath)
+                    .collect(Collectors.toList());
+            dto.setImagePaths(paths);
+        }
+
+        return result;
     }
 
-    public List<Review> getAllReview() {
-        List<Review> review = null ;
-        try{
-            review = reviewRepository .findAll();
-        }catch(Exception e){
-            throw new RuntimeException(e);
-        }
-        return review ;
-    }
 
     @Transactional
     public void saveReview(Long orderId, int rating, String content, List<MultipartFile> images, String username) {
@@ -91,8 +98,10 @@ public class ReviewService {
         }
     }
 
-    public List<ReviewDisplayDto> getAllDisplayReviews() {
-        List<ReviewDisplayDto> dtos = reviewRepository.findAllWithoutImages();
+    public Page<ReviewDisplayDto> getAllDisplayReviews(int pageNo, int pageSize) {
+        Pageable pageable = PageRequest.of(pageNo, pageSize, Sort.by("createdAt").descending());
+
+        Page<ReviewDisplayDto> dtos = reviewRepository.findAllWithoutImages(pageable );
 
         // Lấy tất cả ảnh
         List<ReviewImage> allImages = reviewImageRepository.findAll();
@@ -127,5 +136,36 @@ public class ReviewService {
         return reviewRepository.countTotalReviews();
     }
 
+    public ReviewDisplayDto findByReviewId(Long reviewId) {
+        try {
+            Review review = reviewRepository.findWithOrderAndUserById(reviewId)
+                    .orElseThrow(() -> new RuntimeException("Không tìm thấy đánh giá"));
+
+            ReviewDisplayDto dto = new ReviewDisplayDto();
+            dto.setReviewId(review.getId());
+            dto.setComment(review.getComment());
+            dto.setRating(review.getRating());
+            dto.setTrainName(review.getTrip().getTrain().getName());
+            dto.setDepartureStationName(review.getTrip().getRoute().getDeparture().getName());
+            dto.setArrivalStationName(review.getTrip().getRoute().getArrival().getName());
+            dto.setDepartureTime(review.getTrip().getDepartureAt());
+            dto.setStatus(review.getStatus());
+
+            if (review.getOrder() != null && review.getOrder().getUser() != null) {
+                dto.setUserFullName(review.getOrder().getUser().getFullname());
+
+            }
+
+            List<String> imageUrls = review.getReviewImages()
+                    .stream()
+                    .map(ReviewImage::getFilePath)
+                    .toList();
+            dto.setImagePaths(imageUrls);
+
+            return dto;
+        } catch (Exception e) {
+            throw new RuntimeException("Lỗi khi lấy đánh giá: " + e.getMessage(), e);
+        }
+    }
 
 }

@@ -12,7 +12,10 @@ import java.util.List;
 import java.util.Optional;
 
 public interface UserRepository extends JpaRepository<User, Long> {
+
     User findByUsername(String userName);
+
+//    Optional<User> findByUsername1(String username);
 
     List<User> findByStatusLessThan(Integer statusIsLessThan);
     @Query(value = "select u from User u where u.status = ?1")
@@ -27,13 +30,15 @@ public interface UserRepository extends JpaRepository<User, Long> {
             "u.phoneNumber LIKE %:keyword%")
     List<User> findByUsernameOrFullnameOrEmailOrPhoneNumber(@Param("keyword") String keyword);
 
-    boolean existsByEmail(String email); // <- THÊM DÒNG NÀY
+    boolean existsByEmail(String email);
+
+    boolean existsByPhoneNumber(String phone);
 
     boolean existsByUsername(String username);
 
-    Optional<User> findByEmail(String email);
+    User findByEmail(String email);
 
-    Optional<User> findByResetToken(String resetToken);
+    User findByResetToken(String resetToken);
 
 
 }

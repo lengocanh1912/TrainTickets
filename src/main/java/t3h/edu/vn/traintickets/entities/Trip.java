@@ -4,8 +4,9 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
+import t3h.edu.vn.traintickets.enums.TripState;
 
-import java.time.Instant;
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Getter
@@ -38,18 +39,18 @@ public class Trip {
 
     @NotNull
     @Column(name = "price", nullable = false)
-    private Float price;
+    private BigDecimal price;
 
-    @NotNull
-    @Column(name = "status", nullable = false, columnDefinition = "TINYINT(1)")
-    private boolean status;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status")
+    private TripState status;
 
     @NotNull
     @Column(name = "createdAt", nullable = false)
-    private Instant createdAt;
+    private LocalDateTime createdAt;
 
     @Column(name = "updatedAt")
-    private Instant updatedAt;
+    private LocalDateTime updatedAt;
 
     public Long getId() {
         return id;
@@ -91,35 +92,38 @@ public class Trip {
         this.arrivalAt = arrivalAt;
     }
 
-    public @NotNull Float getPrice() {
+
+    public @NotNull BigDecimal getPrice() {
         return price;
     }
 
-    public void setPrice(@NotNull Float price) {
+    public void setPrice(@NotNull BigDecimal price) {
         this.price = price;
     }
 
-    public @NotNull boolean getStatus() {
+    public @NotNull TripState getStatus() {
         return status;
     }
 
-    public void setStatus(@NotNull boolean status) {
+    public void setStatus(@NotNull TripState status) {
         this.status = status;
     }
 
-    public @NotNull Instant getCreatedAt() {
-        return createdAt;
-    }
-
-    public void setCreatedAt(@NotNull Instant createdAt) {
-        this.createdAt = createdAt;
-    }
-
-    public Instant getUpdatedAt() {
+    public LocalDateTime getUpdatedAt() {
         return updatedAt;
     }
 
-    public void setUpdatedAt(Instant updatedAt) {
+    public void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
     }
+
+    public @NotNull LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(@NotNull LocalDateTime createdAt) {
+        this.createdAt = createdAt;
+    }
+
+
 }

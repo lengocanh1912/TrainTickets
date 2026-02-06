@@ -2,6 +2,7 @@ package t3h.edu.vn.traintickets.controller.user;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
@@ -50,6 +51,9 @@ public class UserTripController {
     private UserRepository userRepository;
     @Autowired
     private OrderTicketRepository orderTicketRepository;
+    @Autowired
+    private TicketPdfService ticketPdfService;
+
 
     @ModelAttribute
     public void addAttributes(Model model) {
@@ -145,56 +149,6 @@ public class UserTripController {
         return "user/trip_listSearch"; // Giao diện kết quả
     }
 
-//    @PostMapping("/booking")
-//    public String bookTickets(@RequestBody BookingRequest request, Principal principal, RedirectAttributes redirectAttributes) {
-//        // 1. Lấy user đang đăng nhập
-//        String username = principal.getName();
-//        User user = userRepository.findByUsername(username);
-//
-//        // 2. Tạo vé và lưu vào DB
-//        List<Ticket> savedTickets = new ArrayList<>();
-//        for (int i = 0; i < request.getSeatIds().size(); i++) {
-//            Long seatId = request.getSeatIds().get(i);
-//            Float price = request.getPrices().get(i);
-//            Byte ticketType = request.getTicketTypes().get(i);
-//
-//            Ticket ticket = new Ticket();
-//            ticket.setUser(user);
-//            ticket.setTrip(tripRepository.findById(request.getTripId()).orElseThrow());
-//            ticket.setSeat(seatRepository.findById(seatId).orElseThrow());
-//            ticket.setPrice(price);
-//            ticket.setStatus((byte) 0); // chưa thanh toán
-//            ticket.setTicketType(ticketType);
-//            ticket.setCreatedAt(LocalDateTime.now());
-//
-//            savedTickets.add(ticketRepository.save(ticket));
-//        }
-//
-//        // 3. Tạo đơn hàng
-//        Order order = new Order();
-//        order.setUser(user);
-//        float total = savedTickets.stream().map(Ticket::getPrice).reduce(0f, Float::sum);
-//        order.setTotalAmount(total);
-//        order.setFinalAmount(total); // chưa áp mã giảm giá
-//        order.setStatus((byte) 0); // chờ thanh toán
-//        order.setCreatedAt(LocalDateTime.now());
-//
-//        Order savedOrder = orderRepository.save(order);
-//
-//        // 4. Gán vé vào đơn hàng (order_ticket)
-//        for (Ticket ticket : savedTickets) {
-//            OrderTicket ot = new OrderTicket();
-//            ot.setOrder(savedOrder);
-//            ot.setTicket(ticket);
-//            orderTicketRepository.save(ot);
-//        }
-//
-//        // 5. Chuyển hướng đến trang thanh toán
-//        redirectAttributes.addFlashAttribute("message", "Vui lòng thanh toán để hoàn tất.");
-//        return "redirect:/user/checkout/" + savedOrder.getId();
-//    }
-
-
     @GetMapping("/list")
     public String list(Model model) {
         model.addAttribute("menu", "trip");
@@ -209,24 +163,63 @@ public class UserTripController {
         return "/user/trip_detail";
     }
 
-//    @GetMapping("/trip_booking/{id}")
-//    public String viewPayment(@PathVariable Long id, Model model) {
-//        Order order = orderService.findById(id);
-//        if (order == null) {
-//            System.out.println("ko thấy đơn hàng");
-//        }
-//
-//        OrderPaymentDto dto = orderService.getOrderPaymentDto(order);
-//        model.addAttribute("order", dto);
-//
-//        return "user/payment";
-//    }
+//    trả về trang thanh toán
     @GetMapping("/trip_booking/{id}")
-    public String viewPayment(@PathVariable Long id, Model model) {
+    public String viewPayment(@PathVariable Long id,
+                              Model model,
+                              Principal principal) {
+
+        // 1. Lấy OrderPaymentDto từ service
         OrderPaymentDto dto = orderService.getOrderPaymentDtoById(id);
+
+        if (dto == null) {
+            throw new RuntimeException("Order not found with id = " + id);
+        }
+
         model.addAttribute("order", dto);
+
+        // 2. Lấy thông tin liên hệ từ Order hoặc User
+        ContactInfo contactInfo = new ContactInfo();
+
+        // Ưu tiên lấy từ Order trước (nếu đã lưu)
+        if (dto.getContactName() != null && !dto.getContactName().isEmpty()) {
+            contactInfo.setFullname(dto.getContactName());
+            contactInfo.setPhoneNumber(dto.getContactPhone());
+            contactInfo.setEmail(dto.getContactEmail());
+        }
+
+        // Nếu Order chưa có, lấy từ User đang đăng nhập
+        else if (principal != null) {
+            String username = principal.getName(); // Email hoặc username
+            User user = userRepository.findByUsername(username);
+            if (user != null) {
+                contactInfo.setFullname(user.getFullname());
+                contactInfo.setPhoneNumber(user.getPhoneNumber());
+                contactInfo.setEmail(user.getEmail());
+            }
+        }
+
+        model.addAttribute("contactInfo", contactInfo);
+
+        // 3. Trả về view
         return "user/payment";
     }
+
+    @GetMapping("/{id}/pdf")
+    @ResponseBody
+    public ResponseEntity<byte[]> downloadTicket(@PathVariable Long id)
+            throws Exception {
+
+        byte[] pdf = ticketPdfService.generateTicketPdf(id);
+
+        return ResponseEntity.ok()
+                .header("Content-Disposition",
+                        "attachment; filename=ticket-" + id + ".pdf")
+                .contentType(MediaType.APPLICATION_PDF)
+                .body(pdf);
+    }
+
+
 
 
 

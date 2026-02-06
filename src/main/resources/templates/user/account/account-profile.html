@@ -1,0 +1,170 @@
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6" xmlns:th="http://www.w3.org/1999/xhtml">
+
+    <!-- PROFILE CARD -->
+    <div class="bg-white rounded-xl shadow p-6 flex flex-col items-center">
+        <form th:action="@{/user/account/avatar}"
+              method="post"
+              enctype="multipart/form-data">
+
+            <div class="relative">
+                <img th:src="@{${user.avatar != null ? user.avatar : '/img/avatar.png'}}"
+                     class="w-28 h-28 rounded-full object-cover border-4 border-blue-100">
+
+                <label class="absolute bottom-1 right-1 bg-blue-600 text-white p-2 rounded-full cursor-pointer">
+                    <i class="fa-solid fa-camera"></i>
+                    <input type="file" name="avatar" class="hidden" onchange="this.form.submit()">
+                </label>
+            </div>
+        </form>
+
+        <h2 class="mt-4 text-lg font-semibold" th:text="${user.fullname}">
+            Nguyễn Văn A
+        </h2>
+
+        <p class="text-sm text-gray-500" th:text="${user.email}">
+            user@gmail.com
+        </p>
+
+        <span class="mt-3 px-3 py-1 text-xs rounded-full bg-green-100 text-green-700">
+            Đang hoạt động
+        </span>
+    </div>
+
+    <!-- INFO FORM -->
+    <div class="lg:col-span-2 bg-white rounded-xl shadow p-6">
+        <h3 class="text-lg font-semibold mb-4 text-gray-800">
+            Thông tin cá nhân
+        </h3>
+
+        <form th:action="@{/user/account/profile/update}"
+              method="post"
+              class="space-y-4">
+
+            <input type="hidden" name="id" th:value="${user.id}">
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+                <div>
+                    <label class="text-sm text-gray-600">Họ và tên</label>
+                    <input type="text"
+                           th:value="${user.fullname}"
+                           name="fullname"
+                           class="w-full mt-1 px-4 py-2 border rounded-lg bg-gray-100">
+                </div>
+
+                <div>
+                    <label class="text-sm text-gray-600">Số điện thoại</label>
+                    <input type="text"
+                           name="phoneNumber"
+                           th:value="${user.phoneNumber}"
+                           class="w-full mt-1 px-4 py-2 border rounded-lg bg-gray-100">
+                </div>
+
+<!--                email-->
+                <div>
+                    <label class="text-sm text-gray-600">Email</label>
+                    <!-- Email hiện tại ( KHÔNG cho sửa) -->
+                    <input type="email"
+                           name="email"
+                           th:value="${user.email}"
+                           readonly
+                           class="w-full mt-1 px-4 py-2 border rounded-lg bg-gray-100">
+                </div>
+
+<!--                birthDay-->
+                <div>
+                    <label class="text-sm text-gray-600">Ngày sinh</label>
+                    <input type="text"
+                           name="birthday"
+                           placeholder="dd/MM/yyyy"
+                           th:value="${user.birthday != null ? #temporals.format(user.birthday, 'dd/MM/yyyy') : ''}"
+                           class="w-full mt-1 px-4 py-2 border rounded-lg bg-gray-100">
+
+                </div>
+
+            </div>
+
+            <div>
+                <label class="text-sm text-gray-600">Địa chỉ</label>
+                <textarea rows="2"
+                          th:text="${user.address}"
+                          name="address"
+                          class="w-full mt-1 px-4 py-2 border rounded-lgbg-gray-100">
+                </textarea>
+            </div>
+
+            <div class="flex justify-end gap-3">
+                <button type="reset"
+                        class="px-5 py-2 border rounded-lg">
+                    Huỷ
+                </button>
+                <button type="submit"
+                        class="px-5 py-2 bg-blue-600 text-white rounded-lg">
+                    Lưu
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    function sendOtp() {
+        const token = document.querySelector('meta[name="_csrf"]').content;
+        const header = document.querySelector('meta[name="_csrf_header"]').content;
+
+        fetch('/trainticket/user/account/EmailOTP-request', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                [header]: token
+            },
+            body: new URLSearchParams({
+                currentEmail: document.getElementById('emailInput').value
+            })
+
+        })
+        .then(res => {
+            if (!res.ok) throw new Error("Gửi OTP thất bại");
+            return res.text();
+        })
+        .then(msg => {
+            alert(msg);
+            document.getElementById('otpBox').classList.remove('hidden');
+        })
+        .catch(err => alert(err.message));
+    }
+
+    function confirmOtp() {
+        const token = document.querySelector('meta[name="_csrf"]').content;
+        const header = document.querySelector('meta[name="_csrf_header"]').content;
+
+        fetch('/trainticket/user/account/EmailOTP-confirm', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                [header]: token
+            },
+            body: new URLSearchParams({
+                otp: document.getElementById('otpInput').value
+            })
+        })
+        .then(res => {
+            if (!res.ok) throw new Error("OTP không đúng");
+            return res.text();
+        })
+        .then(msg => {
+            alert(msg);
+
+            const emailInput = document.getElementById('emailInput');
+            emailInput.removeAttribute('readonly');
+            emailInput.classList.remove('bg-gray-100');
+            emailInput.classList.add('bg-white');
+
+            document.getElementById('otpBox').classList.add('hidden');
+            document.getElementById('sendOtpBtn').disabled = true;
+            document.getElementById('sendOtpBtn').innerText = "Đã xác thực";
+        })
+        .catch(err => alert(err.message));
+    }
+
+</script>

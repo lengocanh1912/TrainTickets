@@ -22,8 +22,15 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
+
         body {
             background-color: #f8f9fa;
+        }
+        .container {
+            /*margin-top: 80px;*/
+            padding: 0 5cm; /* Cách đều 2 bên 5cm */
+            max-width: 100%;
+            box-sizing: border-box;
         }
         .review-card {
             border-radius: 16px;
@@ -68,6 +75,8 @@
             <a class="nav-link text-white" href="#">Train Seat</a>
             <a class="nav-link text-white" th:href="@{/user/support}"
                th:classappend="${menu == 'support'} ? 'active'">Support</a>
+            <a class="nav-link text-white" th:href="@{/user/review/view}"
+               th:classappend="${menu == 'review'} ? 'active'">Rating</a>
             <a class="nav-link text-white" href="#">Q&A</a>
         </div>
 
@@ -91,21 +100,20 @@
                     <li th:if="${currentUser != null}">
                         <a class="dropdown-item text-primary" th:each="role : ${currentUser.role}"
                            th:if="${role == 'ADMIN'}"
-                           th:href="@{/admin/home}">ADMIN</a>
-                        <hr class="" >
+                           th:href="@{/admin/home}">ADMIN<hr></a>
                     </li>
                     <li th:if="${currentUser != null}">
-                        <a class="dropdown-item" th:href="@{/cart/checkout}">Checkout</a>
+                        <a class="dropdown-item" th:href="@{/cart/checkout}">Tài khoản</a>
                     </li>
+                    <!--                    <li th:if="${currentUser != null}">-->
+                    <!--                        <a class="dropdown-item" th:href="@{/cart/checkout-vnpay}">VNPAY</a>-->
+                    <!--                    </li>-->
                     <li th:if="${currentUser != null}">
-                        <a class="dropdown-item" th:href="@{/cart/checkout-vnpay}">VNPAY</a>
+                        <a class="dropdown-item" th:href="@{/user/order/view}">Đơn hàng</a>
                     </li>
-                    <li th:if="${currentUser != null}">
-                        <a class="dropdown-item" th:href="@{/orders}">Đơn hàng</a>
-                    </li>
-                    <li th:if="${currentUser != null}">
-                        <a class="dropdown-item" th:href="@{/wishlist}">Yêu thích</a>
-                    </li>
+                    <!--                    <li th:if="${currentUser != null}">-->
+                    <!--                        <a class="dropdown-item" th:href="@{/wishlist}">Yêu thích</a>-->
+                    <!--                    </li>-->
                     <li th:if="${currentUser != null}">
                         <a class="dropdown-item" th:href="@{/logout}">Đăng xuất</a>
                     </li>
@@ -126,11 +134,11 @@
     </div>
 </nav>
 
-<div class="container mt-20">
+<div class="container mt-20 mb-4">
     <h1 class="mb-4 text-center ">Đánh giá từ người dùng</h1>
 
     <div class="row">
-        <div class="col-12" th:each="review : ${reviews}">
+        <div class="col-12" th:each="review : ${page.getContent()}">
             <div class="review-card">
                 <!-- Header -->
                 <div class="d-flex justify-content-between align-items-center mb-2">
@@ -176,6 +184,8 @@
             </div>
         </div>
     </div>
+    <!-- Gọi phân trang -->
+    <nav th:replace="/admin/common/fragments :: paginationid()"></nav>
 </div>
 
 <!--active-->

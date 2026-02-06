@@ -31,3 +31,21 @@ build/
 
 ### VS Code ###
 .vscode/
+
+# ===== Maven =====
+/target/
+
+# ===== IDE =====
+.idea/
+.vscode/
+*.iml
+
+# ===== Upload files =====
+/uploads/
+uploads/
+
+# ===== Logs =====
+*.log
+
+# ===== Temp =====
+all-files.txt

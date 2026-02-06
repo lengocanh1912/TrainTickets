@@ -1,7 +1,10 @@
 package t3h.edu.vn.traintickets.dto;
 
+import lombok.Data;
+
 import java.util.List;
 
+@Data
 public class DatatableResponse<Entity> {
 
     List<Entity> data;

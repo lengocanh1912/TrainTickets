@@ -1,7 +1,9 @@
 package t3h.edu.vn.traintickets.config;
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
@@ -12,10 +14,10 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
+import t3h.edu.vn.traintickets.security.LogoutHandlerImpl;
 
 @Configuration
 @EnableWebSecurity
-@EnableGlobalMethodSecurity(prePostEnabled = true)
 @EnableMethodSecurity
 public class SecurityConfig {
     @Bean
@@ -26,13 +28,6 @@ public class SecurityConfig {
     // bước 1: Cáu hình securityFilterchain
     // Bước 2: Cấu hình UserDetailService
     // bước 3: Cấu hinh passwordEncoder
-
-    //test
-//    @Autowired
-//    private CustomAuthenticationProvider customAuthenticationProvider;
-
-//    @Autowired
-//    private CustomAuthenticationSuccessHandler successHandler;
 
     @Autowired
     private UserDetailsService userDetailsService;
@@ -71,49 +66,100 @@ public class SecurityConfig {
 //    }
 
     @Autowired
-    public void configureGlobal(AuthenticationManagerBuilder auth) throws Exception {
-        auth
-                .userDetailsService(userDetailsService)
-                .passwordEncoder(passwordEncoder());
-    }
-
+    private CustomAuthenticationSuccessHandler customAuthenticationSuccessHandler;
     @Autowired
-    private CustomAuthenticationSuccessHandler successHandler;
+    private LogoutHandlerImpl logoutHandlerImpl;
+    @Autowired
+    private CustomAuthenticationProvider customAuthenticationProvider;
+    @Autowired
+    private CustomAuthFailureHandler customAuthFailureHandler;
+
+    @Bean
+    public AuthenticationManager authenticationManager(HttpSecurity http) throws Exception {
+        return http
+                .getSharedObject(AuthenticationManagerBuilder.class)
+                .authenticationProvider(customAuthenticationProvider)
+                .build();
+    }
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        http.csrf().disable()
-                .authorizeHttpRequests((requests) -> requests
-                // 👇 Admin phải có role
-                .requestMatchers("/admin/**").hasAnyRole("ADMIN", "CUSTOMER")
 
-                // 👇 Cho phép truy cập chi tiết chuyến tàu không cần login
-                .requestMatchers("/api/trips/*/detail").permitAll()
-
-                // 👇 Đặt vé phải login
-                .requestMatchers("/api/trips/booking").authenticated()
-
-                // 👇 Các trang còn lại (bao gồm cả modal, trang home...) không yêu cầu login
-                .anyRequest().permitAll()
+        http.csrf(csrf -> csrf
+                        .ignoringRequestMatchers("/ws-chat/**", "/api/**") // Bỏ CSRF cho WebSocket và Chat API
                 )
-                .formLogin((form) -> form
+                .authorizeHttpRequests(requests -> requests
+                        .requestMatchers(
+                                "/css/**",
+                                "/js/**",
+                                "/images/**",
+                                "/sounds/**",
+                                "/webjars/**"
+                        ).permitAll()
+                        // Admin
+                        .requestMatchers("/admin/**").hasRole("ADMIN")
+
+                        // WebSocket & API chat
+                        .requestMatchers("/ws-chat/**").permitAll()
+                        .requestMatchers("/api/chat/**").permitAll()
+
+                        // Public API
+                        .requestMatchers("/api/trips/*/detail").permitAll()
+
+                        // User cần login
+                        .requestMatchers(
+                                  "/user/support",
+                                            "/user/account/**",
+                                            "/user/order/**",
+                                            "/user/payment/**"
+                        ).authenticated()
+
+                        // Còn lại cho phép
+                        .anyRequest().permitAll()
+                )
+
+                // 👉 Xử lý khi chưa login
+                .exceptionHandling(ex -> ex
+                        .authenticationEntryPoint((request, response, authException) -> {
+                            String uri = request.getServletPath();
+
+                            if (uri.startsWith("/api/")) {
+                                // API → trả JSON, không redirect
+                                response.setContentType("application/json;charset=UTF-8");
+                                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                                response.getWriter().write("{\"error\":\"UNAUTHORIZED\"}");
+                            } else {
+                                request.getSession().setAttribute(
+                                        "REDIRECT_AFTER_LOGIN",
+                                        request.getRequestURI()
+                                );
+                                // UI → redirect về /login
+                                request.getSession().setAttribute("LOGIN_REQUIRED", true);
+                                response.sendRedirect(request.getContextPath() + "/login" );
+                            }
+                        })
+                )
+                // 👉 Form login
+                .formLogin(form -> form
                         .loginPage("/login")
                         .loginProcessingUrl("/doLogin")
                         .usernameParameter("username")
                         .passwordParameter("password")
-                        .successHandler(successHandler)  // ✅ dùng custom handler
+                        .successHandler(customAuthenticationSuccessHandler)
+                        .failureHandler(customAuthFailureHandler)
 //                        .failureUrl("/login?error=true")
-                        .permitAll())
+                        .permitAll()
+                )
+                // 👉 Logout
                 .logout(logout -> logout
                         .logoutRequestMatcher(new AntPathRequestMatcher("/logout"))
-                        .permitAll()
                         .logoutSuccessUrl("/user/home")
                         .invalidateHttpSession(true)
                         .deleteCookies("JSESSIONID")
+                        .addLogoutHandler(logoutHandlerImpl)
+                        .permitAll()
                 );
 
         return http.build();
     }
-
-
 }

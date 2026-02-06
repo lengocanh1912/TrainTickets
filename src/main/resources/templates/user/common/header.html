@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
+
+<body>
+<nav th:fragment="userHeader(menu)"
+     class="navbar navbar-expand-lg navbar-dark bg-primary fixed-top">
+
+    <div class="container-fluid px-5">
+
+        <!-- LOGO -->
+        <a class="navbar-brand" th:href="@{/user/home}">TrainTicket</a>
+
+        <!-- MENU -->
+        <div class="navbar-nav">
+            <a class="nav-link text-white"
+               th:href="@{/user/home}"
+               th:classappend="${menu == 'userHome'} ? 'active'">
+                Home
+            </a>
+
+            <a class="nav-link text-white"
+               th:href="@{/user/trip/list}"
+               th:classappend="${menu == 'trip'} ? 'active'">
+                Trip
+            </a>
+
+            <a class="nav-link text-white" href="#">Train Seat</a>
+
+            <!-- SUPPORT -->
+            <a class="nav-link text-white position-relative"
+               th:href="@{/user/support}"
+               th:classappend="${menu == 'support'} ? 'active'">
+
+                Support
+                <span id="support-unread-badge"
+                      class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
+                      style="display:none;font-size:0.65rem;">
+                    0
+                </span>
+            </a>
+
+            <a class="nav-link text-white"
+               th:href="@{/user/review/view}"
+               th:classappend="${menu == 'review'} ? 'active'">
+                Rating
+            </a>
+
+            <a class="nav-link text-white" href="#">Q&A</a>
+        </div>
+
+        <!-- RIGHT -->
+        <div class="d-flex text-white ms-auto align-items-center">
+
+            <a th:href="@{/user/order/view}" class="nav-link text-white">
+                <i class="bi bi-cart"></i> Đơn hàng
+            </a>
+
+            <!-- ACCOUNT -->
+            <div class="dropdown">
+                <button class="btn btn-light"
+                        type="button"
+                        id="accountDropdown"
+                        data-bs-toggle="dropdown">
+                    <i class="bi bi-person"></i>
+                    <span th:text="${currentUser != null ? currentUser.fullname : 'Tài khoản'}"></span>
+                </button>
+
+                <ul class="dropdown-menu dropdown-menu-end">
+                    <li th:if="${currentUser != null}">
+                        <a class="dropdown-item"
+                           th:href="@{/user/account}">
+                            Tài khoản
+                        </a>
+                    </li>
+
+                    <li th:if="${currentUser != null}">
+                        <a class="dropdown-item"
+                           th:href="@{/logout}">
+                            Đăng xuất
+                        </a>
+                    </li>
+
+                    <li th:if="${currentUser == null}">
+                        <a class="dropdown-item"
+                           th:href="@{/login}">
+                            Đăng nhập
+                        </a>
+                    </li>
+
+                    <li th:if="${currentUser == null}">
+                        <a class="dropdown-item"
+                           th:href="@{/register}">
+                            Tạo tài khoản
+                        </a>
+                    </li>
+                </ul>
+            </div>
+
+        </div>
+    </div>
+</nav>
+
+<script th:if="${currentUser != null}" th:inline="javascript">
+    const contextPath = /*[[@{/}]]*/ '/';
+    const userId = /*[[${currentUser.id}]]*/ 0;
+
+    console.log('USER ID =', userId);
+
+    let stompClient = null;
+
+    document.addEventListener('DOMContentLoaded', () => {
+        loadInitialUnread();
+        connectSupportBadgeWS();
+    });
+
+    // ✅ LOAD BAN ĐẦU (khi reload trang)
+    function loadInitialUnread() {
+        fetch(contextPath + 'user/support/unread-count')
+            .then(res => res.json())
+            .then(count => updateSupportUnread(count))
+            .catch(err => console.log('Unread fetch error', err));
+    }
+
+    // ✅ WEBSOCKET REALTIME
+    function connectSupportBadgeWS() {
+        const socket = new SockJS(contextPath + 'ws-chat');
+        stompClient = Stomp.over(socket);
+        stompClient.debug = null;
+
+        stompClient.connect({}, () => {
+            console.log('🔔 Support badge WS connected');
+
+            stompClient.subscribe(
+                `/topic/user/${userId}/support-unread`,
+                msg => {
+                    const count = JSON.parse(msg.body);
+                    updateSupportUnread(count);
+                }
+            );
+        });
+    }
+
+    function updateSupportUnread(count) {
+        const badge = document.getElementById('support-unread-badge');
+        if (!badge) return;
+
+        if (count > 0) {
+            badge.style.display = 'inline-block';
+            badge.textContent = count > 9 ? '9+' : count;
+        } else {
+            badge.style.display = 'none';
+        }
+    }
+</script>
+
+
+</body>
+</html>

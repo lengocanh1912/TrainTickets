@@ -81,12 +81,12 @@
             </div>
 
             <div class="d-flex gap-2 mt-4 mb-3">
-                <button class="btn btn-secondary" onclick="prevCoach()" id="prevBtn" style="display:none;">Trước</button>
+                <button class="btn btn-primary" onclick="prevCoach()" id="prevBtn" style="display:none;">Trước</button>
                 <button class="btn btn-primary" onclick="nextCoach()" id="nextBtn" disabled>Tiếp</button>
             </div>
             <!-- ✅ Thêm vào phần này ngay sau nút "Tiếp" -->
             <div id="coachCompletedMsg" class="alert alert-success mt-3" style="display: none;">
-                Đã nhập đủ thông tin cho tất cả các toa. Hãy ấn nút <strong>Tạo tàu</strong>.
+                Đã nhập đủ thông tin cho tất cả các toa. Hãy ấn nút <strong>Tạo tàu</strong> để thêm mới tàu.
             </div>
 
         </div>
@@ -97,193 +97,200 @@
             <button class="btn btn-danger" onclick="location.reload()">Hủy</button>
         </div>
     </div>
+</div>
 
-    <script>
-        let train = {
-            name: "",
-            code: "",
-            coachCount: 0,
-            coaches: []
-        };
+<script>
+    let train = {
+        name: "",
+        code: "",
+        coachCount: 0,
+        coaches: []
+    };
 
-        let currentCoachIndex = 0;
+    let currentCoachIndex = 0;
 
-        document.addEventListener("DOMContentLoaded", function () {
-            const coachInput = document.getElementById("coachCount");
-            coachInput.addEventListener("keypress", function (event) {
-                if (event.key === "Enter") {
-                    event.preventDefault();
-                    handleCoachCountConfirm();
-                }
-            });
-
-            const capacityInput = document.getElementById("coachCapacity");
-            capacityInput.addEventListener("keypress", function (event) {
-                if (event.key === "Enter") {
-                    event.preventDefault();
-                    updateCoachSeats();
-                }
-            });
+    document.addEventListener("DOMContentLoaded", function () {
+        const coachInput = document.getElementById("coachCount");
+        coachInput.addEventListener("keypress", function (event) {
+            if (event.key === "Enter") {
+                event.preventDefault();
+                handleCoachCountConfirm();
+            }
         });
 
-        function handleCoachCountConfirm() {
-            const name = document.getElementById("trainName").value.trim();
-            const code = document.getElementById("trainCode").value.trim();
-            const count = parseInt(document.getElementById("coachCount").value);
-
-            if (!name || !code || !count || count <= 0) {
-                return;
+        const capacityInput = document.getElementById("coachCapacity");
+        capacityInput.addEventListener("keypress", function (event) {
+            if (event.key === "Enter") {
+                event.preventDefault();
+                updateCoachSeats();
             }
+        });
+    });
 
-            train.name = name;
-            train.code = code;
-            train.coachCount = count;
-            train.coaches = new Array(count).fill({}).map(() => ({
-                type: "standard",
-                capacity: 0,
-                code: "",
-                seats: []
-            }));
+    function handleCoachCountConfirm() {
+        const name = document.getElementById("trainName").value.trim();
+        const code = document.getElementById("trainCode").value.trim();
+        const count = parseInt(document.getElementById("coachCount").value);
 
-            document.getElementById("coachSetup").style.display = "block";
-            document.getElementById("finalButtons").style.display = "none";
-            document.getElementById("coachCompletedMsg").style.display = "none";
+        if (!name || !code || !count || count <= 0) {
+            return;
+        }
 
+        train.name = name;
+        train.code = code;
+        train.coachCount = count;
+        train.coaches = new Array(count).fill({}).map(() => ({
+            type: "standard",
+            capacity: 0,
+            code: "",
+            seats: []
+        }));
+
+        document.getElementById("coachSetup").style.display = "block";
+        document.getElementById("finalButtons").style.display = "none";
+        document.getElementById("coachCompletedMsg").style.display = "none";
+
+        renderCoachForm();
+    }
+
+    function updateCoachCode() {
+        const type = document.getElementById("coachType").value;
+        const prefix = type === "vip" ? "V" : "S";
+        const coachCode = prefix + (currentCoachIndex + 1);
+        document.getElementById("coachCode").innerText = coachCode;
+    }
+
+    function updateCoachSeats() {
+        const type = document.getElementById("coachType").value;
+        const capacity = parseInt(document.getElementById("coachCapacity").value || 0);
+
+        if (!capacity || capacity <= 0) {
+            alert("Số lượng chỗ phải lớn hơn 0!");
+            return;
+        }
+
+        const coachCode = (type === "vip" ? "V" : "S") + (currentCoachIndex + 1);
+        const seatList = [];
+        for (let i = 1; i <= capacity; i++) {
+            seatList.push({
+                seatCode: coachCode + i,
+                booked: false,
+                price: 0
+            });
+        }
+
+
+        const seatContainer = document.getElementById("seatCodes");
+        seatContainer.innerHTML = "";
+        seatList.forEach(seat => {
+            const span = document.createElement("span");
+            span.className = "seat-badge";
+            span.innerText = seat.seatCode;
+            seatContainer.appendChild(span);
+        });
+
+        train.coaches[currentCoachIndex] = {
+            type,
+            capacity,
+            code: coachCode,
+            seats: seatList
+        };
+
+        document.getElementById("nextBtn").disabled = false;
+        checkIfAllCoachesComplete();
+    }
+
+
+
+    function renderCoachForm() {
+        document.getElementById("coachTitle").innerText = `Cài đặt toa ${currentCoachIndex + 1}`;
+        document.getElementById("coachType").value = train.coaches[currentCoachIndex].type;
+        document.getElementById("coachCapacity").value = train.coaches[currentCoachIndex].capacity || "";
+        updateCoachCode();
+
+        const seats = train.coaches[currentCoachIndex].seats || [];
+        const seatContainer = document.getElementById("seatCodes");
+        seatContainer.innerHTML = "";
+        seats.forEach(code => {
+            const span = document.createElement("span");
+            span.className = "seat-badge";
+            span.innerText = code;
+            seatContainer.appendChild(span);
+        });
+
+        document.getElementById("prevBtn").style.display = currentCoachIndex > 0 ? "inline-block" : "none";
+        document.getElementById("nextBtn").innerText = "Tiếp";
+        document.getElementById("nextBtn").disabled = !train.coaches[currentCoachIndex].capacity;
+    }
+
+    function nextCoach() {
+        updateCoachSeats();
+
+        if (!train.coaches[currentCoachIndex].capacity) {
+            alert("Vui lòng nhập và xác nhận số chỗ (ấn Enter) cho toa.");
+            return;
+        }
+
+        if (currentCoachIndex < train.coachCount - 1) {
+            currentCoachIndex++;
             renderCoachForm();
         }
 
-        function updateCoachCode() {
-            const type = document.getElementById("coachType").value;
-            const prefix = type === "vip" ? "V" : "S";
-            const coachCode = prefix + (currentCoachIndex + 1);
-            document.getElementById("coachCode").innerText = coachCode;
+        checkIfAllCoachesComplete();
+    }
+
+    function prevCoach() {
+        if (currentCoachIndex > 0) {
+            currentCoachIndex--;
+            renderCoachForm();
         }
+    }
 
-        function updateCoachSeats() {
-            const type = document.getElementById("coachType").value;
-            const capacity = parseInt(document.getElementById("coachCapacity").value || 0);
+    function checkIfAllCoachesComplete() {
+        const allFilled = train.coaches.every(c => c.capacity > 0 && c.code && c.seats.length > 0);
+        const completedMsg = document.getElementById("coachCompletedMsg");
+        const finalButtons = document.getElementById("finalButtons");
+        const submitBtn = document.getElementById("submitBtn");
 
-            if (!capacity || capacity <= 0) {
-                alert("Số lượng chỗ phải lớn hơn 0!");
-                return;
-            }
-
-            const coachCode = (type === "vip" ? "V" : "T") + (currentCoachIndex + 1);
-            const seatList = [];
-            for (let i = 1; i <= capacity; i++) {
-                seatList.push(coachCode + i);
-            }
-
-            const seatContainer = document.getElementById("seatCodes");
-            seatContainer.innerHTML = "";
-            seatList.forEach(code => {
-                const span = document.createElement("span");
-                span.className = "seat-badge";
-                span.innerText = code;
-                seatContainer.appendChild(span);
-            });
-
-            train.coaches[currentCoachIndex] = {
-                type,
-                capacity,
-                code: coachCode,
-                seats: seatList
-            };
-
-            document.getElementById("nextBtn").disabled = false;
-            checkIfAllCoachesComplete();
+        if (allFilled) {
+            completedMsg.style.display = "block";
+            finalButtons.style.display = "flex";
+            submitBtn.classList.remove("btn-secondary");
+            submitBtn.classList.add("btn-success");
+        } else {
+            completedMsg.style.display = "none";
+            finalButtons.style.display = "none";
+            submitBtn.classList.remove("btn-success");
+            submitBtn.classList.add("btn-secondary");
         }
+    }
 
-        function renderCoachForm() {
-            document.getElementById("coachTitle").innerText = `Cài đặt toa ${currentCoachIndex + 1}`;
-            document.getElementById("coachType").value = train.coaches[currentCoachIndex].type;
-            document.getElementById("coachCapacity").value = train.coaches[currentCoachIndex].capacity || "";
-            updateCoachCode();
+    function submitTrain() {
+        // In ra dữ liệu trước khi gửi
+        console.log(JSON.stringify(train, null, 2));
 
-            const seats = train.coaches[currentCoachIndex].seats || [];
-            const seatContainer = document.getElementById("seatCodes");
-            seatContainer.innerHTML = "";
-            seats.forEach(code => {
-                const span = document.createElement("span");
-                span.className = "seat-badge";
-                span.innerText = code;
-                seatContainer.appendChild(span);
-            });
-
-            document.getElementById("prevBtn").style.display = currentCoachIndex > 0 ? "inline-block" : "none";
-            document.getElementById("nextBtn").innerText = "Tiếp";
-            document.getElementById("nextBtn").disabled = !train.coaches[currentCoachIndex].capacity;
-        }
-
-        function nextCoach() {
-            updateCoachSeats();
-
-            if (!train.coaches[currentCoachIndex].capacity) {
-                alert("Vui lòng nhập và xác nhận số chỗ (ấn Enter) cho toa.");
-                return;
-            }
-
-            if (currentCoachIndex < train.coachCount - 1) {
-                currentCoachIndex++;
-                renderCoachForm();
-            }
-
-            checkIfAllCoachesComplete();
-        }
-
-        function prevCoach() {
-            if (currentCoachIndex > 0) {
-                currentCoachIndex--;
-                renderCoachForm();
-            }
-        }
-
-        function checkIfAllCoachesComplete() {
-            const allFilled = train.coaches.every(c => c.capacity > 0 && c.code && c.seats.length > 0);
-            const completedMsg = document.getElementById("coachCompletedMsg");
-            const finalButtons = document.getElementById("finalButtons");
-            const submitBtn = document.getElementById("submitBtn");
-
-            if (allFilled) {
-                completedMsg.style.display = "block";
-                finalButtons.style.display = "flex";
-                submitBtn.classList.remove("btn-secondary");
-                submitBtn.classList.add("btn-success");
-            } else {
-                completedMsg.style.display = "none";
-                finalButtons.style.display = "none";
-                submitBtn.classList.remove("btn-success");
-                submitBtn.classList.add("btn-secondary");
-            }
-        }
-        function submitTrain() {
-            // In ra dữ liệu trước khi gửi
-            console.log(JSON.stringify(train, null, 2));
-
-            fetch("/trainticket/api/admin/trains", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify(train)
+        fetch("/trainticket/api/admin/trains", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(train)
+        })
+            .then(response => {
+                if (response.ok) {
+                    alert("Tạo tàu thành công!");
+                    window.location.href = "/trainticket/admin/train/view";
+                } else {
+                    alert("Tạo tàu thất bại!");
+                }
             })
-                .then(response => {
-                    if (response.ok) {
-                        alert("Tạo tàu thành công!");
-                        window.location.href = "/trainticket/admin/train/view";
-                    } else {
-                        alert("Tạo tàu thất bại!");
-                    }
-                })
-                .catch(error => {
-                    console.error("Lỗi:", error);
-                    alert("Đã xảy ra lỗi khi gửi dữ liệu.");
-                });
-        }
+            .catch(error => {
+                console.error("Lỗi:", error);
+                alert("Đã xảy ra lỗi khi gửi dữ liệu.");
+            });
+    }
 
-    </script>
-
-</div>
+</script>
 
 </body>
 </html>

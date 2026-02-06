@@ -4,6 +4,10 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
+import t3h.edu.vn.traintickets.enums.CancelType;
+import t3h.edu.vn.traintickets.enums.OrderStatus;
+
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -31,19 +35,19 @@ public class Order {
 
     @NotNull
     @Column(name = "totalAmount", nullable = false)
-    private Float totalAmount;
+    private BigDecimal totalAmount;
 
     @NotNull
     @Column(name = "finalAmount", nullable = false)
-    private Float finalAmount;
+    private BigDecimal finalAmount;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "returnTripId")
     private t3h.edu.vn.traintickets.entities.Trip returnTrip;
 
-    @NotNull
+    @Enumerated(EnumType.STRING) // hoặc EnumType.ORDINAL nếu bạn dùng số
     @Column(name = "status", nullable = false)
-    private Byte status;
+    private OrderStatus status;
 
     @NotNull
     @Column(name = "createdAt", nullable = false)
@@ -52,95 +56,33 @@ public class Order {
     @Column(name = "updatedAt")
     private LocalDateTime updatedAt;
 
+    @Column
+    private LocalDateTime expiresAt; // thời gian hết hạn giữ vé
+
+    @Enumerated(EnumType.STRING)
+    @Column(length = 30)
+    private CancelType cancelType; // loại hủy
+
+    @Column(length = 255)
+    private String cancelNote; // ghi chú thêm
+
     @OneToMany(mappedBy = "order", fetch = FetchType.LAZY)
     private List<OrderTicket> orderTickets;
 
-    //getter & setter
-    public String getOrderCode() {
-        return orderCode;
-    }
+    @Column(name = "transaction_code", unique = true)
+    private String transactionCode;
 
-    public void setOrderCode(String orderCode) {
-        this.orderCode = orderCode;
-    }
+    @Column(name = "hold_until")
+    private LocalDateTime holdUntil; // thời điểm hết hạn giữ ghế cho cả Order
 
-    public List<OrderTicket> getOrderTickets() {
-        return orderTickets;
-    }
+    //contact
+    @Column(name = "contact_name", length = 100)
+    private String contactName;
 
-    public void setOrderTickets(List<OrderTicket> orderTickets) {
-        this.orderTickets = orderTickets;
-    }
+    @Column(name = "contact_phone", length = 20)
+    private String contactPhone;
 
-    public Long getId() {
-        return id;
-    }
+    @Column(name = "contact_email", length = 100)
+    private String contactEmail;
 
-    public void setId(Long id) {
-        this.id = id;
     }
-
-    public User getUser() {
-        return user;
-    }
-
-    public void setUser(User user) {
-        this.user = user;
-    }
-
-    public Discount getDiscount() {
-        return discount;
-    }
-
-    public void setDiscount(Discount discount) {
-        this.discount = discount;
-    }
-
-    public @NotNull Float getTotalAmount() {
-        return totalAmount;
-    }
-
-    public void setTotalAmount(@NotNull Float totalAmount) {
-        this.totalAmount = totalAmount;
-    }
-
-    public @NotNull Float getFinalAmount() {
-        return finalAmount;
-    }
-
-    public void setFinalAmount(@NotNull Float finalAmount) {
-        this.finalAmount = finalAmount;
-    }
-
-    public Trip getReturnTrip() {
-        return returnTrip;
-    }
-
-    public void setReturnTrip(Trip returnTrip) {
-        this.returnTrip = returnTrip;
-    }
-
-    public @NotNull Byte getStatus() {
-        return status;
-    }
-
-    public void setStatus(@NotNull Byte status) {
-        this.status = status;
-    }
-
-    public @NotNull LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
-
-    public void setCreatedAt(@NotNull LocalDateTime createdAt) {
-        this.createdAt = createdAt;
-    }
-
-    public LocalDateTime getUpdatedAt() {
-        return updatedAt;
-    }
-
-    public void setUpdatedAt(LocalDateTime updatedAt) {
-        this.updatedAt = updatedAt;
-    }
-}

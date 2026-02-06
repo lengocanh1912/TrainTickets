@@ -34,6 +34,12 @@
       <h3>Cập nhật chuyến đi</h3>
 
       <form th:action="@{/admin/trip/update}" th:object="${trip}" method="post">
+        <!-- Lỗi toàn form -->
+        <div th:if="${#fields.hasErrors('*')}" class="alert alert-danger mt-3">
+          <ul>
+            <li th:each="err : ${#fields.errors('*')}" th:text="${err}"></li>
+          </ul>
+        </div>
         <!-- ID ẩn -->
         <input type="hidden" th:field="*{id}"/>
 
@@ -61,7 +67,10 @@
         <!-- Giá vé -->
         <div class="mb-3">
           <label for="price" class="form-label">Giá vé</label>
-          <input type="number" class="form-control" id="price" th:field="*{price}" required min="0" step="1">
+          <div class="input-group">
+            <input type="text" class="form-control" id="price" th:field="*{price}" required />
+            <span class="input-group-text">VND</span>
+          </div>
           <div class="text-danger" th:if="${#fields.hasErrors('price')}" th:errors="*{price}"></div>
         </div>
 
@@ -71,15 +80,13 @@
           <input type="datetime-local"
                  class="form-control"
                  id="departureAt"
-                 th:field="*{departureAt}"
-                 th:value="${#temporals.format(trip.departureAt, 'yyyy-MM-dd''T''HH:mm')}"/>
-<!--          <input type="datetime-local"-->
-<!--                 class="form-control"-->
-<!--                 th:field="*{departureAt}" />-->
-
+                 name="departureAt"
+                 th:value="${trip.departureAtFormatted}" />
           <div class="text-danger" th:if="${#fields.hasErrors('departureAt')}"
                th:errors="*{departureAt}"></div>
         </div>
+
+
 
         <!-- Thời gian đến -->
         <div class="mb-3">
@@ -87,9 +94,8 @@
           <input type="datetime-local"
                  class="form-control"
                  id="arrivalAt"
-                 th:field="*{arrivalAt}"
-                 th:value="${#temporals.format(trip.arrivalAt, 'yyyy-MM-dd''T''HH:mm')}" />
-
+                 name="arrivalAt"
+                 th:value="${trip.arrivalAtFormatted}" />
           <div class="text-danger" th:if="${#fields.hasErrors('arrivalAt')}" th:errors="*{arrivalAt}"></div>
         </div>
 
@@ -103,7 +109,7 @@
                    type="radio"
                    id="statusActive"
                    th:field="*{status}"
-                   th:value="true"
+                   th:value="${T(t3h.edu.vn.traintickets.enums.TripState).ACTIVE}"
                    required>
             <label class="form-check-label" for="statusActive">Đang chạy</label>
           </div>
@@ -114,7 +120,7 @@
                    type="radio"
                    id="statusPaused"
                    th:field="*{status}"
-                   th:value="false"
+                   th:value="${T(t3h.edu.vn.traintickets.enums.TripState).INACTIVE}"
                    required>
             <label class="form-check-label" for="statusPaused">Tạm dừng</label>
           </div>
@@ -124,18 +130,14 @@
 
 
 
+
         <!-- Nút thao tác -->
         <div class="text-end">
           <button class="btn btn-success" type="submit">Cập nhật</button>
           <a class="btn btn-secondary" th:href="@{/admin/trip/view}">Quay lại</a>
         </div>
 
-        <!-- Lỗi toàn form -->
-        <div th:if="${#fields.hasErrors('*')}" class="alert alert-danger mt-3">
-          <ul>
-            <li th:each="err : ${#fields.errors('*')}" th:text="${err}"></li>
-          </ul>
-        </div>
+
       </form>
 
       <!-- Thông báo thành công -->
@@ -144,4 +146,26 @@
   </div>
 </div>
 </body>
+
+<script>
+  // Simple formatter: giữ chỉ chữ số, thêm dấu chấm theo locale vi-VN
+  function formatInput(e) {
+    const el = e.target;
+    let v = el.value;
+    // Remove non-digit chars
+    v = v.replace(/\D/g, '');
+    if (!v) { el.value = ''; return; }
+    // Format using Intl.NumberFormat
+    el.value = new Intl.NumberFormat('vi-VN').format(v);
+  }
+
+  const priceInput = document.getElementById('price');
+  if (priceInput) {
+    // format initial value (server already supplied formatted string)
+    priceInput.addEventListener('input', formatInput);
+    // optional: format on blur to ensure correct
+    priceInput.addEventListener('blur', formatInput);
+  }
+</script>
+
 </html>

@@ -30,19 +30,42 @@
 <div class="main-content">
   <div class="container-fluid">
     <header class="d-flex justify-content-between align-items-center py-3">
-      <div class="col-lg-4 col-xl-5">
-        <form th:action="@{'/admin/ticket/search'}" method="GET" class="flex-grow-1" style="max-width: 400px;">
-          <div class="input-group">
-            <input type="text" name="keyword" class="form-control"
-                   placeholder="Nhập từ khóa..." aria-label="Search"
-                   th:value="${param.keyword}">
-            <button class="btn btn-primary" type="submit">
-              <i class="bi bi-search"></i>
-            </button>
-          </div>
+      <div>
+        <form th:action="@{'/admin/ticket/search'}" method="GET"
+              class="d-flex align-items-center flex-nowrap w-100" style="gap: 8px; overflow-x: auto;">
+
+          <input type="text" name="keyword" class="form-control" placeholder="Người dùng..."
+                 th:value="${param.keyword}" style="width: 160px; flex: 0 0 auto;">
+
+          <input type="text" name="trainName" class="form-control" placeholder="Tên tàu..."
+                 th:value="${param.trainName}" style="width: 140px; flex: 0 0 auto;">
+
+          <input type="text" name="departure" class="form-control" placeholder="Ga đi..."
+                 th:value="${param.departure}" style="width: 140px; flex: 0 0 auto;">
+
+          <input type="text" name="arrival" class="form-control" placeholder="Ga đến..."
+                 th:value="${param.arrival}" style="width: 140px; flex: 0 0 auto;">
+
+          <input type="date" name="departureDate" class="form-control"
+                 th:value="${param.departureDate}" style="width: 160px; flex: 0 0 auto;">
+
+          <select name="status" class="form-select" style="width: 140px; flex: 0 0 auto;">
+            <option value="">State</option>
+            <option th:each="s : ${T(t3h.edu.vn.traintickets.enums.TicketStatus).values()}"
+                    th:value="${s.name()}"
+                    th:selected="${s.name() == param.status}"
+                    th:text="${s}">
+            </option>
+          </select>
+
+          <button class="btn btn-primary" type="submit" style="flex: 0 0 auto;">
+            <i class="bi bi-search"></i> Tìm
+          </button>
+
         </form>
       </div>
     </header>
+
     <header class="d-flex justify-content-between align-items-center py-3">
       <h3 class="mb-0">Danh sách vé đã bán</h3>
     </header>
@@ -50,12 +73,16 @@
     <h5 class="text-danger" th:text="${message}"></h5>
 
     <main class="table-responsive mb-5">
+
       <table class="table table-bordered table-hover align-middle">
         <thead class="table-dark text-center">
         <tr>
           <th>ID</th>
-          <th>Người dùng</th>
+          <th>User</th>
           <th>Chuyến đi</th>
+          <th>ngày đi </th>
+          <th>ngày đến </th>
+          <th>tàu</th>
           <th>Ghế</th>
           <th>Loại vé</th>
           <th>Giá vé</th>
@@ -64,35 +91,77 @@
           <th>Hành động</th>
         </tr>
         </thead>
+
         <tbody class="text-center">
         <tr th:each="ticket : ${tickets}">
+          <!-- ID -->
           <td th:text="${ticket.id}">1</td>
-          <td th:text="${ticket.user.fullname}">Nguyễn Văn A</td>
-          <td th:text="${ticket.trip.route.departure.name + ' -> ' + ticket.trip.route.arrival.name}">Hà Nội đến Sài Gòn</td>
-          <td th:text="${ticket.seat.coach.code + '-' + ticket.seat.seatCode}">A1-12</td>
-          <td th:switch="${ticket.ticketType}">
-            <span th:case="0">Người lớn</span>
-            <span th:case="1">Trẻ em</span>
-            <span th:case="2">Sinh viên</span>
-            <span th:case="3">Người cao tuổi</span>
-            <span th:case="*">Không rõ</span>
+
+          <!-- Người dùng -->
+          <td th:text="${ticket.userFullname}">Nguyễn Văn A</td>
+
+          <!-- Chuyến đi -->
+          <td th:text="${ticket.departureStation + ' → ' + ticket.arrivalStation}">
+            Hà Nội → Sài Gòn
           </td>
-          <td th:text="${#numbers.formatDecimal(ticket.price, 0, 'COMMA', 0, 'POINT')} + 'đ'"></td>
-          <td>
-            <span th:if="${ticket.status == 1}" class="badge bg-success">đã thanh toán</span>
-            <span th:if="${ticket.status == 0}" class="badge bg-warning text-dark">Chưa thanh toán</span>
-            <span th:if="${ticket.status == -1}" class="badge bg-secondary">Đã hủy</span>
+          <td th:text="${#temporals.format(ticket.departureAt, 'dd/MM/yyyy HH:mm')}">
+            26/07/2025 18:00
           </td>
-          <td th:text="${#temporals.format(ticket.createdAt, 'dd/MM/yyyy HH:mm')}"></td>
+          <td th:text="${#temporals.format(ticket.arrivalAt, 'dd/MM/yyyy HH:mm')}">
+            26/07/2025 18:00
+          </td>
+          <td th:text="${ticket.trainName}">1</td>
+          <!-- Ghế -->
+          <td th:text="${ticket.seatCode}">A1-12</td>
+
+          <!-- Loại vé -->
           <td>
-            <a th:href="@{/admin/ticket/view/{id}(id=${ticket.id})}" class="btn btn-sm btn-info">Xem</a>
-            <a class="btn btn-danger btn-sm" th:href="@{'/admin/ticket/delete?id=' + ${ticket.id}}"
-               onclick="return confirm('Bạn có chắc chắn muốn xóa vé này?')">Xóa</a>
+            <span th:switch="${ticket.ticketType}">
+              <span th:case="0">Người lớn</span>
+              <span th:case="1">Trẻ em</span>
+              <span th:case="2">Sinh viên</span>
+              <span th:case="3">Người cao tuổi</span>
+              <span th:case="*">Không rõ</span>
+            </span>
+          </td>
+
+          <!-- Giá vé -->
+          <td th:text="${#numbers.formatDecimal(ticket.price, 0, 'COMMA', 0, 'POINT')} + 'đ'">500.000đ</td>
+
+          <!-- Trạng thái -->
+          <td>
+    <span th:switch="${ticket.status}">
+      <span th:case="${TicketStatus.PENDING}" class="badge bg-warning text-dark">Chờ thanh toán</span>
+      <span th:case="${TicketStatus.PAID}" class="badge bg-success">Đã thanh toán</span>
+      <span th:case="${TicketStatus.CHECKED_IN}" class="badge bg-info text-dark">Đã check-in</span>
+      <span th:case="${TicketStatus.USED}" class="badge bg-secondary">Đã sử dụng</span>
+      <span th:case="${TicketStatus.CANCELLED}" class="badge bg-danger">Đã huỷ</span>
+      <span th:case="${TicketStatus.EXPIRED}" class="badge bg-dark">Quá hạn</span>
+      <span th:case="${TicketStatus.REFUNDED}" class="badge bg-primary">Đã hoàn tiền</span>
+      <span th:case="*" class="badge bg-light text-dark border">Không xác định</span>
+    </span>
+          </td>
+
+          <!-- Ngày tạo -->
+          <td th:text="${#temporals.format(ticket.createdAt, 'dd/MM/yyyy HH:mm')}">21/10/2025 10:30</td>
+
+          <!-- Hành động -->
+          <td>
+            <div class="d-flex justify-content-center gap-2">
+              <a class="btn btn-primary btn-sm"
+                 th:href="@{'/admin/ticket/detail?id=' + ${ticket.id}}">
+                Xem
+              </a>
+              <a th:href="@{'/admin/ticket/delete?id=' + ${ticket.id}}"
+                 class="btn btn-sm btn-danger"
+                 onclick="return confirm('Bạn có chắc chắn muốn xóa vé này?')">Xóa</a>
+            </div>
           </td>
         </tr>
         </tbody>
       </table>
-<!--      <nav th:replace="/admin/common/fragments :: paginationid()"></nav>-->
+
+      <!--      <nav th:replace="/admin/common/fragments :: paginationid()"></nav>-->
     </main>
   </div>
 </div>

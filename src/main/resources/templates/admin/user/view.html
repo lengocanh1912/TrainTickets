@@ -35,7 +35,7 @@
                 <form th:action="@{/admin/user/search}" method="GET" class="flex-grow-1" style="max-width: 400px;">
                     <div class="input-group">
                         <input type="text" name="keyword" class="form-control"
-                               placeholder="Nhập từ khóa..." aria-label="Search"
+                               placeholder="Tìm kiếm theo tên,email,id,sdt,..." aria-label="Search"
                                th:value="${param.keyword}">
                         <button class="btn btn-primary" type="submit">
                             <i class="bi bi-search"></i>
@@ -46,7 +46,7 @@
         </header>
         <header class="d-flex justify-content-between align-items-center py-3">
             <h3 class="mb-0">Danh sách người dùng</h3>
-            <a class="btn btn-primary" th:href="@{'/admin/user/create'}">Thêm người dùng</a>
+            <a class="btn btn-primary" th:href="@{|/admin/user/create?page=${currentPage}|}">Thêm người dùng</a>
         </header>
 
         <h3 class="text-danger" th:text="${message}"></h3>
@@ -62,6 +62,8 @@
                     <th>SĐT</th>
                     <th>Giới tính</th>
                     <th>Vai trò</th>
+                    <th>Ngày tạo</th>
+                    <th>Ngày cập nhật</th>
                     <th>Hành động</th>
                 </tr>
                 </thead>
@@ -76,25 +78,38 @@
                     <td>
                         <th:block th:switch="${user.role}">
                             <span th:case="'ADMIN'">
-                               admin
+                               ADMIN
                             </span>
-                            <span th:case="'EMPLOYEE'">
-                               employee
-                            </span>
+<!--                            <span th:case="'EMPLOYEE'">-->
+<!--                               employee-->
+<!--                            </span>-->
                             <span th:case="'CUSTOMER'">
-                               customer
+                               CUSTOMER
                             </span>
                         </th:block>
                     </td>
+                    <td th:text="${#dates.format(user.createdAt, 'dd/MM/yyyy HH:mm')}"></td>
+                    <td th:text="${user.updatedAt != null ? #dates.format(user.updatedAt, 'dd/MM/yyyy HH:mm') : 'Chưa cập nhật'}"></td>
+
+<!--                    <td th:text="${user.createdAt}"></td>-->
+<!--                    <td th:text="${user.updatedAt}"></td>-->
                     <td class="text-nowrap text-center">
-                        <a class="btn btn-primary btn-sm me-1" th:href="@{'/admin/user/detail?id=' + ${user.id}}">Xem</a>
-                        <a class="btn btn-success btn-sm me-1" th:href="@{'/admin/user/update?id=' + ${user.id}}">Sửa</a>
+                        <a class="btn btn-primary btn-sm me-1"
+                           th:href="@{'/admin/user/detail?id=' + ${user.id} + '&page=' + ${page.number}}">Xem</a>
+                        <a class="btn btn-success btn-sm me-1"
+                           th:href="@{'/admin/user/update?id=' + ${user.id}}">Sửa</a>
                         <a class="btn btn-danger btn-sm"
                            th:href="@{/admin/user/delete(id=${user.id}, page=${page.number})}"
                            onclick="return confirm('Bạn có muốn xóa?')">Xóa</a>
 
                     </td>
                 </tr>
+
+                <tr th:if="${page.last and page.getContent().size() < page.size}"
+                    th:each="i : ${#numbers.sequence(1, page.size - page.getContent().size())}">
+                    <td colspan="8" style="height: 50px;">&nbsp;</td>
+                </tr>
+
                 </tbody>
             </table>
             <!-- Gọi phân trang -->

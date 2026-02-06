@@ -6,6 +6,7 @@ import jakarta.validation.constraints.Size;
 import lombok.Getter;
 import lombok.Setter;
 import org.hibernate.annotations.ColumnDefault;
+import t3h.edu.vn.traintickets.enums.SeatStatus;
 
 @Getter
 @Setter
@@ -27,44 +28,11 @@ public class Seat {
     @Column(name = "seatCode", nullable = false, length = 10)
     private String seatCode;
 
-//    @Size(max = 20)
-//    @ColumnDefault("'standard'")
-//    @Column(name = "type", length = 20)
-//    private String type;
-
     @Column(name = "type", nullable = false, length = 20)
     private String type;
 
+    @Column(name = "status", nullable = false)
+    @Enumerated(EnumType.STRING)
+    private SeatStatus status; // AVAILABLE, HOLD, BOOKED
 
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public @NotNull Coach getCoach() {
-        return coach;
-    }
-
-    public void setCoach(@NotNull Coach coach) {
-        this.coach = coach;
-    }
-
-    public @Size(max = 10) @NotNull String getSeatCode() {
-        return seatCode;
-    }
-
-    public void setSeatCode(@Size(max = 10) @NotNull String seatCode) {
-        this.seatCode = seatCode;
-    }
-
-    public @Size(max = 20) String getType() {
-        return type;
-    }
-
-    public void setType(@Size(max = 20) String type) {
-        this.type = type;
-    }
 }

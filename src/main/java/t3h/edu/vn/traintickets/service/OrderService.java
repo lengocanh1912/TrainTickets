@@ -1,26 +1,51 @@
 package t3h.edu.vn.traintickets.service;
 
 
+import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.*;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import t3h.edu.vn.traintickets.dto.OrderGroupedTicketDto;
-import t3h.edu.vn.traintickets.dto.OrderPaymentDto;
-import t3h.edu.vn.traintickets.dto.OrderTicketDetailDto;
-import t3h.edu.vn.traintickets.dto.TicketDto;
+import t3h.edu.vn.traintickets.dto.*;
 import t3h.edu.vn.traintickets.entities.*;
+import t3h.edu.vn.traintickets.enums.CancelType;
+import t3h.edu.vn.traintickets.enums.OrderStatus;
+import t3h.edu.vn.traintickets.enums.SeatStatus;
+import t3h.edu.vn.traintickets.enums.TicketStatus;
+import t3h.edu.vn.traintickets.event.OrderPaidEvent;
 import t3h.edu.vn.traintickets.repository.OrderRepository;
+import t3h.edu.vn.traintickets.repository.OrderTicketRepository;
+import t3h.edu.vn.traintickets.repository.SeatRepository;
+import t3h.edu.vn.traintickets.repository.TicketRepository;
+import org.springframework.context.ApplicationEventPublisher;
 
 import java.time.Duration;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 @Service
+
 public class OrderService {
+
+    @Autowired
+    private MailService mailService;
     @Autowired
     private OrderRepository orderRepository;
+    @Autowired
+    private TicketRepository ticketRepository;
+    @Autowired
+    private SeatRepository seatRepository;
+    @Autowired
+    private OrderTicketRepository orderTicketRepository;
+    @Autowired
+    private ApplicationEventPublisher eventPublisher;
+
+    private static final Logger log = LoggerFactory.getLogger(OrderService.class);
 
     @Transactional(readOnly = true)
     public List<OrderGroupedTicketDto> searchGroupedOrders(String keyword) {
@@ -159,23 +184,10 @@ public class OrderService {
         return new PageImpl<>(content, pageable, ordersPage.getTotalElements());
     }
 
-
     public String generateOrderCode() {
         String timePart = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMddHHmmss"));
         String randomPart = UUID.randomUUID().toString().substring(0, 5).toUpperCase();
         return "OD" + timePart + randomPart;
-    }
-
-    public String generateUniqueOrderCode() {
-        int retry = 0;
-        while (retry < 5) {
-            String code = generateOrderCode();
-            if (!orderRepository.existsByOrderCode(code)) {
-                return code;
-            }
-            retry++;
-        }
-        throw new RuntimeException("Không thể sinh mã đơn hàng duy nhất sau nhiều lần thử.");
     }
 
     @Transactional
@@ -191,225 +203,233 @@ public class OrderService {
 
     @Transactional
     public OrderPaymentDto getOrderPaymentDtoById(Long id) {
-        Order order = orderRepository.findWithTicketsById(id).orElseThrow(() ->
-                new RuntimeException("Order not found"));
+        Order order = orderRepository.findWithTicketsById(id)
+                .orElseThrow(() -> new RuntimeException("Order not found"));
+
         return getOrderPaymentDto(order);
     }
 
     @Transactional
     public OrderPaymentDto getOrderPaymentDto(Order order) {
+
         OrderPaymentDto dto = new OrderPaymentDto();
+
         dto.setOrderId(order.getId());
-        dto.setOrderCode("ORDER-" + order.getId()); // tuỳ bạn đặt mã đơn
+        dto.setOrderCode(order.getOrderCode());
         dto.setCreatedAt(order.getCreatedAt());
         dto.setTotalAmount(order.getTotalAmount());
         dto.setFinalAmount(order.getFinalAmount());
+        dto.setHoldUntil(order.getHoldUntil());
 
-        List<TicketDto> ticketDtos = new ArrayList<>();
+        // Lấy ticket đầu tiên để lấy thông tin trip
+        Ticket firstTicket = order.getOrderTickets().get(0).getTicket();
+        Trip trip = firstTicket.getTrip();
 
-        for (OrderTicket orderTicket : order.getOrderTickets()) {
-            Ticket ticket = orderTicket.getTicket();
-            Trip trip = ticket.getTrip();
-            Route route = trip.getRoute();
+        dto.setDepartureStation(trip.getRoute().getDeparture().getName());
+        dto.setArrivalStation(trip.getRoute().getArrival().getName());
+        dto.setTrainCode(trip.getTrain().getCode());
+        dto.setDepartureTime(trip.getDepartureAt());
+        dto.setArrivalTime(trip.getArrivalAt());
 
-            TicketDto ticketDto = new TicketDto();
-            ticketDto.setTrainName(trip.getTrain().getName());
-            ticketDto.setCoachCode(ticket.getSeat().getCoach().getCode());
-            ticketDto.setSeatCode(ticket.getSeat().getSeatCode());
-            ticketDto.setDepartureStation(route.getDeparture().getName());
-            ticketDto.setArrivalStation(route.getArrival().getName());
-            ticketDto.setDepartureAt(trip.getDepartureAt());
-            ticketDto.setArrivalAt(trip.getArrivalAt());
-            ticketDto.setPrice(ticket.getPrice());
-            ticketDto.setTicketType(ticket.getTicketType());
+        List<TicketPaymentDto> ticketDtos = new ArrayList<>();
 
-            ticketDtos.add(ticketDto);
+        for (OrderTicket ot : order.getOrderTickets()) {
+
+            Ticket t = ot.getTicket();
+            TicketPaymentDto td = new TicketPaymentDto();
+
+            td.setTicketId(t.getId());
+
+            td.setCoachName(t.getSeat().getCoach().getCode());
+            td.setSeatNumber(t.getSeat().getSeatCode());
+            td.setSeatType(t.getSeat().getType());
+            td.setPrice(t.getPrice());
+
+            Byte type = t.getTicketType();
+            td.setTicketType(type);
+            td.setTicketTypeLabel(convertTicketType(type));
+
+            // nếu bạn muốn prefill thông tin đã có:
+            td.setPassengerName(t.getPassengerName());
+            td.setBirthDate(null);
+            td.setCccd(t.getCccd());
+            td.setPhone(t.getPhone());
+            td.setAddress(t.getAddress());
+
+            ticketDtos.add(td);
         }
 
         dto.setTickets(ticketDtos);
+
         return dto;
     }
 
-    @Transactional
-    public Page<OrderTicketDetailDto> getUserOrderTickets(Long userId, int page, int size) {
-        Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
-        Page<Order> ordersPage = orderRepository.findByUserId(userId, pageable);
-
-        List<OrderTicketDetailDto> dtoList = new ArrayList<>();
-        for (Order order : ordersPage.getContent()) {
-            for (OrderTicket ot : order.getOrderTickets()) {
-                Ticket ticket = ot.getTicket();
-                Trip trip = ticket.getTrip();
-                Seat seat = ticket.getSeat();
-                Coach coach = seat.getCoach();
-                Train train = coach.getTrain();
-                Route route = trip.getRoute();
-
-                OrderTicketDetailDto dto = new OrderTicketDetailDto();
-                dto.setTrainName(train.getName());
-                dto.setCoachCode(coach.getCode());
-                dto.setSeatCode(seat.getSeatCode());
-                dto.setOrderCode(order.getOrderCode());
-
-                dto.setDepartureStation(route.getDeparture().getName());
-                dto.setArrivalStation(route.getArrival().getName());
-
-                dto.setDepartureAt(trip.getDepartureAt());
-                dto.setArrivalAt(trip.getArrivalAt());
-
-                dto.setPrice(ticket.getPrice());
-                dto.setTicketType(ticket.getTicketType());
-                dto.setTicketStatus(ticket.getStatus());
-
-                dtoList.add(dto);
-            }
-        }
-
-        // Tạo Page từ danh sách DTO
-        int start = (int) pageable.getOffset();
-        int end = Math.min(start + pageable.getPageSize(), dtoList.size());
-        List<OrderTicketDetailDto> pageContent = dtoList.subList(start, end);
-
-        return new PageImpl<>(pageContent, pageable, dtoList.size());
+    private String convertTicketType(Byte type) {
+        return switch (type) {
+            case 0 -> "Người lớn";
+            case 1 -> "Trẻ em";
+            case 2 -> "Sinh viên";
+            case 3 -> "Người cao tuổi";
+            default -> "Không xác định";
+        };
     }
 
     @Transactional
-    public List<OrderGroupedTicketDto> getGroupedOrderTickets(Long userId) {
-        List<Order> orders = orderRepository.findByUserIdWithTickets(userId); // đã fetch sẵn
+    public void updateOrderAndTicketsStatus(Long orderId, boolean success) throws Exception {
 
-        List<OrderGroupedTicketDto> result = new ArrayList<>();
-
-        for (Order order : orders) {
-            List<OrderTicket> orderTickets = order.getOrderTickets();
-            if (orderTickets == null || orderTickets.isEmpty()) continue; // tránh lỗi IndexOutOfBounds
-
-            OrderGroupedTicketDto dto = new OrderGroupedTicketDto();
-            dto.setOrderCode(order.getOrderCode());
-
-            // Lấy vé đầu tiên để lấy thông tin chuyến đi
-            Optional<Ticket> optionalFirstTicket = order.getOrderTickets().stream()
-                    .map(OrderTicket::getTicket)
-                    .findFirst();
-
-            if (optionalFirstTicket.isEmpty()) continue;
-
-            Ticket firstTicket = optionalFirstTicket.get();
-            Trip trip = firstTicket.getTrip();
-
-            dto.setDepartureAt(trip.getDepartureAt());
-            dto.setArrivalAt(trip.getArrivalAt());
-            dto.setDepartureStation(trip.getRoute().getDeparture().getName());
-            dto.setArrivalStation(trip.getRoute().getArrival().getName());
-            dto.setId(order.getId());
-            dto.setCreatedAt(order.getCreatedAt());
-            dto.setStatus(order.getStatus());
-            // Gom vé theo loại (người lớn, trẻ em,...)
-            Map<String, List<TicketDto>> grouped = new LinkedHashMap<>();
-
-            for (OrderTicket ot : orderTickets) {
-                Ticket ticket = ot.getTicket();
-
-                String label = switch (ticket.getTicketType()) {
-                    case 0 -> "Người lớn";
-                    case 1 -> "Trẻ em";
-                    case 2 -> "Sinh viên";
-                    case 3 -> "Người cao tuổi";
-                    default -> "Không rõ";
-                };
-
-                grouped.computeIfAbsent(label, k -> new ArrayList<>());
-
-                TicketDto detail = new TicketDto();
-                detail.setCoachCode(ticket.getSeat().getCoach().getCode());
-                detail.setSeatCode(ticket.getSeat().getSeatCode());
-                detail.setPrice(ticket.getPrice());
-
-                grouped.get(label).add(detail);
-            }
-
-            dto.setGroupedTickets(grouped);
-            result.add(dto);
-
-        }
-        LocalDateTime now = LocalDateTime.now();
-        result.sort(Comparator.comparing(OrderGroupedTicketDto::getCreatedAt).reversed());
-
-        return result;
-    }
-
-    @Transactional
-    public void updateOrderStatusToPaid(Long orderId) {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy đơn hàng"));
 
-        if (order.getStatus() == 0) {
-            order.setStatus((byte) 1); // Đã thanh toán
-//            order.setPaidAt(LocalDateTime.now()); // Nếu bạn có trường paidAt
-            orderRepository.save(order);
+        // 🔒 Guard double callback
+        if (order.getStatus() == OrderStatus.PAID) {
+            return;
         }
+
+        order.setUpdatedAt(LocalDateTime.now());
+        order.setHoldUntil(null);
+
+        if (success) {
+            order.setStatus(OrderStatus.PAID);
+
+            for (OrderTicket ot : order.getOrderTickets()) {
+                Ticket ticket = ot.getTicket();
+
+                ticket.setStatus(TicketStatus.PAID);
+                ticket.setUsed(false);
+
+                if (ticket.getTicketCode() == null) {
+                    ticket.setTicketCode(generateUniqueTicketCode());
+                }
+
+                ticket.setUpdatedAt(LocalDateTime.now());
+                ticketRepository.save(ticket);
+            }
+            // ✅ PUBLISH EVENT (CHỈ KHI PAID)
+            eventPublisher.publishEvent(
+                    new OrderPaidEvent(order.getId(), order.getContactEmail())
+            );
+        } else {
+            order.setStatus(OrderStatus.FAILED);
+
+            for (OrderTicket ot : order.getOrderTickets()) {
+                Ticket ticket = ot.getTicket();
+                ticket.setStatus(TicketStatus.CANCELLED);
+                ticket.setUpdatedAt(LocalDateTime.now());
+                ticketRepository.save(ticket);
+            }
+        }
+
+        orderRepository.save(order);
+
+    }
+
+
+
+    @Transactional
+    public void cancelOrderAndReleaseEverything(Long orderId) {
+
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new RuntimeException("Order not found"));
+
+        List<OrderTicket> orderTickets = orderTicketRepository.findByOrderId(orderId);
+
+        for (OrderTicket ot : orderTickets) {
+
+            Ticket ticket = ot.getTicket();
+            Seat seat = ticket.getSeat();  // LẤY GHẾ Ở ĐÂY
+
+            // 1. Giải phóng ghế
+            if (seat != null) {
+                seat.setStatus(SeatStatus.AVAILABLE);
+                seatRepository.save(seat);
+                order.setHoldUntil(null);
+            }
+
+            // 2. Hủy vé
+            ticket.setStatus(TicketStatus.CANCELLED);
+            ticket.setUpdatedAt(LocalDateTime.now());
+            ticket.setPassengerName(null);
+            ticket.setCccd(null);
+            ticket.setAddress(null);
+            ticket.setBirthday(null);
+            ticketRepository.save(ticket);
+
+            // 3. Xóa OrderTicket
+            orderTicketRepository.delete(ot);
+        }
+
+        // 4. Cập nhật trạng thái của đơn hàng
+        order.setStatus(OrderStatus.CANCELLED);
+        order.setCancelType(CancelType.AUTO_EXPIRED);
+        order.setUpdatedAt(LocalDateTime.now());
+        orderRepository.save(order);
+
+        log.info("Order {} cancelled, tickets cancelled, seats released, OT deleted", orderId);
+    }
+
+
+    public void updateOrderContactInfo(OrderPaymentDto dto) {
+        Order order = orderRepository.findById(dto.getOrderId())
+                .orElseThrow(() -> new RuntimeException("Order not found"));
+
+        order.setContactName(dto.getContactName());
+        order.setContactPhone(dto.getContactPhone());
+        order.setContactEmail(dto.getContactEmail());
+        order.setUpdatedAt(LocalDateTime.now());
+
+        orderRepository.save(order);
     }
 
     @Transactional
-    public List<OrderGroupedTicketDto> getAllGroupedOrderTickets() {
-        List<Order> orders = orderRepository.findAllWithTickets(); // cần viết query JOIN FETCH
+    public void handlePaymentSuccess(Long orderId) {
 
-        List<OrderGroupedTicketDto> result = new ArrayList<>();
+        Order order = orderRepository.findById(orderId).orElseThrow();
 
-        for (Order order : orders) {
-            List<OrderTicket> orderTickets = order.getOrderTickets();
-            if (orderTickets == null || orderTickets.isEmpty()) continue;
-
-            OrderGroupedTicketDto dto = new OrderGroupedTicketDto();
-            dto.setOrderCode(order.getOrderCode());
-            dto.setId(order.getId());
-            dto.setCreatedAt(order.getCreatedAt());
-            dto.setStatus(order.getStatus());
-
-            // Lấy thông tin chuyến đi từ vé đầu
-            Optional<Ticket> optionalFirstTicket = orderTickets.stream()
-                    .map(OrderTicket::getTicket)
-                    .findFirst();
-            if (optionalFirstTicket.isEmpty()) continue;
-
-            Ticket firstTicket = optionalFirstTicket.get();
-            Trip trip = firstTicket.getTrip();
-            dto.setDepartureAt(trip.getDepartureAt());
-            dto.setArrivalAt(trip.getArrivalAt());
-            dto.setDepartureStation(trip.getRoute().getDeparture().getName());
-            dto.setArrivalStation(trip.getRoute().getArrival().getName());
-
-            // Gom nhóm vé
-            Map<String, List<TicketDto>> grouped = new LinkedHashMap<>();
-            for (OrderTicket ot : orderTickets) {
-                Ticket ticket = ot.getTicket();
-
-                String label = switch (ticket.getTicketType()) {
-                    case 0 -> "Người lớn";
-                    case 1 -> "Trẻ em";
-                    case 2 -> "Sinh viên";
-                    case 3 -> "Người cao tuổi";
-                    default -> "Không rõ";
-                };
-
-                grouped.computeIfAbsent(label, k -> new ArrayList<>());
-
-                TicketDto td = new TicketDto();
-                td.setCoachCode(ticket.getSeat().getCoach().getCode());
-                td.setSeatCode(ticket.getSeat().getSeatCode());
-                td.setPrice(ticket.getPrice());
-                td.setTicketType(ticket.getTicketType());
-                td.setTrainName(ticket.getTrip().getTrain().getName());
-                td.setUserFullname(order.getUser().getFullname());
-
-                grouped.get(label).add(td);
-            }
-
-            dto.setGroupedTickets(grouped);
-            result.add(dto);
+        if (order.getStatus() == OrderStatus.PAID) {
+            return; // IDEMPOTENT
         }
 
-        result.sort(Comparator.comparing(OrderGroupedTicketDto::getCreatedAt).reversed());
-        return result;
+        order.setStatus(OrderStatus.PAID);
+        order.setUpdatedAt(LocalDateTime.now());
+
+        for (OrderTicket ot : order.getOrderTickets()) {
+
+            Long ticketId = ot.getTicket().getId();
+
+            Ticket t = ticketRepository.findById(ticketId)
+                    .orElseThrow();
+
+            t.setStatus(TicketStatus.PAID);
+            t.setTicketCode(UUID.randomUUID().toString());
+            t.setUsed(false);
+            t.setUpdatedAt(LocalDateTime.now());
+
+            ticketRepository.save(t);
+        }
+
+        orderRepository.save(order);
+    }
+
+//    @Transactional
+//    public void markOrderPaid(Order order) {
+//        order.setStatus(OrderStatus.PAID);
+//        order.setUpdatedAt(LocalDateTime.now());
+//        orderRepository.save(order);
+//    }
+
+    private String generateUniqueTicketCode() {
+        String code ;
+        do {
+            code = "TRAINTICKET-"
+                    + LocalDate.now()
+                    + "-"
+                    + UUID.randomUUID()
+                    .toString()
+                    .substring(0, 8)
+                    .toUpperCase()
+            ;
+        } while (ticketRepository.existsByTicketCode(code));
+        return code;
     }
 
 }

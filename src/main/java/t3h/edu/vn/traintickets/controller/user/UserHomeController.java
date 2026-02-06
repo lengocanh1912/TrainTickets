@@ -14,11 +14,12 @@ public class UserHomeController {
     @Autowired
     UserService userService;
 
-    @GetMapping("/support")
-    public String support(Model model) {
-        model.addAttribute("menu", "support");
-        return "user/support";
-    }
+//    @GetMapping("/support")
+//    public String support(Model model) {
+//        model.addAttribute("menu", "support");
+//        return "user/support";
+//    }
+
     @GetMapping("/test")
     public String test(Model model) {
         return"/user/test";
@@ -33,4 +34,9 @@ public class UserHomeController {
     public String test2(Model model) {
         return"/user/test2";
     }
+
+//    @GetMapping("/account")
+//    public String account(Model model) {
+//        return "/user/account";
+//    }
 }

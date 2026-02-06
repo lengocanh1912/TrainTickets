@@ -45,8 +45,8 @@
             </div>
         </header>
         <header class="d-flex justify-content-between align-items-center py-3">
-            <h3 class="mb-0">Danh sách đánh giá</h3>
-            <a class="btn btn-primary" th:href="@{'/admin/user/create'}">Thêm người dùng</a>
+            <h3 class="mb-0">Đánh giá của người dùng</h3>
+<!--            <a class="btn btn-primary" th:href="@{'/admin/user/create'}">Thêm người dùng</a>-->
         </header>
 
         <h3 class="text-danger" th:text="${message}"></h3>
@@ -59,12 +59,14 @@
                     <th>Chuyến đi</th>
                     <th>Đánh giá</th>
                     <th>Bình luận</th>
+                    <th>Ngày đánh giá</th>
                     <th>Ảnh feedback</th>
+                    <th>Trạng thái</th>
                     <th>Thao tác</th>
                 </tr>
                 </thead>
                 <tbody class="text-center">
-                <tr th:each="review : ${reviews}">
+                <tr th:each="review : ${page.getContent()}">
                     <td th:text="${review.userFullName}"></td>
                     <td>
                         <span th:text="${#temporals.format(review.departureTime, 'HH:mm dd/MM/yyyy')}"></span><br/>
@@ -75,6 +77,7 @@
                               th:text="${i <= review.rating ? '⭐' : '☆'}"></span>
                     </td>
                     <td th:text="${review.comment}"></td>
+                    <td th:text="${#temporals.format(review.createdAt, 'dd/MM/yyyy HH:mm')}"></td>
                     <td>
                         <div style="display: flex; flex-wrap: wrap; gap: 5px;">
                             <img th:each="img : ${review.imagePaths}"
@@ -82,14 +85,34 @@
                                  style="width: 70px; height: 70px; object-fit: cover;" />
                         </div>
                     </td>
+<!--                    <td>-->
+<!--                        <span th:text="${review.status == 'REPLIED' ? 'Đã phản hồi' : 'Chưa phản hồi'}"-->
+<!--                              th:class="${review.status == 'REPLIED'} ? 'text-success' : 'text-warning'">-->
+<!--                        </span>-->
+<!--                    </td>-->
                     <td>
-                        <a href="#" class="btn btn-sm btn-primary">Trả lời</a>
+                      <span th:switch="${review.status}">
+                        <span th:case="${ReviewStatus.PENDING}" class="badge bg-warning text-dark">Chưa phản hồi</span>
+                        <span th:case="${ReviewStatus.REPLIED}" class="badge bg-success">Đã phản hồi</span>
+                        <span th:case="*">Không xác định</span>
+                      </span>
                     </td>
+
+                    <td>
+                        <a th:href="@{'/admin/review/reply/' + ${review.reviewId}}"
+                           class="btn btn-sm btn-primary">Trả lời</a>
+                    </td>
+
+                </tr>
+                <!-- Dòng trống để làm đủ 5 hàng, chỉ hiển thị ở trang cuối -->
+                <tr th:if="${page.last}"
+                    th:each="i : ${#numbers.sequence(1, page.size - page.getContent().size())}">
+                    <td colspan="8" style="height: 50px;">&nbsp;</td>
                 </tr>
                 </tbody>
             </table>
             <!-- Gọi phân trang -->
-<!--            <nav th:replace="/admin/common/fragments :: paginationid()"></nav>-->
+            <nav th:replace="/admin/common/fragments :: paginationid()"></nav>
         </main>
     </div>
 </div>

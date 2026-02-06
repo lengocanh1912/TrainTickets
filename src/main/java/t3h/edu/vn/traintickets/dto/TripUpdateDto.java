@@ -1,11 +1,17 @@
 package t3h.edu.vn.traintickets.dto;
 
 import jakarta.validation.constraints.NotNull;
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
+import t3h.edu.vn.traintickets.enums.TripState;
 
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 
 @Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class TripUpdateDto {
     @NotNull
     private Long id;
@@ -18,64 +24,20 @@ public class TripUpdateDto {
     @NotNull
     private LocalDateTime arrivalAt;
     @NotNull
-    private Float price;
+    private String price;
     @NotNull
-    private boolean status;
+    private TripState status;
 
-
-    public @NotNull Long getId() {
-        return id;
+    public String getDepartureAtFormatted() {
+        return departureAt != null
+                ? departureAt.format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm"))
+                : "";
     }
 
-    public void setId(@NotNull Long id) {
-        this.id = id;
+    public String getArrivalAtFormatted() {
+        return arrivalAt != null
+                ? arrivalAt.format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm"))
+                : "";
     }
 
-    public @NotNull Long getTrainId() {
-        return trainId;
-    }
-
-    public void setTrainId(@NotNull Long trainId) {
-        this.trainId = trainId;
-    }
-
-    public @NotNull Long getRouteId() {
-        return routeId;
-    }
-
-    public void setRouteId(@NotNull Long routeId) {
-        this.routeId = routeId;
-    }
-
-    public @NotNull LocalDateTime getDepartureAt() {
-        return departureAt;
-    }
-
-    public void setDepartureAt(@NotNull LocalDateTime departureAt) {
-        this.departureAt = departureAt;
-    }
-
-    public @NotNull LocalDateTime getArrivalAt() {
-        return arrivalAt;
-    }
-
-    public void setArrivalAt(@NotNull LocalDateTime arrivalAt) {
-        this.arrivalAt = arrivalAt;
-    }
-
-    public @NotNull Float getPrice() {
-        return price;
-    }
-
-    public void setPrice(@NotNull Float price) {
-        this.price = price;
-    }
-
-    public @NotNull boolean getStatus() {
-        return status;
-    }
-
-    public void setStatus(@NotNull boolean status) {
-        this.status = status;
-    }
 }

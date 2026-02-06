@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="vi">
+<html lang="vi" xmlns:th="http://www.w3.org/1999/xhtml">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -280,15 +280,9 @@
 
     /* Grid chứa toàn bộ ghế - có 4 hàng */
     #seatGrid {
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-      align-items: center;
-    }
-
-    /* Mỗi hàng */
-    .row-box {
-      display: flex;
+      display: grid;
+      grid-auto-flow: column;       /* đổ ghế theo cột */
+      grid-template-rows: repeat(4, 1fr); /* mỗi cột có 4 ghế */
       gap: 10px;
       justify-content: center;
     }
@@ -304,7 +298,6 @@
       text-align: center;
       line-height: 50px;
       cursor: pointer;
-      transition: background-color 0.2s ease;
     }
 
     .seat.sold {
@@ -349,6 +342,21 @@
       background-color: #cceeff;
       border-color: #33aadd;
     }
+      .coach-card.inactive {
+        opacity: 0.4;
+        cursor: not-allowed;
+    }
+
+    .coach-card.inactive small {
+        display: block;
+        font-size: 11px;
+    }
+
+    .seat.sold {
+        background: #999;
+        cursor: not-allowed;
+    }
+
   </style>
 <!--ticket render -->
   <style>
@@ -398,7 +406,7 @@
 
     <div class="d-flex text-white ms-auto">
       <!--            <button class="btn btn-light" type="button">-->
-      <a th:href="@{/user/trip/list}" class="nav-link text-white">
+      <a th:href="@{/user/order/view}" class="nav-link text-white">
         <i class="bi bi-cart "> Đơn hàng</i>
       </a>
       <div class="dropdown">
@@ -813,84 +821,6 @@
 
 </div>
 
-<!-- Modal -->
-<!--<div id="myModal" class="modal-overlay">-->
-<!--  <form id="bookingForm">-->
-
-<!--    <div class="modal-backdrop">-->
-<!--      <div class="modal-content">-->
-<!--        <div class="header">-->
-<!--          <div class="route-info">-->
-<!--            <span id="modalDepartureStation">Nơi đi</span>-->
-<!--            <span class="route-arrow">→</span>-->
-<!--            <span id="modalArrivalStation">nơi đến</span>-->
-<!--            <span style="margin: 0 10px;">|</span>-->
-<!--            <span id="modalDepartureDate">ngày đi</span>-->
-<!--          </div>-->
-<!--          <div class="train-info" id="modalTrainName" th:text="trip.trainName">tên tàu</div>-->
-<!--          <span class="close-btn" onclick="closeModal()">&times;</span>-->
-<!--        </div>-->
-<!--        &lt;!&ndash; Hiển thị danh sách toa + đầu tàu &ndash;&gt;-->
-<!--        <div class="coach-selector">-->
-<!--          <div class="coach-scroll-container" id="coachCards">-->
-<!--            <img class="train-head" src="/trainticket/img/head-train.png"  alt="Đầu tàu">-->
-<!--          </div>-->
-<!--        </div>-->
-<!--        &lt;!&ndash; Sơ đồ ghế &ndash;&gt;-->
-<!--        <div class="coach-layout">-->
-<!--          <div class="compartment-label" id="selectedCoachName">Chọn toa để xem sơ đồ ghế</div>-->
-<!--          <div class="seat-grid-scroll">-->
-<!--            <div id="seatGrid"></div>-->
-<!--          </div>-->
-<!--        </div>-->
-<!--        &lt;!&ndash; Loại vé &ndash;&gt;-->
-<!--        <div id="ticketList" style="display: flex; gap: 10px; overflow-x: auto;">-->
-<!--          &lt;!&ndash; Các vé sẽ được render động bằng JavaScript &ndash;&gt;-->
-<!--        </div>-->
-<!--        <div class="ticket-summary">-->
-<!--            <div class="legend">-->
-<!--              <div class="legend-item">-->
-<!--                <div class="legend-icon empty"></div>-->
-<!--                <span>Chỗ trống</span>-->
-<!--              </div>-->
-<!--              <div class="legend-item">-->
-<!--                <div class="legend-icon sold"></div>-->
-<!--                <span>Chỗ đã bán</span>-->
-<!--              </div>-->
-<!--              <div class="legend-item">-->
-<!--                <div class="legend-icon selected"></div>-->
-<!--                <span>Chỗ đang chọn</span>-->
-<!--              </div>-->
-<!--            </div>-->
-<!--            <div class="checkout">-->
-<!--              <div class="selected-count" id="selectedCount"-->
-<!--                   th:data-total="${totalTicket}">-->
-<!--                Đã chọn: 0/<span th:text="${totalTicket}">totalTicket</span> chỗ-->
-<!--              </div>-->
-<!--              <div id="totalPrice">Tổng tiền: 0đ</div>-->
-
-<!--                <button type="button"-->
-<!--                        th:data-trip-id="${trip.id}"-->
-<!--                        onclick="selectDeparture(this)"-->
-<!--                        class="bg-orange-500 hover:bg-yellow-400 text-white font-semibold px-6 py-2 rounded-md">-->
-<!--                  đặt vé-->
-<!--                </button>-->
-<!--            </div>-->
-<!--          </div>-->
-<!--      </div>-->
-<!--    </div>-->
-<!--  </form>-->
-<!--</div>-->
-
-<!--<script>-->
-<!--  function closeModal() {-->
-<!--    document.getElementById("bookingModal").style.display = "none";-->
-<!--  }-->
-<!--  function selectCoach(toa) {-->
-<!--    // logic thay đổi toa và load ghế tương ứng-->
-<!--    console.log("Toa được chọn:", toa);-->
-<!--  }-->
-<!--</script>-->
 
 <!--thời gian đi-->
 <script>

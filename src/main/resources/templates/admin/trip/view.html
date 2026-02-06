@@ -50,38 +50,44 @@
       <a class="btn btn-primary" th:href="@{'/admin/trip/create'}">Thêm chuyến đi</a>
     </header>
 
-    <h3 class="text-danger" th:text="${message}"></h3>
+<!--    <h3 class="text-danger" th:text="${message}"></h3>-->
+
+    <div th:if="${message}" class="alert alert-success" th:text="${message}"></div>
+    <div th:if="${error}" class="alert alert-danger" th:text="${error}"></div>
 
     <main class="table-responsive mb-5">
       <table class="table table-bordered table-hover align-middle">
         <thead class="table-dark text-center">
         <tr>
           <th>ID</th>
-          <th>ID tàu</th>
-          <th>ID Tuyến đường</th>
+          <th>Tên tàu</th>
+          <th>Tuyến đường</th>
           <th>Thời gian khởi hành</th>
           <th>Thời gian đến nơi</th>
           <th>Giá vé</th>
           <th>Trạng thái</th>
+          <th>Ngày tạo</th>
+          <th>Ngày cập nhật</th>
           <th>Hành động</th>
         </tr>
         </thead>
         <tbody class="text-center">
         <tr th:each="trip : ${page.getContent()}">
           <td th:text="${trip.id}"></td>
-          <td th:text="${trip.train.id}"></td>
-          <td th:text="${trip.route.id}"></td>
-          <td th:text="${#temporals.format(trip.departureAt, 'dd/MM/yyyy HH:mm')}"></td>
-          <td th:text="${#temporals.format(trip.arrivalAt, 'dd/MM/yyyy HH:mm')}"></td>
+          <td th:text="${trip.train.name}"></td>
+          <td th:text="${trip.route.departure.name + ' -> ' + trip.route.arrival.name}"></td>
+          <td th:text="${#temporals.format(trip.departureAt, 'dd/MM/yyyy -   HH:mm')}"></td>
+          <td th:text="${#temporals.format(trip.arrivalAt, 'dd/MM/yyyy - HH:mm')}"></td>
           <td th:text="${#numbers.formatDecimal(trip.price, 1, 'COMMA',0,'POINT' )} + ' đ'"></td>
           <td>
               <span th:switch="${trip.status}">
-                <span th:case="true" class="badge bg-success">Đang chạy</span>
-                <span th:case="false" class="badge bg-secondary">Tạm dừng</span>
+                <span th:case="${TripSate.ACTIVE}" class="badge bg-success">Đang chạy</span>
+                <span th:case="${TripSate.INACTIVE}" class="badge bg-secondary">Tạm dừng</span>
                 <span th:case="*">Không xác định</span>
               </span>
           </td>
-
+          <td th:text="${#temporals.format(trip.createdAt, 'dd/MM/yyyy - HH:mm')}"></td>
+          <td th:text="${#temporals.format(trip.updatedAt, 'dd/MM/yyyy - HH:mm')}"></td>
           <td class="text-nowrap text-center">
             <a class="btn btn-primary btn-sm me-1" th:href="@{'/admin/trip/detail?id=' + ${trip.id}}">Xem</a>
             <a class="btn btn-success btn-sm me-1" th:href="@{'/admin/trip/update?id=' + ${trip.id}}">Sửa</a>
@@ -90,7 +96,7 @@
           </td>
         </tr>
         <!-- Dòng trống để làm đủ 5 hàng, chỉ hiển thị ở trang cuối -->
-        <tr th:if="${page.last}"
+        <tr th:if="${page.last and page.getContent().size() < page.size}"
             th:each="i : ${#numbers.sequence(1, page.size - page.getContent().size())}">
           <td colspan="8" style="height: 50px;">&nbsp;</td>
         </tr>

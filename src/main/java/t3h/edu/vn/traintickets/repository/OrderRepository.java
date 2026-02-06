@@ -7,8 +7,11 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import t3h.edu.vn.traintickets.entities.Order;
+import t3h.edu.vn.traintickets.enums.OrderStatus;
 
 
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -62,7 +65,7 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
 
 
     // Tính tổng doanh thu từ các đơn hàng thành công
-    @Query("SELECT SUM(o.finalAmount) FROM Order o WHERE o.status = 1")
+    @Query("SELECT SUM(o.finalAmount) FROM Order o WHERE o.status = 'PAID' ")
     Double getTotalRevenue();
 
     @EntityGraph(attributePaths = {
@@ -112,11 +115,95 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
             countQuery = "SELECT COUNT(o) FROM Order o")
     Page<Order> findAllWithTicketsPage(Pageable pageable);
 
-    @Query("SELECT MONTH(o.createdAt), SUM(o.finalAmount) " +
-            "FROM Order o WHERE YEAR(o.createdAt) = :year AND o.status = 1 " +
-            "GROUP BY MONTH(o.createdAt)")
-    List<Object[]> getMonthlyRevenue(@Param("year") int year);
+    @Query("""
+        SELECT 
+            MONTH(o.createdAt),
+            SUM(o.finalAmount)
+        FROM Order o
+        WHERE YEAR(o.createdAt) = :year
+          AND o.status = :status
+        GROUP BY MONTH(o.createdAt)
+        ORDER BY MONTH(o.createdAt)
+    """)
+    List<Object[]> getMonthlyRevenue(
+            @Param("year") int year,
+            @Param("status") OrderStatus status
+    );
 
-    @Query("SELECT SUM(o.finalAmount) FROM Order o WHERE YEAR(o.createdAt) = :year AND o.status = 1")
-    Float getTotalRevenueByYear(@Param("year") int year);
+
+    @Query("""
+        SELECT COALESCE(SUM(o.finalAmount), 0)
+        FROM Order o
+        WHERE YEAR(o.createdAt) = :year
+          AND o.status = :status
+    """)
+    BigDecimal getTotalRevenueByYear(
+            @Param("year") int year,
+            @Param("status") OrderStatus status
+    );
+
+    @Query("""
+        SELECT o FROM Order o 
+        JOIN o.orderTickets ot 
+        WHERE ot.ticket.id = :ticketId
+    """)
+    Optional<Order> findByTicketId(@Param("ticketId") Long ticketId);
+
+    @Query("SELECT o FROM Order o WHERE o.status = 'PENDING_PAYMENT' AND o.expiresAt < :now")
+    List<Order> findExpiredUnpaidOrders(LocalDateTime now);
+
+    Order findByTransactionCode(String transactionCode);
+
+    List<Order> findByStatusAndHoldUntilBefore(OrderStatus status, LocalDateTime time);
+
+    List<Order> findByStatusAndExpiresAtBefore(OrderStatus status, LocalDateTime expiresAt);
+
+    @Query("""
+        SELECT 
+            DAY(o.createdAt),
+            SUM(o.finalAmount)
+        FROM Order o
+        WHERE YEAR(o.createdAt) = :year
+          AND MONTH(o.createdAt) = :month
+          AND o.status = :status
+        GROUP BY DAY(o.createdAt)
+        ORDER BY DAY(o.createdAt)
+    """)
+    List<Object[]> getDailyRevenue(
+            @Param("year") int year,
+            @Param("month") int month,
+            @Param("status") OrderStatus status
+    );
+
+    @Query("""
+    SELECT COALESCE(SUM(o.finalAmount), 0)
+    FROM Order o
+    WHERE YEAR(o.createdAt) = :year
+      AND o.status = :status
+""")
+    BigDecimal getCancelledRevenueByYear(
+            @Param("year") int year,
+            @Param("status") OrderStatus status
+    );
+
+    @Query("""
+    SELECT COALESCE(SUM(o.finalAmount), 0)
+    FROM Order o
+    WHERE YEAR(o.createdAt) = :year
+      AND MONTH(o.createdAt) = :month
+      AND o.status = :status
+""")
+    BigDecimal getCancelledRevenueByMonth(
+            @Param("year") int year,
+            @Param("month") int month,
+            @Param("status") OrderStatus status
+    );
+
+    @Query("""
+        SELECT COALESCE(SUM(o.finalAmount), 0)
+        FROM Order o
+        WHERE o.status = :status
+    """)
+    BigDecimal getTotalRevenueOrderPaid(@Param("status") OrderStatus status);
+
 }

@@ -1,23 +1,19 @@
 package t3h.edu.vn.traintickets.dto;
 
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+import java.math.BigDecimal;
+
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
 public class MonthlyRevenueDto {
     private int month;
-    private float revenue;
+    private BigDecimal  revenue;
 
-    public MonthlyRevenueDto(int month, float revenue) {
-        this.month = month;
-        this.revenue = revenue;
-    }
 
-    public void setMonth(int month) {
-        this.month = month;
-    }
 
-    public void setRevenue(float revenue) {
-        this.revenue = revenue;
-    }
-
-    public int getMonth() { return month; }
-    public float getRevenue() { return revenue; }
 }
 

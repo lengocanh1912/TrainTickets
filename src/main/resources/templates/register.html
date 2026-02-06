@@ -24,139 +24,47 @@
 
     <style>
         body {
-            background: linear-gradient(to right, #74ebd5, #9face6);
+            background: #ffffff;
             min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            padding-top: 80px;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
 
         .register-card {
-            background: white;
-            padding: 30px;
-            border-radius: 15px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-            width: 100%;
-            max-width: 500px;
-            margin-top: 10cm;
-        }
-    </style>
-    <style>
-        * {
-            box-sizing: border-box;
-        }
-
-        body {
-            background: linear-gradient(to right, #ffffff, #ffffff);
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-        }
-
-        .login-box {
+            max-width: 520px;
+            margin: auto;
             background: #fff;
-            padding: 40px 30px;
-            border-radius: 15px;
-            box-shadow: 0 15px 25px rgba(0,0,0,0.2);
-            width: 350px;
-            text-align: center;
+            border-radius: 16px;
+            padding: 32px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
         }
 
-        .login-box h2 {
-            margin-bottom: 30px;
-            font-size: 28px;
-            font-weight: bold;
+        .register-card h3 {
+            font-weight: 600;
         }
 
-        .input-field {
+        .form-control {
+            border-radius: 10px;
+        }
+
+        .password-wrapper {
             position: relative;
-            margin-bottom: 20px;
         }
 
-        .input-field i {
+        .password-wrapper i {
             position: absolute;
-            top: 12px;
-            left: 12px;
-            color: #888;
-        }
-
-        .input-field input {
-            width: 100%;
-            padding: 10px 10px 10px 40px;
-            border: 1px solid #ccc;
-            border-radius: 30px;
-            outline: none;
-            font-size: 14px;
-        }
-
-        .forgot {
-            display: block;
-            text-align: right;
-            font-size: 13px;
-            margin-bottom: 20px;
-            color: #666;
-            text-decoration: none;
-        }
-
-        .btn {
-            width: 100%;
-            padding: 10px;
-            background: linear-gradient(to right, #4158d0, #c850c0);
-            border: none;
-            border-radius: 30px;
-            color: white;
-            font-weight: bold;
+            top: 50%;
+            right: 14px;
+            transform: translateY(-50%);
             cursor: pointer;
-            transition: 0.3s;
+            color: #6c757d;
         }
 
-        .btn:hover {
-            opacity: 0.9;
-        }
-
-        .or {
-            margin: 20px 0 10px;
-            font-size: 13px;
-            color: #555;
-        }
-
-        .social-icons {
-            display: flex;
-            justify-content: center;
-            gap: 15px;
-            margin-bottom: 20px;
-        }
-
-        .social-icons a {
-            width: 36px;
-            height: 36px;
-            border-radius: 50%;
-            color: white;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            text-decoration: none;
-        }
-
-        .fa-facebook-f { background: #3b5998; }
-        .fa-twitter { background: #1da1f2; }
-        .fa-google { background: #db4437; }
-
-        .signup {
-            font-size: 13px;
-            color: #555;
-        }
-
-        .signup a {
-            color: #4158d0;
-            text-decoration: none;
-            font-weight: bold;
+        .error {
+            font-size: 0.85rem;
+            color: #dc3545;
         }
     </style>
-
 
 </head>
 <body>
@@ -229,66 +137,85 @@
 <div class="register-card">
     <h3 class="text-center mb-4">Tạo tài khoản mới</h3>
 
-    <form th:action="@{'/register'}" method="post" th:object="${user}">
-        <div class="mb-3">
-            <label for="userName" class="form-label">Tên đăng nhập</label>
-            <input type="text" class="form-control" id="userName" th:field="*{username}" >
-            <label class="error" th:if="${#fields.hasErrors('username')}" th:errors="*{username}"></label>
-        </div>
-        <div class="mb-3">
-            <label for="fullName" class="form-label">Họ và tên</label>
-            <input type="text" class="form-control" id="fullName" th:field="*{fullName}" >
-            <label class="error" th:if="${#fields.hasErrors('fullName')}" th:errors="*{fullName}"></label>
-        </div>
-
+    <form th:action="@{/register}" method="post" th:object="${user}">
 
         <div class="mb-3">
-            <label for="email" class="form-label">Email</label>
-            <input type="email" class="form-control" id="email" th:field="*{email}" >
-            <label class="error" th:if="${#fields.hasErrors('email')}" th:errors="*{email}"></label>
+            <label class="form-label">Tên đăng nhập</label>
+            <input type="text" class="form-control" th:field="*{username}">
+            <div class="error" th:if="${#fields.hasErrors('username')}" th:errors="*{username}"></div>
         </div>
+
         <div class="mb-3">
-            <label for="phoneNumber" class="form-label">Số điện thoại</label>
-            <input type="text" class="form-control" id="phoneNumber" th:field="*{phoneNumber}" >
-            <label class="error" th:if="${#fields.hasErrors('phoneNumber')}" th:errors="*{phoneNumber}"></label>
+            <label class="form-label">Họ và tên</label>
+            <input type="text" class="form-control" th:field="*{fullName}">
+            <div class="error" th:if="${#fields.hasErrors('fullName')}" th:errors="*{fullName}"></div>
         </div>
+
         <div class="mb-3">
-            <label class="form-label">Giới tính: </label>
+            <label class="form-label">Email</label>
+            <input type="email" class="form-control" th:field="*{email}">
+            <div class="error" th:if="${#fields.hasErrors('email')}" th:errors="*{email}"></div>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Số điện thoại</label>
+            <input type="text" class="form-control" th:field="*{phoneNumber}">
+            <div class="error" th:if="${#fields.hasErrors('phoneNumber')}" th:errors="*{phoneNumber}"></div>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Giới tính</label><br>
             <div class="form-check form-check-inline">
-                <input class="form-check-input" th:checked="${user.gender == true}" type="radio" name="gender" id="genderMale" value="1" >
-                <label class="form-check-label" for="genderMale">Nam</label>
+                <input class="form-check-input" type="radio" name="gender" value="1">
+                <label class="form-check-label">Nam</label>
             </div>
             <div class="form-check form-check-inline">
-                <input class="form-check-input" th:checked="${user.gender == false}" type="radio" name="gender" id="genderFemale" value="0" >
-                <label class="form-check-label" for="genderFemale">Nữ</label>
+                <input class="form-check-input" type="radio" name="gender" value="0">
+                <label class="form-check-label">Nữ</label>
             </div>
         </div>
+
         <div class="mb-3">
-            <label for="address" class="form-label">Địa chỉ (ko bắt buộc)</label>
-            <input type="text" class="form-control" id="address" th:field="*{address}" >
+            <label class="form-label">Địa chỉ</label>
+            <input type="text" class="form-control" th:field="*{address}">
         </div>
-        <div class="mb-3">
-            <label for="password" class="form-label">Mật khẩu</label>
-            <input type="password" class="form-control" id="password" th:field="*{password}" >
-            <label class="error" th:if="${#fields.hasErrors('password')}" th:errors="*{password}"></label>
+
+        <div class="mb-3 ">
+            <label class="form-label">Mật khẩu</label>
+            <div class="password-wrapper">
+                <input type="password"
+                       class="form-control"
+                       id="password"
+                       th:field="*{password}">
+                <i class="bi bi-eye position-absolute top-50 end-0 translate-middle-y me-3 cursor-pointer"
+                   onclick="togglePassword('password', this)"></i>
+                <div class="error" th:if="${#fields.hasErrors('password')}" th:errors="*{password}"></div>
+            </div>
         </div>
-        <div class="mb-3">
-            <label for="password" class="form-label">Nhập lại mật khẩu</label>
-            <input type="password" class="form-control" id="rePassword" th:field="*{rePassword}" >
-            <label class="error" th:if="${#fields.hasErrors('rePassword')}" th:errors="*{rePassword}"></label>
+
+        <div class="mb-4 password-wrapper">
+            <label class="form-label">Nhập lại mật khẩu</label>
+            <div class="password-wrapper">
+                <input type="password" class="form-control" id="rePassword" th:field="*{rePassword}">
+                <i class="bi bi-eye position-absolute top-50 end-0 translate-middle-y me-3 cursor-pointer"
+                   onclick="togglePassword('rePassword', this)"></i>
+                <div class="error"
+                     th:if="${#fields.hasErrors('rePassword')}"
+                     th:errors="*{rePassword}">
+                </div>
+            </div>
+
         </div>
-        <div class="d-grid">
-            <button type="submit" class="btn btn-primary">Đăng ký</button>
-        </div>
-<!--        <a class="btn btn-primary" th:href="@{'/admin/user/view'}">hủy</a>-->
+
+        <button type="submit" class="btn btn-primary w-100">
+            Đăng ký
+        </button>
     </form>
 
-    <div class="mt-3 text-center">
-        <a th:href="@{/login}" class="text-decoration-none">Đã có tài khoản? Đăng nhập</a>
-    </div>
-
-    <div th:if="${#fields.hasErrors()}" class="alert alert-danger mt-3" th:each="err : ${#fields.errors('*')}">
-        <p th:text="${err}"></p>
+    <div class="text-center mt-3">
+        <a th:href="@{/login}" class="text-decoration-none">
+            Đã có tài khoản? Đăng nhập
+        </a>
     </div>
 
     <div th:if="${message}" class="alert alert-success mt-3" th:text="${message}"></div>
@@ -296,4 +223,18 @@
 </div>
 
 </body>
+
+<script>
+    function togglePassword(inputId, icon) {
+        const input = document.getElementById(inputId);
+        if (input.type === "password") {
+            input.type = "text";
+            icon.classList.replace("bi-eye", "bi-eye-slash");
+        } else {
+            input.type = "password";
+            icon.classList.replace("bi-eye-slash", "bi-eye");
+        }
+    }
+</script>
+
 </html>

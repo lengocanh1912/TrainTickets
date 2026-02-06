@@ -13,9 +13,12 @@ import t3h.edu.vn.traintickets.dto.TrainCreateDto;
 import t3h.edu.vn.traintickets.dto.TrainUpdateDto;
 import t3h.edu.vn.traintickets.entities.Train;
 import t3h.edu.vn.traintickets.entities.User;
+import t3h.edu.vn.traintickets.enums.ReviewStatus;
+import t3h.edu.vn.traintickets.enums.TrainState;
 import t3h.edu.vn.traintickets.service.TrainService;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 
 @Controller
@@ -24,33 +27,33 @@ public class AdminTrainController {
 
     @Autowired
     TrainService trainService;
+
+
     @ModelAttribute
     public void addAttributes(Model model) {
         model.addAttribute("menu", "train");
     }
 
-//    @GetMapping("view")
-//    public String view(Model model) {
-//        model.addAttribute("trains", trainService.getAll());
-//        return "admin/train/view";
-//    }
 
-    @GetMapping("list")
+    @GetMapping("/list")
     @ResponseBody
     public Object list(Model model,
-                       @RequestParam(defaultValue = "0  ") Integer page,
+                       @RequestParam(defaultValue = "0") Integer page,
                        @RequestParam(defaultValue = "5") Integer perpage) {
+
         return trainService.paging(page, perpage);
     }
-    @GetMapping("view")
+
+    @GetMapping("/view")
     public String view(Model model,
                        @RequestParam(defaultValue = "0") Integer page,
                        @RequestParam(defaultValue = "5") Integer perpage) {
         model.addAttribute("page", trainService.paging(page, perpage));
         model.addAttribute("path", "/admin/train/view");
+        model.addAttribute("trainStates", TrainState.class);
+
         return "admin/train/view";
     }
-
 
     @GetMapping("/create")
     public String showCreateTrainForm(Model model) {
@@ -64,6 +67,10 @@ public class AdminTrainController {
     public String showUpdateForm(@PathVariable Long id, Model model) {
         TrainUpdateDto trainDto = trainService.getTrainUpdateDtoById(id);
         System.out.println(">>> Train ID: " + id);
+
+        trainDto.getCoaches()
+                .sort(Comparator.comparing(CoachDto::getPosition));
+
         int totalSeats = trainDto.getCoaches().stream()
                 .mapToInt(CoachDto::getCapacity)
                 .sum();
@@ -73,36 +80,22 @@ public class AdminTrainController {
         return "admin/train/update";// hiển thị trang update
     }
 
-    @PostMapping("/save")
-    public String save(@Valid @ModelAttribute("train") TrainCreateDto dto,
-                       BindingResult bindingResult,
-                       Model model,
-                       RedirectAttributes redirectAttributes) {
-
-        // Nếu có lỗi validate => quay lại form
-        if (bindingResult.hasErrors()) {
-            return "admin/train/create"; // hoặc đường dẫn đúng tới form thêm tàu
-        }
-
-        try {
-            trainService.createTrain(dto);
-            redirectAttributes.addFlashAttribute("message",
-                    "Tạo mới tàu thành công");
-            return "redirect:/admin/train/view";
-        } catch (DataIntegrityViolationException ex) {
-            // Lỗi trùng code tàu
-            model.addAttribute("error",
-                    "Mã tàu đã tồn tại");
-            return "admin/train/create";
-        }
-    }
-
+    // cập nhật, chỉnh sửa ttin tàu
     @PostMapping("/update")
-    public String saveTrain(@ModelAttribute("train") TrainUpdateDto trainDto) {
-        trainService.updateTrainFromDto(trainDto);
-        return "redirect:/admin/train/list";
+    public String updateTrain(@ModelAttribute TrainUpdateDto trainDto,
+                              RedirectAttributes redirectAttributes) {
+        try {
+            trainService.updateTrain(trainDto); // bạn phải có hàm update trong service
+            redirectAttributes.addFlashAttribute("message", "Cập nhật tàu thành công!");
+            System.out.println("DTO ID: " + trainDto.getId());
+            System.out.println("Name: " + trainDto.getName());
+            System.out.println("Code: " + trainDto.getCode());
+            System.out.println("Coaches: " + trainDto.getCoaches().size());
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", "Cập nhật thất bại: " + e.getMessage());
+        }
+        return "redirect:/admin/train/view"; // hoặc về danh sách
     }
-
 
     @GetMapping("/delete")
     public String delete(@RequestParam("id") Long id,
@@ -130,7 +123,7 @@ public class AdminTrainController {
     public String searchTrains(@RequestParam String keyword, Model model) {
         List<Train> trains = trainService.searchTrains(keyword);
         model.addAttribute("trains", trains);
-        return "admin/train/search"; // thay bằng tên view hiển thị danh sách tàu
+        return "admin/train/search";
     }
 
 

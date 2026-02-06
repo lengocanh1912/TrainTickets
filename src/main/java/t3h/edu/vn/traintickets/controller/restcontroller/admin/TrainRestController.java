@@ -12,18 +12,19 @@ import t3h.edu.vn.traintickets.service.TrainService;
 
 @RestController
 @RequestMapping("/api/admin/trains")
+@RequiredArgsConstructor
 public class TrainRestController {
-    @Autowired
-    private final TrainService trainService;
 
-    public TrainRestController(TrainService trainService) {
-        this.trainService = trainService;
-    }
+    private final TrainService trainService;
 
     @PostMapping
     public ResponseEntity<?> createTrain(@RequestBody TrainCreateDto dto) {
-        trainService.createTrain(dto);
-        return ResponseEntity.ok("Tạo tàu thành công");
+        try {
+            trainService.createTrain(dto);
+            return ResponseEntity.ok("Tạo tàu thành công");
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("Tạo tàu thất bại: " + e.getMessage());
+        }
     }
 }
 

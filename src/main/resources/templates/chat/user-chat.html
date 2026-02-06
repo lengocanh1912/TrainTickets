@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hỗ trợ khách hàng - Đặt vé tàu</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1.5.1/dist/sockjs.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
+
+    <style>
+        /* Message Styles */
+        .message {
+          display: flex;
+          width: 100%;
+          margin-bottom: 1rem;
+        }
+
+        .message-content {
+          white-space: pre-wrap;
+          word-break: break-word;
+        }
+
+        .message.sent {
+          justify-content: flex-end;
+        }
+
+        .message.received {
+          justify-content: flex-start;
+        }
+
+        .message-wrapper {
+          max-width: 75%;
+          display: flex;
+          flex-direction: column;
+          width: fit-content;
+        }
+
+        .message.sent .message-wrapper {
+          align-items: flex-end;
+          margin-left: auto;
+        }
+
+        .message.received .message-wrapper {
+          align-items: flex-start;
+          margin-right: auto;
+        }
+
+        .message-bubble {
+          padding: 12px 16px;
+          border-radius: 18px;
+          word-wrap: break-word;
+          font-size: 0.95rem;
+          box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+          width: fit-content;
+          min-width: 60px;
+          max-width: 100%;
+        }
+
+        .message.sent .message-bubble {
+          background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+          color: white;
+          border-bottom-right-radius: 4px;
+        }
+
+        .message.received .message-bubble {
+          background-color: #f3f4f6;
+          color: #111827;
+          border-bottom-left-radius: 4px;
+          border: 1px solid #e5e7eb;
+        }
+
+        .message-time {
+          font-size: 0.7rem;
+          opacity: 0.6;
+          margin-top: 4px;
+          padding: 0 4px;
+          user-select: none;
+        }
+
+        .message-row {
+          display: flex;
+          align-items: flex-end;
+          gap: 8px;
+          width: 100%;
+        }
+
+        .message.sent .message-row {
+          flex-direction: row-reverse;
+          justify-content: flex-start;
+        }
+
+        .message.received .message-row {
+          justify-content: flex-start;
+        }
+
+        .avatar {
+          width: 36px;
+          height: 36px;
+          border-radius: 50%;
+          background: linear-gradient(135deg, #c7d2fe 0%, #a5b4fc 100%);
+          color: #1e3a8a;
+          font-weight: 600;
+          font-size: 0.85rem;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          flex-shrink: 0;
+          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .avatar img {
+          width: 100%;
+          height: 100%;
+          border-radius: 50%;
+          object-fit: cover;
+        }
+
+        /* File Preview Styles */
+        .file-preview-image {
+          max-width: 300px;
+          max-height: 300px;
+          border-radius: 12px;
+          margin-bottom: 8px;
+          cursor: pointer;
+          transition: transform 0.2s;
+        }
+
+        .file-preview-image:hover {
+          transform: scale(1.02);
+        }
+
+        .file-preview-video {
+          max-width: 300px;
+          border-radius: 12px;
+          margin-bottom: 8px;
+        }
+
+        .file-attachment {
+          background-color: rgba(255, 255, 255, 0.1);
+          padding: 10px;
+          border-radius: 8px;
+          margin-bottom: 8px;
+          display: flex;
+          align-items: center;
+          gap: 8px;
+        }
+
+        .message.received .file-attachment {
+          background-color: #e5e7eb;
+        }
+
+        /* Animations */
+        @keyframes messageIn {
+          from {
+            opacity: 0;
+            transform: translateY(10px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+
+        .animate-message {
+          animation: messageIn 0.3s ease-out;
+        }
+
+        @keyframes pulse {
+          0%, 100% {
+            opacity: 1;
+          }
+          50% {
+            opacity: 0.5;
+          }
+        }
+
+        .animate-pulse-slow {
+          animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+
+        /* Typing Indicator */
+        .typing-dot {
+          width: 8px;
+          height: 8px;
+          background-color: #9ca3af;
+          border-radius: 50%;
+          animation: typing 1.4s infinite;
+        }
+
+        .typing-dot:nth-child(2) {
+          animation-delay: 0.2s;
+        }
+
+        .typing-dot:nth-child(3) {
+          animation-delay: 0.4s;
+        }
+
+        @keyframes typing {
+          0%, 60%, 100% {
+            transform: translateY(0);
+            opacity: 0.7;
+          }
+          30% {
+            transform: translateY(-10px);
+            opacity: 1;
+          }
+        }
+
+        /* Scrollbar */
+        #messagesContainer::-webkit-scrollbar {
+          width: 6px;
+        }
+
+        #messagesContainer::-webkit-scrollbar-track {
+          background: #f1f1f1;
+        }
+
+        #messagesContainer::-webkit-scrollbar-thumb {
+          background: #cbd5e1;
+          border-radius: 3px;
+        }
+
+        #messagesContainer::-webkit-scrollbar-thumb:hover {
+          background: #94a3b8;
+        }
+
+        /* Input Area */
+        #messageInput {
+          max-height: 150px;
+          overflow-y: auto;
+          transition: all 0.2s;
+        }
+
+        #messageInput:focus {
+          box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+
+        /* Connection Status */
+        .status-dot {
+          display: inline-block;
+          width: 8px;
+          height: 8px;
+          border-radius: 50%;
+          margin-right: 6px;
+        }
+
+        .status-online {
+          background-color: #10b981;
+          box-shadow: 0 0 8px rgba(16, 185, 129, 0.6);
+        }
+
+        .status-offline {
+          background-color: #ef4444;
+          box-shadow: 0 0 8px rgba(239, 68, 68, 0.6);
+        }
+
+        /* Button Hover Effects */
+        .icon-button {
+          transition: all 0.2s;
+        }
+
+        .icon-button:hover {
+          transform: scale(1.1);
+        }
+
+        .icon-button:active {
+          transform: scale(0.95);
+        }
+
+        .message-status {
+            font-size: 0.75rem;
+            user-select: none;
+        }
+
+        /* trạng thái */
+        .message-status.sending { opacity: 0.5; }
+        .message-status.sent     { opacity: 0.7; }
+        .message-status.read     { opacity: 1; color: #2563eb; } /* xanh nhẹ */
+        .message-status.failed   { color: #ef4444; }
+
+        /* Image Modal */
+        .image-modal {
+          display: none;
+          position: fixed;
+          z-index: 1000;
+          left: 0;
+          top: 0;
+          width: 100%;
+          height: 100%;
+          background-color: rgba(0, 0, 0, 0.9);
+          animation: fadeIn 0.3s;
+        }
+
+        .image-modal.active {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+
+        .image-modal img {
+          max-width: 90%;
+          max-height: 90%;
+          object-fit: contain;
+        }
+
+        @keyframes fadeIn {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+
+        /* Loading Spinner */
+        .spinner {
+          border: 3px solid rgba(255, 255, 255, 0.3);
+          border-radius: 50%;
+          border-top: 3px solid white;
+          width: 20px;
+          height: 20px;
+          animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+
+<body class="bg-gray-50">
+<div class="flex h-screen bg-gray-100">
+    <!-- Sidebar -->
+    <aside class="w-64 bg-white border-r shadow-sm flex flex-col">
+        <!-- Logo -->
+        <div class="h-16 flex items-center px-6 border-b">
+            <i class="fa-solid fa-train text-blue-600 text-xl mr-2"></i>
+            <span class="font-bold text-lg">TrainTicket</span>
+        </div>
+
+        <!-- Menu -->
+        <nav class="flex-1 px-4 py-4 space-y-2">
+            <a href="/trainticket/user/home"
+               class="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-blue-50 text-gray-700 font-medium">
+                🏠 <span>Trang chủ</span>
+            </a>
+
+            <a href="/trainticket/user/order/view"
+               class="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-blue-50 text-gray-700 font-medium">
+                📦 <span>Đơn hàng</span>
+            </a>
+
+            <a href="/trainticket/user/support"
+               class="flex items-center gap-3 px-4 py-3 rounded-lg bg-blue-100 text-blue-700 font-semibold">
+                💬 <span>Hỗ trợ</span>
+            </a>
+
+            <a href="/trainticket/user/account"
+               class="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-blue-50 text-gray-700 font-medium">
+                👤 <span>Tài khoản</span>
+            </a>
+        </nav>
+
+        <!-- Footer -->
+        <div class="px-6 py-4 border-t text-sm text-gray-500">
+            © 2026 TrainTicket
+        </div>
+    </aside>
+
+    <!-- Chat Area -->
+    <main class="flex-1 flex justify-center">
+        <!-- 👇 Dán toàn bộ code chat hiện tại của m vào đây -->
+        <!-- Image Modal -->
+        <div id="imageModal" class="image-modal" onclick="closeImageModal()">
+            <img id="modalImage" src="" alt="Full size">
+            <button onclick="closeImageModal()" class="absolute top-4 right-4 text-white text-4xl hover:text-gray-300">
+                &times;
+            </button>
+        </div>
+
+<!--        <div class="flex flex-col h-screen max-w-4xl mx-auto bg-white shadow-xl">-->
+        <div class="flex flex-col flex-1 bg-white shadow-xl">
+
+
+        <!-- Header -->
+            <div class="bg-gradient-to-r from-blue-600 to-blue-700 text-white p-4 shadow-lg">
+                <div class="flex items-center gap-4">
+                    <div class="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-md">
+                        <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z"></path>
+                        </svg>
+                    </div>
+                    <div class="flex-1">
+                        <h2 class="font-bold text-lg">Hỗ trợ đặt vé tàu</h2>
+                        <p class="text-sm text-blue-100 flex items-center">
+                            <span id="onlineStatus" class="status-dot status-online"></span>
+                            <span id="statusText">Đang hoạt động</span>
+                        </p>
+                    </div>
+                    <button onclick="clearChat()" class="p-2 hover:bg-blue-500 rounded-lg transition" title="Xóa lịch sử chat">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Messages Container -->
+            <div id="messagesContainer" class="flex-1 overflow-y-auto p-6 space-y-2 bg-gray-50">
+                <!-- Welcome message -->
+                <div class="text-center py-8">
+                    <div class="inline-block bg-white px-6 py-3 rounded-full shadow-sm">
+                        <p class="text-gray-500 text-sm">👋 Chào mừng bạn đến với hỗ trợ đặt vé tàu</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Typing Indicator -->
+            <div id="typingIndicator" class="px-6 pb-2 hidden">
+                <div class="flex items-center gap-2">
+                    <div class="bg-gray-200 rounded-2xl px-4 py-3 flex items-center gap-2">
+                        <div class="typing-dot"></div>
+                        <div class="typing-dot"></div>
+                        <div class="typing-dot"></div>
+                    </div>
+                    <span class="text-xs text-gray-500">đang nhập...</span>
+                </div>
+            </div>
+
+            <!-- Input Area -->
+            <div class="border-t bg-white p-4 shadow-lg">
+                <!-- File Preview -->
+                <div id="filePreviewContainer" class="mb-3 hidden">
+                    <div class="bg-blue-50 border border-blue-200 rounded-lg p-3 flex items-center gap-3">
+                        <img id="filePreviewImage" class="hidden w-16 h-16 object-cover rounded" />
+                        <div id="filePreviewIcon" class="hidden w-12 h-12 bg-blue-100 rounded flex items-center justify-center">
+                            <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
+                            </svg>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <p id="fileName" class="text-sm font-medium text-gray-900 truncate"></p>
+                            <p id="fileSize" class="text-xs text-gray-500"></p>
+                        </div>
+                        <button onclick="clearFile()" class="text-red-500 hover:bg-red-50 p-2 rounded-lg transition icon-button">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Input Row -->
+                <div class="flex items-end gap-3">
+                    <button onclick="triggerFileUpload()" class="p-3 hover:bg-gray-100 rounded-lg transition icon-button" title="Đính kèm file">
+                        <svg class="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"></path>
+                        </svg>
+                    </button>
+
+                    <input type="file" id="fileInput" class="hidden" onchange="handleFileSelect(event)" accept="image/*,video/*,.pdf,.doc,.docx,.txt">
+
+                    <div class="flex-1">
+          <textarea
+                  id="messageInput"
+                  placeholder="Nhập tin nhắn..."
+                  class="w-full px-4 py-3 border border-gray-300 rounded-xl resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  rows="1"
+                  onkeydown="handleKeyPress(event)"
+                  oninput="autoResizeTextarea(this); handleTyping();"></textarea>
+                    </div>
+
+                    <button id="sendButton" onclick="sendMessage()" class="bg-blue-600 hover:bg-blue-700 text-white p-3 rounded-lg transition icon-button shadow-md" title="Gửi tin nhắn">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+    </main>
+</div>
+
+<script>
+    window.chatConfig = {
+      conversationId: [[${conversationId}]],
+      userId: [[${userId}]],
+      contextPath: '/trainticket'
+    };
+</script>
+
+<script src="/trainticket/js/chat/user-chat.js"></script>
+</body>
+</html>

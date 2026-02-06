@@ -138,10 +138,15 @@
                     <div class="row justify-content-center">
                         <div class="col-auto">
                             <div class="d-flex gap-2">
-                                <a class="btn btn-primary btn-sm me-1" th:href="@{'/admin/user/view?id='+ ${user.id}}">Back</a>
-                                <a class="btn btn-success btn-sm me-1" th:href="@{'/admin/user/update?id=' + ${user.id}}">Fix</a>
-                                <a class="btn btn-danger btn-sm" th:href="@{'/admin/user/delete?id=' + ${user.id}}"
+                                <a class="btn btn-primary btn-sm me-1"
+                                   th:href="@{|/admin/user/view?page=${page != null ? page : 0}|}">
+                                    Back</a>
+                                <a class="btn btn-success btn-sm me-1"
+                                   th:href="@{'/admin/user/update?id=' + ${user.id}}">Fix</a>
+                                <a class="btn btn-danger btn-sm"
+                                   th:href="@{/admin/user/delete(id=${user.id}, page=${page})}"
                                    onclick="return confirm('Bạn có muốn xóa người dùng này ?')">Delete</a>
+
                             </div>
                         </div>
                     </div>

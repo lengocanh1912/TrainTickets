@@ -2,6 +2,7 @@ package t3h.edu.vn.traintickets.controller.user;
 
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Controller;
 import org.springframework.stereotype.Repository;
 import org.springframework.ui.Model;
@@ -10,6 +11,8 @@ import org.springframework.web.multipart.MultipartFile;
 import t3h.edu.vn.traintickets.dto.ReviewDisplayDto;
 import t3h.edu.vn.traintickets.entities.Order;
 import t3h.edu.vn.traintickets.entities.Review;
+import t3h.edu.vn.traintickets.enums.OrderStatus;
+import t3h.edu.vn.traintickets.enums.ReviewStatus;
 import t3h.edu.vn.traintickets.repository.OrderRepository;
 import t3h.edu.vn.traintickets.repository.ReviewRepository;
 import t3h.edu.vn.traintickets.service.ReviewService;
@@ -34,13 +37,30 @@ public class UserReviewController {
 
     }
 
+//    @GetMapping("/list")
+//    public String getReviewList(Model model) {
+//        List<ReviewDisplayDto> reviews = reviewService.getAllDisplayReviews(); // 👈 Gọi từ service, không gọi trực tiếp repo
+//        model.addAttribute("reviews", reviews);
+//        return "user/review_list"; // Tên template HTML
+//    }
+
     @GetMapping("/list")
-    public String getReviewList(Model model) {
-        List<ReviewDisplayDto> reviews = reviewService.getAllDisplayReviews(); // 👈 Gọi từ service, không gọi trực tiếp repo
-        model.addAttribute("reviews", reviews);
-        return "user/review_list"; // Tên template HTML
+    @ResponseBody
+    public Page<ReviewDisplayDto> list(@RequestParam(defaultValue = "0") Integer page,
+                                       @RequestParam(defaultValue = "2") Integer perpage) {
+        return reviewService.getAllDisplayReviews(page, perpage);
     }
 
+    @GetMapping("/view")
+    public String view(Model model,
+                       @RequestParam(defaultValue = "0") Integer page,
+                       @RequestParam(defaultValue = "2") Integer perpage) {
+        Page<ReviewDisplayDto> paged = reviewService.getAllDisplayReviews(page, perpage);
+        model.addAttribute("page", paged);
+        model.addAttribute("path", "/user/review/view");
+        model.addAttribute("ReviewStatus", ReviewStatus.class);
+        return "user/review_list";
+    }
 
 
     @GetMapping("/rate")
@@ -59,7 +79,7 @@ public class UserReviewController {
 //        }
 
         // Optional: chỉ cho phép đánh giá khi đơn đã hoàn thành
-        if (order.getStatus() != 1) {
+        if (order.getStatus() != OrderStatus.PAID) {
             throw new RuntimeException("Chỉ có thể đánh giá các chuyến đi đã hoàn tất");
         }
 
@@ -68,6 +88,7 @@ public class UserReviewController {
 
         return "user/review_rate"; // Thymeleaf file để render form đánh giá
     }
+
     @PostMapping("/submit")
     public String submitReview(
             @RequestParam Long orderId,

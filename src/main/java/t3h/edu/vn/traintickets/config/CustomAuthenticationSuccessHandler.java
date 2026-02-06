@@ -4,15 +4,19 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.security.web.savedrequest.HttpSessionRequestCache;
 import org.springframework.security.web.savedrequest.SavedRequest;
 import org.springframework.stereotype.Component;
 import t3h.edu.vn.traintickets.dto.UserCreateDto;
-import t3h.edu.vn.traintickets.config.UserDetailServiceImpl.UserDetailImpl;
+
 import t3h.edu.vn.traintickets.dto.UserPasswordDto;
+import t3h.edu.vn.traintickets.security.UserDetailsImpl;
+import t3h.edu.vn.traintickets.service.UserPresenceService;
 
 import java.io.IOException;
 import java.util.Collection;
@@ -20,52 +24,80 @@ import java.util.Collection;
 @Component
 public class CustomAuthenticationSuccessHandler implements AuthenticationSuccessHandler {
 
+    private final UserPresenceService presenceService;
+    private final SimpMessagingTemplate messagingTemplate;
+
+    public CustomAuthenticationSuccessHandler(
+            UserPresenceService presenceService,
+            SimpMessagingTemplate messagingTemplate) {
+        this.presenceService = presenceService;
+        this.messagingTemplate = messagingTemplate;
+    }
+
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request,
                                         HttpServletResponse response,
                                         Authentication authentication)
             throws IOException, ServletException {
 
-        // Lấy thông tin người dùng từ authentication
-        UserDetailImpl userDetails = (UserDetailImpl) authentication.getPrincipal();
-        // Chuyển đổi UserDetailImpl sang UserCreateDto
+        // ===============================
+        // 1️⃣ LƯU SESSION (GIỮ NGUYÊN)
+        // ===============================
+        UserDetailsImpl userDetails =
+                (UserDetailsImpl) authentication.getPrincipal();
+
         UserPasswordDto userPassword = new UserPasswordDto();
         userPassword.setNewPassword(userDetails.getPassword());
-        // (Cập nhật các thuộc tính khác nếu cần)
-        // Lưu thông tin vào session dưới dạng UserCreateDto
+
         HttpSession session = request.getSession();
         session.setAttribute("user", userPassword);
 
-        // Lấy URL từ ?redirect=
+        // ===============================
+        // 3️⃣ REDIRECT (GIỮ NGUYÊN 100%)
+        // ===============================
+        String redirectAfterLogin =
+                (String) session.getAttribute("REDIRECT_AFTER_LOGIN");
+
+        if (redirectAfterLogin != null) {
+            session.removeAttribute("REDIRECT_AFTER_LOGIN");
+            response.sendRedirect(redirectAfterLogin);
+            return;
+        }
+
         String redirectParam = request.getParameter("redirect");
-        // Lấy URL đã bị chặn trước login
-        SavedRequest savedRequest = new HttpSessionRequestCache().getRequest(request, response);
         if (redirectParam != null && !redirectParam.isEmpty()) {
             response.sendRedirect(redirectParam);
             return;
         }
+
+        SavedRequest savedRequest =
+                new HttpSessionRequestCache()
+                        .getRequest(request, response);
+
         if (savedRequest != null) {
-            String redirectUrl = savedRequest.getRedirectUrl();
-            response.sendRedirect(redirectUrl);
+            response.sendRedirect(savedRequest.getRedirectUrl());
             return;
         }
 
-        // Lấy các quyền (authorities) của người dùng
-        Collection<? extends GrantedAuthority> authorities = authentication.getAuthorities();
+        Collection<? extends GrantedAuthority> authorities =
+                authentication.getAuthorities();
 
-        // Duyệt qua các quyền và thực hiện chuyển hướng phù hợp
         for (GrantedAuthority authority : authorities) {
             String role = authority.getAuthority();
-            if ("ROLE_ADMIN".equals(role) || "ROLE_EMPLOYEE".equals(role)) {
+
+            if ("ROLE_ADMIN".equals(role)
+                    || "ROLE_EMPLOYEE".equals(role)) {
                 response.sendRedirect("/trainticket/admin/home");
                 return;
-            } else if ("ROLE_CUSTOMER".equals(role)) {
+            }
+
+            if ("ROLE_CUSTOMER".equals(role)) {
                 response.sendRedirect("/trainticket/user/home");
                 return;
             }
         }
 
-        // Mặc định nếu không khớp quyền, chuyển hướng đến trang mặc định
-        response.sendRedirect("/default");
+        response.sendRedirect("/trainticket/");
     }
 }
+

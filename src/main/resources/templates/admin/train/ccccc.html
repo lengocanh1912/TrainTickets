@@ -1,121 +1,80 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title><!DOCTYPE html>
-      <html xmlns:th="http://www.thymeleaf.org">
-      <head>
-      <meta charset="UTF-8">
-      <title>Cập nhật tàu</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <!-- Bootstrap -->
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-  <link rel="stylesheet" th:href="@{/css/styles.css}">
-  <link th:href="@{'/img/favicon.ico'}" rel="shortcut icon" type="image/x-icon">
-  <!-- Bootstrap v5.0.1 -->
-  <link th:href="@{'/css/bootstrap.css'}" type="text/css" rel="stylesheet">
-  <script th:src="@{'/js/bootstrap.bundle.js'}" type="text/javascript"></script>
-  <!-- Bootstrap Icons v1.5.0 -->
-  <link th:href="@{'/css/bootstrap-icons.css'}" type="text/css" rel="stylesheet">
-  <!-- Custom Styles -->
-  <link th:href="@{'/css/styles.css'}" type="text/css" rel="stylesheet">
-  <script>
-    var changeLanguage = function (dom) {
-      window.location.href = '?lang=' + dom.value;
-    }
-  </script>
-  <style>
-    .coach-card {
-      display: inline-block;
-      border: 1px solid #ccc;
-      padding: 1rem;
-      margin: 0.5rem;
-      border-radius: 8px;
-      width: 200px;
-    }
-  </style>
-</head>
-<body style="padding-top: 55px;">
-<!--header frag-->
-<div th:replace="/admin/common/fragments :: header_nav"> </div>
-<!-- Sidebar Fragment -->
-<div th:replace="/admin/common/fragments :: side_navbar"> </div>
-<!-- Main Content -->
-<!--<header th:replace="/admin/common/layout :: header()"></header>-->
-<div class="main-content">
-  <div class="container-fluid">
-    <h2>Cập nhật thông tin tàu</h2>
+<div class="container-fluid">
 
-    <form th:action="@{/admin/train/update}" th:object="${train}" method="post">
-      <div>
-        <label>Tên tàu:</label>
-        <input type="text" th:field="*{name}" required/>
-      </div>
-      <div>
-        <label>Mã tàu:</label>
-        <input type="text" th:field="*{code}" required/>
-      </div>
-      <div>
-        <label>Tổng số toa:</label>
-        <input type="text" th:value="${train.coaches.size()}" readonly/>
-      </div>
-      <div>
-        <label>Tổng số chỗ:</label>
-        <input type="text" th:value="${totalSeats}" readonly/>
-      </div>
+  <h2>Cập nhật thông tin tàu - <span th:text="${train.name} + ' (' + ${train.code} + ')'"></span></h2>
+  <form th:action="@{/admin/train/update}" method="post">
+    <!--            <h2>Cập nhật thông tin tàu </h2>-->
+    <h4 class="mt-4">Danh sách toa </h4>
+    <div th:each="coach, iStat : ${train.coaches}" class="border rounded p-3 mb-3">
+      <input type="hidden" th:name="coaches[__${iStat.index}__].id" th:value="${coach.id}"/>
 
-      <div class="coach-container" style="display: flex; flex-wrap: wrap; gap: 1rem; margin-top: 1rem;">
-        <div th:each="coach, iterStat : *{coaches}" class="coach-card" style="border: 1px solid #ccc; padding: 1rem; width: 300px;">
-          <h3 th:text="'Toa ' + ${iterStat.index + 1}">Toa</h3>
+      <div class="row mb-2">
+        <!-- Mã toa -->
+        <div class="col-md-3">
+          <label class="form-label">Mã toa</label>
+          <input type="text" class="form-control"
+                 th:name="coaches[__${iStat.index}__].code"
+                 th:value="${coach.code}" required/>
+        </div>
 
-          <!-- Chỉnh loại toa -->
-          <div>
-            <label>Loại toa:</label>
-            <select th:field="*{coaches[__${iterStat.index}__].type}">
-              <option value="STANDARD">Standard</option>
-              <option value="VIP">VIP</option>
-            </select>
+        <!-- Loại toa -->
+        <div class="col-md-3">
+          <label class="form-label">Loại toa</label>
+          <select class="form-select"
+                  th:name="coaches[__${iStat.index}__].type"
+                  required>
+            <option value="VIP"
+                    th:selected="${coach.type == 'VIP'}">VIP</option>
+            <option value="STANDARD"
+                    th:selected="${coach.type == 'STANDARD'}">Standard</option>
+          </select>
+        </div>
 
-          </div>
+        <!-- Trạng thái -->
+        <div class="col-md-3">
+          <label class="form-label">Trạng thái</label>
+          <select class="form-select"
+                  th:name="coaches[__${iStat.index}__].state"
+                  required>
+            <option value="ACTIVE"
+                    th:selected="${coach.state == 'ACTIVE'}">Active</option>
+            <option value="INACTIVE"
+                    th:selected="${coach.state == 'INACTIVE'}">Inactive</option>
+          </select>
+        </div>
 
-          <div>
-            <label>Số chỗ:</label>
-            <input type="number" th:field="*{coaches[__${iterStat.index}__].capacity}" min="1" required/>
-          </div>
-
-          <div>
-            <label>Mã các chỗ:</label>
-            <div th:each="seat, iStat : *{coaches[__${iterStat.index}__].seats}">
-              <input type="text"
-                     th:field="*{coaches[__${iterStat.index}__].seats[__${iStat.index}__]}"
-                     required />
-            </div>
-          </div>
-
-
-          <div>
-            <label>Trạng thái:</label>
-            <input type="radio"
-                   th:field="*{coaches[__${iterStat.index}__].state}"
-                   value="ACTIVE"/> Bật
-            <input type="radio"
-                   th:field="*{coaches[__${iterStat.index}__].state}"
-                   value="INACTIVE"/> Tắt
-          </div>
+        <!-- Sức chứa -->
+        <div class="col-md-3">
+          <label class="form-label">Sức chứa</label>
+          <input type="number" min="1" class="form-control"
+                 th:name="coaches[__${iStat.index}__].capacity"
+                 th:value="${coach.capacity}" required/>
         </div>
       </div>
 
-      <div style="margin-top: 2rem;">
-        <button type="submit">Cập nhật</button>
+      <!-- Danh sách ghế hiển thị (readonly) -->
+      <div class="row mb-2">
+        <div class="col-md-4">
+          <label class="form-label">Danh sách ghế</label>
+          <select class="form-select" multiple disabled>
+            <option th:each="seat : ${coach.seats}"
+                    th:value="${seat.id}"
+                    th:text="${seat.seatCode}">
+            </option>
+          </select>
+        </div>
       </div>
-    </form>
-  </div>
-</div>
-</body>
-</html>
-</title>
-</head>
-<body>
+    </div>
+    <div class="d-flex justify-content-between mt-4">
+      <!-- Nút quay lại -->
+      <a th:href="@{/admin/train/view}" class="btn btn-secondary">
+        ← Quay lại
+      </a>
 
-</body>
-</html>
+      <!-- Nút cập nhật -->
+      <button type="submit" class="btn btn-primary">
+        💾 Cập nhật
+      </button>
+    </div>
+
+  </form>
+</div>

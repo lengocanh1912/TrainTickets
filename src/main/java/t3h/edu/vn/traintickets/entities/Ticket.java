@@ -5,8 +5,10 @@ import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
 import org.hibernate.annotations.ColumnDefault;
+import t3h.edu.vn.traintickets.enums.TicketStatus;
 
 import java.time.Instant;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Getter
@@ -38,9 +40,9 @@ public class Ticket {
     @Column(name = "price", nullable = false)
     private Float price;
 
-    @NotNull
+    @Enumerated(EnumType.STRING) // hoặc EnumType.ORDINAL nếu bạn dùng số
     @Column(name = "status", nullable = false)
-    private Byte status;
+    private TicketStatus status;
 
     @NotNull
     @ColumnDefault("0")
@@ -54,75 +56,25 @@ public class Ticket {
     @Column(name = "updatedAt")
     private LocalDateTime updatedAt;
 
-    public Long getId() {
-        return id;
-    }
+    @Column(name = "passengerName", length = 100)
+    private String passengerName;
 
-    public void setId(Long id) {
-        this.id = id;
-    }
+    @Column(name = "cccd", length = 20)
+    private String cccd;
 
-    public User getUser() {
-        return user;
-    }
+    @Column(name = "phone", length = 15)
+    private String phone;
 
-    public void setUser(User user) {
-        this.user = user;
-    }
+    @Column(name = "address", length = 255)
+    private String address;
 
-    public Trip getTrip() {
-        return trip;
-    }
+    @Column(name = "birthday")
+    private LocalDate birthday;
 
-    public void setTrip(Trip trip) {
-        this.trip = trip;
-    }
+    @Column(name = "ticket_code", unique = true, length = 50)
+    private String ticketCode;
 
-    public @NotNull Seat getSeat() {
-        return seat;
-    }
+    @Column(name = "used")
+    private Boolean used;
 
-    public void setSeat(@NotNull Seat seat) {
-        this.seat = seat;
-    }
-
-    public @NotNull Float getPrice() {
-        return price;
-    }
-
-    public void setPrice(@NotNull Float price) {
-        this.price = price;
-    }
-
-    public @NotNull Byte getStatus() {
-        return status;
-    }
-
-    public void setStatus(@NotNull Byte status) {
-        this.status = status;
-    }
-
-    public @NotNull Byte getTicketType() {
-        return ticketType;
-    }
-
-    public void setTicketType(@NotNull Byte ticketType) {
-        this.ticketType = ticketType;
-    }
-
-    public @NotNull LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
-
-    public void setCreatedAt(@NotNull LocalDateTime createdAt) {
-        this.createdAt = createdAt;
-    }
-
-    public LocalDateTime getUpdatedAt() {
-        return updatedAt;
-    }
-
-    public void setUpdatedAt(LocalDateTime updatedAt) {
-        this.updatedAt = updatedAt;
-    }
 }

@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Quản lý hủy / hoàn vé</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.js"></script>
+</head>
+<body class="bg-light">
+
+<div class="container mt-4">
+    <h4 class="mb-3 text-primary">Quản lý hủy / hoàn vé</h4>
+
+    <div class="card shadow-sm mb-4 p-3">
+        <h5 class="text-secondary">Thông tin vé</h5>
+        <ul class="list-unstyled mb-0">
+            <li><strong>Mã đơn:</strong> <span th:text="${ticket.orderCode}"></span></li>
+            <li><strong>Khách hàng:</strong> <span th:text="${ticket.userFullName}"></span></li>
+            <li><strong>Tuyến:</strong> <span th:text="${ticket.tripRoute}"></span></li>
+            <li><strong>Ghế:</strong> <span th:text="${ticket.seatName}"></span></li>
+            <li><strong>Giá vé:</strong> <span th:text="${#numbers.formatDecimal(ticket.price, 0, 'COMMA', 0, 'POINT')} + '₫'"></span></li>
+            <li><strong>Trạng thái:</strong>
+                <span th:switch="${ticket.status.name()}">
+                    <span th:case="'PENDING'" class="badge bg-warning text-dark">Chờ thanh toán</span>
+                    <span th:case="'PAID'" class="badge bg-success">Đã thanh toán</span>
+                    <span th:case="'CHECKED_IN'" class="badge bg-info text-dark">Đã xác nhận</span>
+                    <span th:case="'USED'" class="badge bg-secondary">Đã sử dụng</span>
+                    <span th:case="'CANCELLED'" class="badge bg-danger">Đã hủy</span>
+                    <span th:case="'EXPIRED'" class="badge bg-dark">Quá hạn</span>
+                    <span th:case="'REFUNDED'" class="badge bg-primary">Đã hoàn tiền</span>
+                </span>
+            </li>
+        </ul>
+    </div>
+
+    <div class="card shadow-sm p-3 mb-3">
+        <h5 class="text-danger">Hủy vé</h5>
+        <form th:action="@{/admin/ticket/cancel}" method="post" class="d-flex flex-wrap gap-2 align-items-center">
+            <input type="hidden" name="ticketId" th:value="${ticket.id}">
+            <input type="text" name="reason" placeholder="Lý do hủy" class="form-control form-control-sm w-50" required>
+            <select name="refundMethod" class="form-select form-select-sm w-auto">
+                <option value="Chuyển khoản">Chuyển khoản</option>
+                <option value="Tiền mặt">Tiền mặt</option>
+            </select>
+            <button class="btn btn-danger btn-sm">Hủy vé</button>
+        </form>
+    </div>
+
+    <div class="card shadow-sm p-3" th:if="${ticket.status.name() == 'PAID'}">
+        <h5 class="text-success">Hoàn tiền</h5>
+        <form th:action="@{/admin/ticket/refund}" method="post" class="d-flex flex-wrap gap-2 align-items-center">
+            <input type="hidden" name="ticketId" th:value="${ticket.id}">
+            <input type="text" name="note" placeholder="Ghi chú hoàn tiền" class="form-control form-control-sm w-50" required>
+            <button class="btn btn-success btn-sm">Đánh dấu hoàn</button>
+        </form>
+    </div>
+</div>
+
+</body>
+</html>

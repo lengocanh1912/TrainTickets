@@ -1,0 +1,158 @@
+<!--<div class="bg-white rounded-xl shadow p-6 ">-->
+    <div class="max-w-xl bg-white p-6 rounded-xl shadow items-center"
+         xmlns:th="http://www.w3.org/1999/xhtml">
+
+    <!-- STEP 1: EMAIL HIỆN TẠI -->
+    <div class="mb-4">
+        <label class="block text-sm text-gray-600">
+            Email hiện tại
+        </label>
+
+        <input type="email"
+               id="emailInput"
+               th:value="${user.email}"
+               readonly
+               class="w-full mt-1 px-4 py-2 border rounded-lg bg-gray-100 cursor-not-allowed">
+    </div>
+
+    <!-- SEND OTP -->
+    <button type="button"
+            id="sendOtpBtn"
+            onclick="sendOtp()"
+            class="w-full py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
+        Gửi mã OTP xác thực
+    </button>
+
+    <!-- STEP 2: OTP -->
+    <div id="otpBox" class="hidden mt-4 p-4 border rounded-lg bg-gray-50">
+        <label class="block text-sm text-gray-600 mb-1">
+            Nhập mã OTP (đã gửi về email hiện tại)
+        </label>
+
+        <input type="text"
+               id="otpInput"
+               placeholder="VD: 123456"
+               class="w-full px-4 py-2 border rounded-lg">
+
+        <button type="button"
+                onclick="confirmOtp()"
+                class="w-full mt-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition">
+            Xác nhận OTP
+        </button>
+    </div>
+
+    <!-- STEP 3: EMAIL MỚI -->
+    <div id="newEmailBox" class="hidden mt-6">
+        <label class="block text-sm text-gray-600">
+            Email mới
+        </label>
+
+        <input type="email"
+               id="newEmailInput"
+               placeholder="Nhập email mới"
+               class="w-full mt-1 px-4 py-2 border rounded-lg">
+
+        <button type="button"
+                onclick="saveNewEmail()"
+                class="w-full mt-3 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition">
+            Lưu email mới
+        </button>
+    </div>
+
+</div>
+<!--</div>-->
+<script>
+    function csrf() {
+        return {
+            token: document.querySelector('meta[name="_csrf"]').content,
+            header: document.querySelector('meta[name="_csrf_header"]').content
+        }
+    }
+
+    function sendOtp() {
+        const { token, header } = csrf();
+
+        fetch('/trainticket/user/account/EmailOTP-request', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                [header]: token
+            },
+            body: new URLSearchParams({
+                currentEmail: document.getElementById('emailInput').value
+            })
+        })
+        .then(res => {
+            if (!res.ok) throw new Error("Gửi OTP thất bại");
+            return res.text();
+        })
+        .then(msg => {
+            alert(msg);
+            document.getElementById('otpBox').classList.remove('hidden');
+        })
+        .catch(err => alert(err.message));
+    }
+
+    function confirmOtp() {
+        const { token, header } = csrf();
+
+        fetch('/trainticket/user/account/EmailOTP-confirm', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                [header]: token
+            },
+            body: new URLSearchParams({
+                otp: document.getElementById('otpInput').value
+            })
+        })
+        .then(res => {
+            if (!res.ok) throw new Error("OTP không đúng hoặc đã hết hạn");
+            return res.text();
+        })
+        .then(msg => {
+            alert(msg);
+
+            // Disable step cũ
+            document.getElementById('sendOtpBtn').disabled = true;
+            document.getElementById('sendOtpBtn').innerText = "Đã xác thực";
+            document.getElementById('sendOtpBtn').classList.add('bg-gray-400');
+
+            document.getElementById('otpBox').classList.add('hidden');
+
+            // Show step nhập email mới
+            document.getElementById('newEmailBox').classList.remove('hidden');
+        })
+        .catch(err => alert(err.message));
+    }
+
+    function saveNewEmail() {
+        const { token, header } = csrf();
+        const newEmail = document.getElementById('newEmailInput').value;
+
+        if (!newEmail) {
+            alert("Vui lòng nhập email mới");
+            return;
+        }
+
+        fetch('/trainticket/user/account/email-change', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                [header]: token
+            },
+            body: new URLSearchParams({
+                newEmail: newEmail
+            })
+        })
+        .then(res => {
+            if (!res.ok) throw new Error("Đổi email thất bại");
+            return res.text();
+        })
+        .then(msg => {
+            alert(msg);
+            location.reload();
+        })
+        .catch(err => alert(err.message));
+    }
+</script>

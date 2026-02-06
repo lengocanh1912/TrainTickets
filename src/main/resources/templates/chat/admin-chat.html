@@ -1,0 +1,1201 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Support Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1.5.1/dist/sockjs.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
+
+    <script>
+        var changeLanguage = function (dom) {
+            window.location.href = '?lang=' + dom.value;
+        }
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
+
+
+    <style>
+        .custom-scroll::-webkit-scrollbar {
+            width: 4px;
+        }
+        .custom-scroll::-webkit-scrollbar-thumb {
+            background: rgba(0,0,0,0.3);
+            border-radius: 4px;
+        }
+        @keyframes pulse {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.2); }
+        100% { transform: scale(1); }
+        }
+
+        .unread-badge {
+            animation: pulse 0.8s infinite;
+        }
+        .message-status {
+            font-size: 0.75rem;
+            user-select: none;
+            display: inline-flex;
+            align-items: center;
+        }
+
+        /* trạng thái */
+        .message-status.sending {
+            opacity: 0.5;
+        }
+
+        .message-status.sent {
+            opacity: 0.7;
+        }
+
+        .message-status.read {
+            color: #60a5fa; /* xanh nhạt – không đè bubble */
+        }
+
+        .message-status.failed {
+            color: #ef4444;
+        }
+        .message-content {
+          white-space: pre-line;
+          word-break: break-word;
+        }
+
+        .message-wrapper {
+          max-width: 75%;
+          width: fit-content;
+          display: flex;
+          flex-direction: column;
+        }
+        /* Message Styles */
+        .message {
+          display: flex;
+          width: 100%;
+          margin-bottom: 1rem;
+        }
+
+
+
+        .message.sent {
+          justify-content: flex-end;
+        }
+
+        .message.received {
+          justify-content: flex-start;
+        }
+
+        .message.sent .message-wrapper {
+          align-items: flex-end;
+          margin-left: auto;
+        }
+
+        .message.received .message-wrapper {
+          align-items: flex-start;
+          margin-right: auto;
+        }
+
+        .message-bubble {
+          padding: 12px 16px;
+          border-radius: 18px;
+          word-wrap: break-word;
+          font-size: 0.95rem;
+          box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+          width: fit-content;
+          min-width: 60px;
+          max-width: 100%;
+        }
+
+        .message.sent .message-bubble {
+          background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+          color: white;
+          border-bottom-right-radius: 4px;
+        }
+
+        .message.received .message-bubble {
+          background-color: #f3f4f6;
+          color: #111827;
+          border-bottom-left-radius: 4px;
+          border: 1px solid #e5e7eb;
+        }
+
+        .message-time {
+          font-size: 0.7rem;
+          opacity: 0.6;
+          margin-top: 4px;
+          padding: 0 4px;
+          user-select: none;
+        }
+
+        .message-row {
+          display: flex;
+          align-items: flex-end;
+          gap: 8px;
+          width: 100%;
+        }
+
+        .message.sent .message-row {
+          flex-direction: row-reverse;
+          justify-content: flex-start;
+        }
+
+        .message.received .message-row {
+          justify-content: flex-start;
+        }
+
+    </style>
+
+
+</head>
+<body class="bg-gray-50">
+<div class="flex h-screen">
+
+    <!-- Sidebar - Conversation List -->
+    <div class="w-80 bg-white border-r flex flex-col">
+        <!-- Header -->
+        <div class="p-4 border-b bg-blue-600 text-white flex items-center justify-between">
+            <div>
+                <h2 class="text-lg font-bold">Support Dashboard</h2>
+                <p class="text-sm text-blue-100">
+                    <span id="waitingCount">0</span> conversations
+                </p>
+            </div>
+            <a th:href="@{/admin/home}"
+               class="bg-white text-blue-600 px-3 py-1 rounded text-sm font-medium hover:bg-blue-100 transition">
+                ← Back
+            </a>
+        </div>
+
+        <!-- Search -->
+        <div class="p-3 border-b">
+            <input
+                    type="text"
+                    id="searchConversations"
+                    placeholder="Search customers..."
+                    class="w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    onkeyup="filterConversations()"
+            />
+        </div>
+
+        <!-- Conversation List -->
+        <div class="flex-1 overflow-y-auto" id="conversationList">
+            <div class="p-4 text-center text-gray-500 text-sm">Loading conversations...</div>
+        </div>
+    </div>
+
+    <!-- Main Chat Area -->
+    <div class="flex-1 flex flex-col">
+        <!-- Empty State -->
+        <div id="emptyState" class="flex-1 flex items-center justify-center">
+            <div class="text-center">
+                <svg class="w-24 h-24 mx-auto text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
+                </svg>
+                <h3 class="mt-4 text-lg font-medium text-gray-900">No conversation selected</h3>
+                <p class="mt-2 text-sm text-gray-500">Choose a conversation from the list to start chatting</p>
+            </div>
+        </div>
+        <!-- Chat Content (Hidden initially) -->
+        <div id="chatContent" class="hidden h-full flex flex-col">
+            <!-- Chat Header -->
+            <div class="bg-white border-b px-6 py-4 flex items-center justify-between">
+                <div class="flex items-center gap-4">
+                    <div class="w-12 h-12 bg-gradient-to-br from-purple-400 to-purple-600 rounded-full flex items-center justify-center text-white font-bold text-xl">
+                        <span id="userInitial">U</span>
+                    </div>
+                    <div>
+                        <h2 id="userName" class="font-bold text-lg">Customer Name</h2>
+                        <div class="flex items-center gap-3 text-sm text-gray-600">
+<!--                            <span id="bookingId">Booking ID</span>-->
+<!--                            <span>•</span>-->
+                            <span id="userStatus" class="text-gray-500"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-2">
+                    <!-- Customer info -->
+                    <button onclick="toggleCustomerSidebar()"
+                            class="p-2 rounded-lg hover:bg-gray-100 text-gray-600">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                  d="M5.121 17.804A4 4 0 0112 15a4 4 0 016.879 2.804M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+                        </svg>
+                    </button>
+
+                    <!-- Close chat (KHÔNG close conversation) -->
+                    <button onclick="closeChatWindow()"
+                            class="px-4 py-2 text-sm bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 flex items-center gap-2">
+                        ✕ Close
+                    </button>
+                </div>
+
+
+            </div>
+
+            <!-- Messages -->
+            <div id="messagesContainer"
+                 class="flex-1 overflow-y-auto p-6 space-y-4 bg-gray-50 custom-scroll">
+                <!-- Messages will be inserted here -->
+            </div>
+
+            <!-- Typing Indicator -->
+            <div id="typingIndicator" class="px-6 hidden">
+                <div class="flex items-center gap-2 text-gray-500 text-sm">
+                    <div class="flex gap-1">
+                        <span class="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></span>
+                        <span class="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style="animation-delay: 0.1s"></span>
+                        <span class="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style="animation-delay: 0.2s"></span>
+                    </div>
+                    <span>Customer is typing...</span>
+                </div>
+            </div>
+
+            <!-- Quick Replies for Admin -->
+            <div class="px-6 py-3 bg-white border-t">
+                <p class="text-sm text-gray-600 mb-2">Quick Replies:</p>
+                <div class="flex flex-wrap gap-2">
+                    <button onclick="insertQuickReply('Vui lòng cung cấp mã đặt vé của bạn')" class="px-3 py-1 bg-gray-100 hover:bg-gray-200 rounded-full text-sm">
+                        📋 Request Booking ID
+                    </button>
+                    <button onclick="insertQuickReply('Tôi sẽ kiểm tra và phản hồi ngay')" class="px-3 py-1 bg-gray-100 hover:bg-gray-200 rounded-full text-sm">
+                        ⏳ Checking
+                    </button>
+                    <button onclick="insertQuickReply('Bạn có thể đổi vé miễn phí trước 24h')" class="px-3 py-1 bg-gray-100 hover:bg-gray-200 rounded-full text-sm">
+                        🔄 Reschedule Policy
+                    </button>
+                    <button onclick="insertQuickReply('Còn điều gì tôi có thể giúp không?')" class="px-3 py-1 bg-gray-100 hover:bg-gray-200 rounded-full text-sm">
+                        ❓ Anything else?
+                    </button>
+                </div>
+            </div>
+
+            <!-- Input Area -->
+            <div class="border-t p-4 bg-white">
+                <div class="flex items-end gap-3">
+                    <button onclick="triggerFileUpload()" class="p-3 hover:bg-gray-100 rounded-lg transition">
+                        <svg class="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"></path>
+                        </svg>
+                    </button>
+
+                    <input type="file" id="fileInput" class="hidden" onchange="handleFileSelect(event)" accept="image/*,video/*,.pdf,.doc,.docx">
+
+                    <div class="flex-1">
+                            <textarea
+                                    id="messageInput"
+                                    placeholder="Type your message..."
+                                    class="w-full px-4 py-3 border rounded-xl resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    rows="1"
+                                    onkeypress="handleKeyPress(event)"
+                                    oninput="handleTyping()"></textarea>
+                    </div>
+
+                    <button onclick="sendMessage()" class="bg-blue-600 hover:bg-blue-700 text-white p-3 rounded-lg transition">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path>
+                        </svg>
+                    </button>
+                </div>
+
+                <!-- File Preview -->
+                <div id="filePreview" class="mt-3 hidden">
+                    <div class="bg-gray-100 rounded-lg p-3 flex items-center gap-3">
+                        <img id="filePreviewImage" class="hidden w-12 h-12 object-cover rounded" />
+                        <div class="flex-1">
+                            <p id="fileName" class="text-sm font-medium"></p>
+                            <p id="fileSize" class="text-xs text-gray-500"></p>
+                        </div>
+                        <button onclick="clearFile()" class="text-red-500 hover:bg-red-50 p-2 rounded">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Right Sidebar - Customer Info -->
+    <div id="customerSidebar"
+         class="w-80 border-l bg-white hidden flex-shrink-0 transition-all duration-300">
+
+        <div class="p-6">
+            <div class="text-center mb-5">
+                <div class="w-16 h-16 bg-purple-500 rounded-full
+                            flex items-center justify-center
+                            text-white text-xl font-bold mx-auto">
+                    <span id="customerInitial">A</span>
+                </div>
+
+                <h3 id="customerName" class="font-bold text-lg mt-2"></h3>
+                <p id="customerStatus" class="text-sm"></p>
+            </div>
+
+            <div class="space-y-3 text-sm">
+                <p>📧 <span id="customerEmail"></span></p>
+                <p>📱 <span id="customerPhone"></span></p>
+            </div>
+        </div>
+    </div>
+</div></div>
+
+
+<script th:inline="javascript">
+    /*<![CDATA[*/
+    const currentUserId =[[${#authentication.principal.user.id}]];
+    const adminId = [[${#authentication.principal.user.id}]];
+    const contextPath = /*[[@{/}]]*/ '/';
+
+    let currentCustomerId = null;
+    let presenceSubscription = null;
+    let stompAdmin = null;
+    let currentConversationId = null;
+    let conversations = [];
+    let selectedFile = null;
+    let typingTimeout = null;
+    let messageSubscription = null;
+    let typingSubscription = null;
+    let totalUnread = 0;
+    let isCustomerSidebarOpen = false;
+    let readSubscription = null;
+    let isTabActive = true;
+
+
+
+    console.log('=== ADMIN CHAT INITIALIZED ===');
+    console.log('AdminId:', adminId);
+    console.log('Context Path:', contextPath);
+
+    document.addEventListener("visibilitychange", () => {
+        isTabActive = !document.hidden;
+    });
+    function updateCustomerSidebar(info) {
+        document.getElementById('customerName').textContent = info.userName;
+        document.getElementById('customerInitial').textContent =
+            info.userName?.charAt(0) || 'U';
+
+        document.getElementById('customerEmail').textContent = info.email || '—';
+        document.getElementById('customerPhone').textContent = info.phone || '—';
+
+        const status = document.getElementById('customerStatus');
+        if (info.online) {
+            status.textContent = '🟢 Online';
+            status.className = 'text-green-600 text-sm';
+        } else {
+            status.textContent = '⚪ Offline';
+            status.className = 'text-gray-400 text-sm';
+        }
+    }
+
+    function closeCustomerSidebar() {
+        const sidebar = document.getElementById('customerSidebar');
+        if (!sidebar) return;
+
+        sidebar.classList.add('hidden');
+        isCustomerSidebarOpen = false;
+    }
+
+    function toggleCustomerSidebar() {
+        const sidebar = document.getElementById('customerSidebar');
+
+        isCustomerSidebarOpen = !isCustomerSidebarOpen;
+
+        if (isCustomerSidebarOpen) {
+            sidebar.classList.remove('hidden');
+        } else {
+            sidebar.classList.add('hidden');
+        }
+    }
+    // Connect WebSocket
+    function connectAdminWS() {
+        console.log('>>> Connecting to WebSocket...');
+        const socket = new SockJS(contextPath + 'ws-chat');
+        stompAdmin = Stomp.over(socket);
+        stompAdmin.debug = str => console.log('STOMP:', str);
+        stompAdmin.connect(
+            {userId: adminId },
+            function(frame) {
+                console.log('✅ Admin WebSocket Connected!');
+                console.log("👉 frame:", frame);
+
+                // 🔔 notify khi conversation đã claim
+                stompAdmin.subscribe(
+                    '/queue/admin/' + adminId + '/notification',
+                    onAdminNotify
+                );
+                // 🔔 notify khi conversation WAITING
+                stompAdmin.subscribe(
+                    '/topic/admin/notification',
+                    onAdminNotify
+                );
+                // 🔔 new conversation assigned
+                stompAdmin.subscribe(
+                    '/queue/admin/' + adminId + '/new',
+                    () => loadConversations()
+                );
+
+                loadConversations();
+            }, function(error) {
+                console.error('❌ WebSocket connection error:', error);
+        });
+    }
+    document.addEventListener('DOMContentLoaded', connectAdminWS);
+
+    function onAdminNotify(msg) {
+        const message = JSON.parse(msg.body);
+        console.log('🔔 ADMIN NOTIFY', message);
+
+        // ❌ Nếu đang mở conversation này → bỏ qua notify
+        if (message.conversationId === currentConversationId) return;
+
+        const conv = conversations.find(c => c.id === message.conversationId);
+
+        if (conv) {
+            // 🔥 update nội dung
+            conv.lastMessageContent = message.content || '[Attachment]';
+            conv.lastMessageTime = message.createdAt;
+            conv.unreadCount = (conv.unreadCount || 0) + 1;
+
+            // 🔥 ĐẨY CONVERSATION LÊN ĐẦU LIST
+            conversations = [
+                conv,
+                ...conversations.filter(c => c.id !== conv.id)
+            ];
+
+            displayConversations();
+        }
+
+    }
+
+    function loadConversations() {
+        fetch(contextPath + 'api/admin/conversations')
+            .then(res => res.json())
+            .then(data => {
+                conversations = data;
+                displayConversations();
+            })
+            .catch(err => console.error(err));
+    }
+
+    function syncPresence(userId) {
+        fetch(contextPath + `api/admin/user/${userId}/online`)
+            .then(res => res.json())
+            .then(online => updateOnlineStatus(online));
+    }
+
+    function displayConversations() {
+        const container = document.getElementById('conversationList');
+
+        document.getElementById('waitingCount').textContent = conversations.length;
+
+        if (conversations.length === 0) {
+            container.innerHTML =
+                '<div class="p-4 text-center text-gray-500 text-sm">No conversations</div>';
+            return;
+        }
+
+        container.innerHTML = conversations.map(conv => {
+            const isMe = currentUserId &&
+                conv.lastMessageSenderId === currentUserId;
+
+            const preview = conv.lastMessageContent
+                ? `${isMe ? 'Bạn' : conv.lastMessageSenderName}: ${conv.lastMessageContent}`
+                : '';
+
+            return `
+            <div class="conversation-item p-4 border-b cursor-pointer hover:bg-gray-50
+                ${conv.id === currentConversationId ? 'bg-blue-50' : ''}"
+                data-conversation-id="${conv.id}"
+                onclick="selectConversation(${conv.id})">
+
+                <div class="flex items-start gap-3">
+                    <div class="w-10 h-10 bg-purple-600 rounded-full flex items-center justify-center text-white">
+                        ${conv.userName?.charAt(0) || 'U'}
+                    </div>
+
+                    <div class="flex-1 min-w-0">
+                        <div class="flex justify-between">
+                            <h3 class="font-semibold truncate">${conv.userName}</h3>
+                            <span class="text-xs text-gray-500">
+                                ${formatTime(conv.lastMessageTime)}
+                            </span>
+                        </div>
+
+                        <p class="text-sm truncate text-gray-600">
+                            ${preview}
+                        </p>
+                    </div>
+
+                    <div class="unread-container ml-2">
+                        ${conv.unreadCount > 0
+                            ? `<span class="bg-red-500 text-white text-xs px-2 py-1 rounded-full">
+                                   ${conv.unreadCount > 9 ? '9+' : conv.unreadCount}
+                               </span>`
+                            : ''
+                        }
+                    </div>
+                </div>
+            </div>
+            `;
+        }).join('');
+
+        renderTotalUnread();
+    }
+
+
+
+    function renderStatusBadge(status) {
+        if (status === 'WAITING')
+            return `<span class="text-xs bg-yellow-100 text-yellow-700 px-2 py-0.5 rounded">Waiting</span>`;
+        if (status === 'CLAIMED')
+            return `<span class="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded">Processing</span>`;
+        if (status === 'CLOSED')
+            return `<span class="text-xs bg-gray-200 text-gray-600 px-2 py-0.5 rounded">Closed</span>`;
+        return '';
+    }
+    function loadCustomerInfo(conversationId) {
+        fetch(contextPath + `api/admin/conversation/${conversationId}/info`)
+            .then(res => res.json())
+            .then(info => {
+                console.log('📦 CUSTOMER INFO:', info);
+
+                updateHeaderCustomer(info);
+                updateCustomerSidebar(info);
+
+                // 🔥 set online từ REST
+                updateOnlineStatus(info.online);
+            });
+    }
+
+
+    function reloadCustomerInfo() {
+        fetch(contextPath + `api/admin/conversation/${currentConversationId}/info`)
+            .then(res => res.json())
+            .then(data => {
+                updateOnlineStatus(data.online);
+            });
+    }
+
+    function updateOnlineStatus(isOnline) {
+        // header
+        const header = document.getElementById("userStatus");
+        if (header) {
+            header.textContent = isOnline ? "🟢 Online" : "⚪ Offline";
+            header.className = isOnline ? "text-green-600" : "text-gray-400";
+        }
+
+        // sidebar
+        const sidebar = document.getElementById("customerStatus");
+        if (sidebar) {
+            sidebar.textContent = isOnline ? "🟢 Online" : "⚪ Offline";
+            sidebar.className = isOnline
+                ? "text-green-600 text-sm"
+                : "text-gray-400 text-sm";
+        }
+    }
+
+
+    async function selectConversation(conversationId) {
+        console.log('>>> Selecting conversationId:', conversationId);
+        currentConversationId = conversationId;
+        const conversation = conversations.find(c => c.id === conversationId);
+
+        // 🔥 LẤY USER ID TỪ CONVERSATION
+        currentCustomerId = conversation.userId;
+
+        loadCustomerInfo(conversationId);
+
+        // 🔥 UNSUBSCRIBE CŨ
+        if (presenceSubscription) {
+            presenceSubscription.unsubscribe();
+        }
+
+        // 🔥 SUBSCRIBE PRESENCE realtime
+        presenceSubscription = stompAdmin.subscribe("/topic/presence", msg => {
+            const data = JSON.parse(msg.body);
+
+            console.log('👤 PRESENCE EVENT:', data);
+
+            if (data.userId === currentCustomerId) {
+                updateOnlineStatus(data.online);
+            }
+        });
+
+        if (!conversation) return;
+
+        // ❌ Closed thì không cho chat
+        if (conversation.status === 'CLOSED') {
+            alert('Conversation is closed');
+            return;
+        }
+
+        // 🔥 1. CLAIM NẾU ĐANG WAITING
+        if (conversation.status === 'WAITING') {
+            await claimConversation(conversationId);
+
+            // 🔥 reload lại state từ server
+            await loadConversations();
+
+            // 🔥 lấy lại object mới
+            const updated = conversations.find(c => c.id === conversationId);
+            if (!updated || updated.status !== 'OPEN') {
+                alert('Conversation cannot be claimed');
+                return;
+            }
+        }
+        // ❌ Admin khác đang xử lý
+        if (conversation.adminId && conversation.adminId !== adminId) {
+            alert('Conversation is being handled by another admin');
+            return;
+        }
+
+        // 🔥 2. UI
+        const emptyState = document.getElementById('emptyState');
+        const chatContent = document.getElementById('chatContent');
+        const customerInfo = document.getElementById('customerInfo');
+
+        if (emptyState) emptyState.classList.add('hidden');
+        if (chatContent) chatContent.classList.remove('hidden');
+        if (customerInfo) customerInfo.classList.remove('hidden');
+
+        // 🔥 3. UNSUBSCRIBE CŨ
+        if (messageSubscription) messageSubscription.unsubscribe();
+        if (typingSubscription) typingSubscription.unsubscribe();
+        if (readSubscription) readSubscription.unsubscribe();
+
+        // 🔥 4. SUBSCRIBE MỚI
+        messageSubscription = stompAdmin.subscribe(
+            '/topic/conversation/' + conversationId,
+            msg => {
+                const message = JSON.parse(msg.body);
+                displayMessage(message);
+                scrollToBottom();
+
+                // 🔥🔥🔥 FIX Ở ĐÂY
+                // nếu USER gửi & admin đang mở conversation → mark READ
+                if (
+                    message.senderId !== adminId &&
+                    conversationId === currentConversationId &&
+                    isTabActive
+                ) {
+                    markAsRead(conversationId);
+                }
+
+            }
+        );
+
+        typingSubscription = stompAdmin.subscribe(
+            '/topic/conversation/' + conversationId + '/typing',
+            data => {
+                const indicator = JSON.parse(data.body);
+                if (indicator.userId !== adminId) {
+                    showTypingIndicator(indicator.isTyping);
+                }
+            }
+        );
+
+        // ✅ SUBSCRIBE READ STATUS
+        readSubscription = stompAdmin.subscribe(
+            '/topic/conversation/' + conversationId + '/read',
+            msg => {
+                const data = JSON.parse(msg.body);
+                handleReadRealtime(data);
+            }
+        );
+
+        loadMessages(conversationId);
+
+        // 🔥 ĐÁNH DẤU READ TẠI ĐÂY
+        await markAsRead(conversationId);
+
+            const conv = conversations.find(c => c.id === conversationId);
+            if (conv) {
+                totalUnread -= conv.unreadCount || 0;
+                conv.unreadCount = 0;
+                renderTotalUnread();
+                displayConversations();
+            }
+    }
+
+    function handleReadRealtime(data) {
+        const { messageId, readerId } = data;
+
+        // nếu chính admin đọc → bỏ
+        if (readerId === adminId) return;
+
+        const el = document.querySelector(
+            `[data-message-id="${messageId}"] .message-status`
+        );
+        if (!el) return;
+
+        el.innerHTML = '✔✔';
+        el.classList.remove('sent', 'sending');
+        el.classList.add('read');
+    }
+
+
+
+    function claimConversation(conversationId) {
+        return fetch(contextPath + `api/admin/conversation/${conversationId}/claim`, {
+            method: 'POST'
+        }).then(res => {
+            if (!res.ok) throw new Error('Claim failed');
+            return res.json();
+        });
+    }
+
+
+    function loadMessages(conversationId) {
+        console.log('>>> Loading messages for conversation:', conversationId);
+        fetch(contextPath + `api/chat/${conversationId}/messages`)
+            .then(response => {
+                console.log('Response status:', response.status);
+                return response.json();
+            })
+            .then(messages => {
+                console.log('📥 Loaded ' + messages.length + ' messages:', messages);
+                const container = document.getElementById('messagesContainer');
+                container.innerHTML = '';
+                messages.forEach(msg => displayMessage(msg));
+                scrollToBottom();
+            })
+            .catch(error => {
+                console.error('❌ Error loading messages:', error);
+            });
+    }
+
+    function displayMessage(message) {
+    const container = document.getElementById('messagesContainer');
+    const isOwn = message.senderId === adminId;
+
+    if (document.querySelector(`[data-message-id="${message.id}"]`)) return;
+
+    const messageDiv = document.createElement('div');
+    messageDiv.className = `message ${isOwn ? 'sent' : 'received'}`;
+    messageDiv.dataset.messageId = message.id;
+
+    let fileContent = '';
+    if (message.fileUrl) {
+        const fullUrl = message.fileUrl.startsWith('http')
+            ? message.fileUrl
+            : `${contextPath}${message.fileUrl}`;
+
+        if (message.type === 'IMAGE') {
+            fileContent = `<img src="${fullUrl}" class="file-preview-image">`;
+        } else if (message.type === 'VIDEO') {
+            fileContent = `<video src="${fullUrl}" controls class="file-preview-video"></video>`;
+        }
+    }
+
+    messageDiv.innerHTML = `
+        <div class="message-row">
+            <div class="message-wrapper">
+
+                ${!isOwn && message.senderName ? `
+                    <span class="text-xs text-gray-500 mb-1 px-1">
+                        ${escapeHtml(message.senderName)}
+                    </span>
+                ` : ''}
+
+                <div class="message-bubble">
+                    ${fileContent}
+                    ${message.content ? `
+                        <div class="message-content">
+                            ${escapeHtml(message.content)}
+                        </div>
+                    ` : ''}
+                </div>
+
+                <div class="message-time">
+                    ${formatTime(message.createdAt)}
+                    ${isOwn ? `
+                        <span class="message-status ${message.status?.toLowerCase()}">
+                            ${renderMessageStatusIcon(message.status)}
+                        </span>
+                    ` : ''}
+                </div>
+
+            </div>
+        </div>
+    `;
+
+    container.appendChild(messageDiv);
+}
+
+
+    function renderMessageStatusIcon(status) {
+        switch (status) {
+            case 'READ':
+                return '✔✔';   // đã đọc
+            case 'SENT':
+                return '✔';    // gửi OK
+            case 'FAILED':
+                return '❌';   // lỗi
+            case 'SENDING':
+                return '⏳';   // đang gửi
+            default:
+                return '';
+        }
+    }
+
+    function sendMessage() {
+        const conv = conversations.find(c => c.id === currentConversationId);
+        if (!conv || conv.status !== 'OPEN') {
+            alert('You must claim the conversation before sending messages');
+            return;
+        }
+
+        if (!currentConversationId) {
+            console.log('⚠️ No conversation selected');
+            return;
+        }
+
+        const input = document.getElementById('messageInput');
+        const content = input.value.trim();
+
+        console.log('>>> Sending message:', content);
+
+        if (!content && !selectedFile) {
+            console.log('⚠️ No content to send');
+            return;
+        }
+
+        if (selectedFile) {
+            console.log('>>> Sending with file...');
+            const formData = new FormData();
+            formData.append('content', content);
+            formData.append('file', selectedFile);
+
+            fetch(contextPath + `api/chat/${currentConversationId}/send`, {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(message => {
+                console.log('✅ File message sent:', message);
+
+                // 🔥 UPDATE LIST CONVERSATION REALTIME (FILE)
+                const conv = conversations.find(c => c.id === currentConversationId);
+                if (conv) {
+                    conv.lastMessageContent = '[Attachment]';
+                    conv.lastMessageSenderId = adminId;
+                    conv.lastMessageSenderName = 'Bạn';
+                    conv.lastMessageTime = message.createdAt || new Date().toISOString();
+
+                    conversations = [
+                        conv,
+                        ...conversations.filter(c => c.id !== conv.id)
+                    ];
+
+                    displayConversations();
+                }
+
+                input.value = '';
+                clearFile();
+                scrollToBottom();
+            })
+
+            .catch(error => {
+                console.error('❌ Error sending file message:', error);
+            });
+        } else {
+            console.log('>>> Sending via WebSocket...');
+
+            if (!stompAdmin || !stompAdmin.connected) {
+                console.error('❌ WebSocket not connected!');
+                return;
+            }
+
+            stompAdmin.send("/app/chat.send", {}, JSON.stringify({
+                conversationId: currentConversationId,
+                userId: adminId,
+                content: content
+            }));
+
+            // 🔥 UPDATE LIST REALTIME (admin gửi)
+                const conv = conversations.find(c => c.id === currentConversationId);
+                if (conv) {
+                    conv.lastMessageContent = content;
+                    conv.lastMessageSenderId = adminId;
+                    conv.lastMessageSenderName = 'Bạn';
+                    conv.lastMessageTime = new Date().toISOString();
+
+                    // đẩy lên đầu
+                    conversations = [
+                        conv,
+                        ...conversations.filter(c => c.id !== conv.id)
+                    ];
+
+                    displayConversations();
+                }
+
+
+            console.log('✅ Message sent via WebSocket');
+            input.value = '';
+        }
+    }
+
+    function handleTyping() {
+        if (!currentConversationId) return;
+
+        if (typingTimeout) clearTimeout(typingTimeout);
+
+        stompAdmin.send("/app/chat.typing", {}, JSON.stringify({
+            conversationId: currentConversationId,
+            userId: adminId,
+            isTyping: true
+        }));
+
+        typingTimeout = setTimeout(() => {
+            stompAdmin.send("/app/chat.typing", {}, JSON.stringify({
+                conversationId: currentConversationId,
+                userId: adminId,
+                isTyping: false
+            }));
+        }, 1000);
+    }
+
+    function showTypingIndicator(show) {
+        document.getElementById('typingIndicator').classList.toggle('hidden', !show);
+        if (show) scrollToBottom();
+    }
+
+    function insertQuickReply(text) {
+        document.getElementById('messageInput').value = text;
+        document.getElementById('messageInput').focus();
+    }
+
+    function markAsRead(conversationId) {
+        fetch(contextPath + `api/chat/${conversationId}/read`, {
+            method: 'POST'
+        });
+    }
+
+    function closeConversation() {
+        if (!currentConversationId) return;
+
+        if (confirm('Are you sure you want to close this conversation?')) {
+            fetch(contextPath + `api/admin/conversation/${currentConversationId}/close`, {
+                method: 'POST'
+            })
+            .then(() => {
+                alert('Conversation closed successfully');
+                currentConversationId = null;
+                document.getElementById('chatContent').classList.add('hidden');
+                document.getElementById('customerInfo').classList.add('hidden');
+                document.getElementById('emptyState').classList.remove('hidden');
+                loadConversations();
+            })
+            .catch(error => {
+                console.error('Error closing conversation:', error);
+            });
+        }
+    }
+    function updateUnreadBadge(conversationId, unreadCount) {
+
+        // ❌ đang mở thì không hiện badge
+        if (conversationId === currentConversationId) return;
+
+        const item = document.querySelector(
+            `.conversation-item[data-conversation-id="${conversationId}"]`
+        );
+        if (!item) return;
+
+        const container = item.querySelector('.unread-container');
+        if (!container) return;
+
+        let badge = container.querySelector('.unread-badge');
+
+        if (unreadCount > 0) {
+            if (!badge) {
+                badge = document.createElement('span');
+                badge.className =
+                    'unread-badge bg-red-500 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center animate-pulse';
+                container.appendChild(badge);
+            }
+            badge.textContent = unreadCount > 9 ? '9+' : unreadCount;
+
+        } else {
+            if (badge) badge.remove();
+        }
+    }
+
+    function incrementTotalUnread() {
+        totalUnread++;
+        renderTotalUnread();
+    }
+
+    function decrementTotalUnread() {
+        totalUnread = Math.max(0, totalUnread - 1);
+        renderTotalUnread();
+    }
+
+    function renderTotalUnread() {
+        const badge = document.getElementById('totalUnreadBadge');
+        if (!badge) return;
+
+        if (totalUnread > 0) {
+            badge.textContent = totalUnread > 9 ? '9+' : totalUnread;
+            badge.classList.remove('hidden');
+        } else {
+            badge.classList.add('hidden');
+        }
+    }
+
+
+    function filterConversations() {
+        const query = document.getElementById('searchConversations').value.toLowerCase();
+        document.querySelectorAll('.conversation-item').forEach(item => {
+            const text = item.textContent.toLowerCase();
+            item.style.display = text.includes(query) ? 'block' : 'none';
+        });
+    }
+
+    function handleFileSelect(event) {
+        const file = event.target.files[0];
+        if (file) {
+            if (file.size > 10 * 1024 * 1024) {
+                alert('File size must be less than 10MB');
+                return;
+            }
+
+            selectedFile = file;
+            document.getElementById('fileName').textContent = file.name;
+            document.getElementById('fileSize').textContent = formatFileSize(file.size);
+
+            if (file.type.startsWith('image/')) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const img = document.getElementById('filePreviewImage');
+                    img.src = e.target.result;
+                    img.classList.remove('hidden');
+                };
+                reader.readAsDataURL(file);
+            }
+
+            document.getElementById('filePreview').classList.remove('hidden');
+        }
+    }
+
+    function toggleCustomerModal() {
+        document.getElementById('customerModal')
+            .classList.toggle('hidden');
+    }
+
+    function triggerFileUpload() {
+        document.getElementById('fileInput').click();
+    }
+
+    function clearFile() {
+        selectedFile = null;
+        document.getElementById('fileInput').value = '';
+        document.getElementById('filePreview').classList.add('hidden');
+        document.getElementById('filePreviewImage').classList.add('hidden');
+    }
+
+    function handleKeyPress(event) {
+        if (event.key === 'Enter' && !event.shiftKey) {
+            event.preventDefault();
+            sendMessage();
+        }
+    }
+
+    function scrollToBottom() {
+        const container = document.getElementById('messagesContainer');
+        container.scrollTop = container.scrollHeight;
+    }
+
+    function formatTime(timestamp) {
+        if (!timestamp) return '';
+
+        const date = new Date(timestamp);
+        const now = new Date();
+        const diff = now - date;
+
+        if (diff < 60000) return 'Just now';
+        if (diff < 3600000) return Math.floor(diff / 60000) + 'm ago';
+        if (diff < 86400000) return Math.floor(diff / 3600000) + 'h ago';
+
+        return date.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' });
+    }
+
+    function formatFileSize(bytes) {
+        if (!bytes) return '';
+        return bytes < 1024 * 1024
+            ? `${(bytes / 1024).toFixed(1)} KB`
+            : `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+    }
+
+    function escapeHtml(text) {
+        if (!text) return '';
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
+    function openImage(url) {
+        window.open(url, '_blank');
+    }
+    function updateHeaderCustomer(info) {
+        document.getElementById('userName').textContent = info.userName;
+        document.getElementById('userInitial').textContent =
+            info.userName?.charAt(0) || 'U';
+
+        const status = document.getElementById('userStatus');
+        if (info.online) {
+            status.textContent = 'Online';
+            status.className = 'text-green-600';
+        } else {
+            status.textContent = 'Offline';
+            status.className = 'text-gray-400';
+        }
+    }
+
+    function closeChatWindow() {
+        if (presenceSubscription) {
+            presenceSubscription.unsubscribe();
+            presenceSubscription = null;
+        }
+        if (readSubscription) {
+            readSubscription.unsubscribe();
+            readSubscription = null;
+        }
+
+        updateOnlineStatus(false);
+
+        currentCustomerId = null;
+        currentConversationId = null;
+
+        document.getElementById('chatContent')?.classList.add('hidden');
+        document.getElementById('customerInfo')?.classList.add('hidden');
+        document.getElementById('emptyState')?.classList.remove('hidden');
+
+        closeCustomerSidebar();
+    }
+
+
+    // 🔓 Unlock audio on first user interaction (Chrome autoplay policy)
+    document.addEventListener('click', () => {
+        const audio = document.getElementById('notifySound');
+        if (audio) {
+            audio.play().then(() => {
+                audio.pause();
+                audio.currentTime = 0;
+            }).catch(() => {});
+        }
+    }, { once: true });
+
+    // Initialize
+<!--    connectAdminWS();-->
+    /*]]>*/
+</script>
+
+<!--<audio th:src="@{/sounds/notify.mp3}"></audio>-->
+
+</body>
+
+
+
+</html>

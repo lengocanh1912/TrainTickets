@@ -14,14 +14,13 @@
     <link th:href="@{/static/css/bootstrap-icons.css}" type="text/css" rel="stylesheet">
     <!-- Custom Styles -->
     <link th:href="@{/css/styles.css}" type="text/css" rel="stylesheet">
-    <link rel="stylesheet" th:href="@{/css/bootstrap.min.css}">
-    <link rel="stylesheet" th:href="@{/css/layout.css}">
+
+
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-KyZXEJ10x8bH8tQy4bm8a7Unw7CkCz7Y2pA8a6vFtvbA0hZTkNffpV8V4jeIm9xr" crossorigin="anonymous">
     <!-- Bootstrap Icons (optional, for the account icon) -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
-
 
     <style>
         * {
@@ -60,14 +59,21 @@
 
         .input-field i {
             position: absolute;
-            top: 12px;
-            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
             color: #888;
+        }
+
+        /* icon con mắt bên phải */
+        .eye-icon {
+            right: 12px;
+            cursor: pointer;
+            z-index: 2;
         }
 
         .input-field input {
             width: 100%;
-            padding: 10px 10px 10px 40px;
+            padding: 10px 40px;
             border: 1px solid #ccc;
             border-radius: 30px;
             outline: none;
@@ -140,6 +146,7 @@
     </style>
 </head>
 <body>
+
 <nav class="navbar navbar-expand-lg navbar-dark bg-primary fixed-top">
     <div class="container-fluid px-5 ">
         <a class="navbar-brand" href="#">TrainTicket</a>
@@ -212,15 +219,37 @@
 
         <div class="input-field">
             <i class="fas fa-user"></i>
-            <input type="text" name="username" placeholder="Type your username" required>
+            <input type="text"
+                   name="username"
+                   placeholder="Type your username"
+                   required>
         </div>
-
+<!--        password-->
         <div class="input-field">
             <i class="fas fa-lock"></i>
-            <input type="password" name="password" placeholder="Type your password" required>
+            <input type="password"
+                   name="password"
+                   id="password"
+                   placeholder="Type your password"
+                   required>
+            <i class="bi bi-eye eye-icon"
+               onclick="togglePassword('password', this)"></i>
+
         </div>
 
-        <a href="#forgot" class="forgot">Forgot password?</a>
+        <!-- ERROR MESSAGE -->
+        <div th:if="${param.error != null}"
+             class="alert alert-danger py-2 text-center">
+
+            <span th:switch="${param.error[0]}">
+                <span th:case="'username'">Tài khoản không tồn tại</span>
+                <span th:case="'password'">Mật khẩu không đúng</span>
+                <span th:case="'unknown'">Đăng nhập thất bại</span>
+            </span>
+
+        </div>
+
+        <a href="/trainticket/forgot-password" class="forgot">Forgot password ?</a>
 
         <button type="submit" class="btn">LOGIN</button>
 
@@ -236,5 +265,57 @@
         <input type="hidden" name="redirect" th:value="${param.redirect}" />
     </form>
 </div>
+
+<!-- Modal yêu cầu đăng nhập -->
+<div class="modal fade" id="loginRequiredModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    🔒 Yêu cầu đăng nhập
+                </h5>
+            </div>
+
+            <div class="modal-body">
+                <p class="mb-0">
+                    Vui lòng đăng nhập trước khi sử dụng chức năng hỗ trợ khách hàng.
+                </p>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button"
+                        class="btn btn-primary"
+                        data-bs-dismiss="modal">
+                    OK
+                </button>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+
+<script th:if="${loginRequired}">
+    document.addEventListener("DOMContentLoaded", function () {
+        const modal = new bootstrap.Modal(
+            document.getElementById("loginRequiredModal")
+        );
+        modal.show();
+    });
+</script>
+<script>
+    function togglePassword(inputId, icon) {
+        const input = document.getElementById(inputId);
+        if (input.type === "password") {
+            input.type = "text";
+            icon.classList.replace("bi-eye", "bi-eye-slash");
+        } else {
+            input.type = "password";
+            icon.classList.replace("bi-eye-slash", "bi-eye");
+        }
+    }
+</script>
+
 </body>
 </html>

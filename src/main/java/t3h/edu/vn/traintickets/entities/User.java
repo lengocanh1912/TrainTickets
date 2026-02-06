@@ -49,9 +49,7 @@ public class User {
     @Column(name = "gender", nullable = false)
     private Boolean gender = false;
 
-    @Size(max = 200)
-    @NotNull
-    @Column(name = "address", nullable = false, length = 200)
+    @Column(name = "address", nullable = false)
     private String address;
 
     @Column(name = "birthday")
@@ -78,6 +76,20 @@ public class User {
 
     @Column(name = "reset_token_expiry")
     private Instant resetTokenExpiry;
+
+    @Column(name = "avatar")
+    private String avatar; // lưu path ảnh avata
+
+    @Column(name = "pending_email")
+    private String pendingEmail;
+
+    @Column(name = "email_otp")
+    private String emailOtp;
+
+    @Column(name = "email_otp_expiry")
+    private Instant emailOtpExpiry;
+
+
 
     public String getResetToken() {
         return resetToken;
@@ -198,4 +210,7 @@ public class User {
     public void setUpdatedAt(Instant updatedAt) {
         this.updatedAt = updatedAt;
     }
+
+
+
 }

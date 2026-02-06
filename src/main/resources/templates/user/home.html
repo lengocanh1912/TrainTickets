@@ -27,6 +27,9 @@
             window.location.href = '?lang=' + dom.value;
         }
     </script>
+    <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
+
     <style>
         body {
             /*background: url('/img/backG.png') no-repeat center center/cover;*/
@@ -678,75 +681,115 @@
         }
     </style>
 
+    <style>
+        .navbar .nav-link {
+            padding-left: 1rem;
+            padding-right: 1rem;
+        }
+
+        .navbar .nav-link:hover {
+            background-color: rgba(255, 255, 255, 0.08);
+            border-radius: 6px;
+        }
+    </style>
+
 </head>
 <body class="bg-cover bg-center min-h-screen"
       style="background-image: url('https://res.ivivu.com/train/images/bg-train.jpg');">
 
 <!-- Navbar-->
 <nav class="navbar navbar-expand-lg navbar-dark bg-primary fixed-top">
-    <div class="container-fluid px-5 ">
-        <a class="navbar-brand" href="#">TrainTicket</a>
+
+    <div class="container-fluid px-5">
+
+        <!-- LOGO -->
+        <a class="navbar-brand" th:href="@{/user/home}">TrainTicket</a>
+
+        <!-- MENU -->
         <div class="navbar-nav">
-            <a class="nav-link text-white" th:href="@{/user/home}"
-               th:classappend="${menu == 'userHome'} ? 'active' ">Home</a>
-            <a class="nav-link text-white" th:href="@{/user/trip/list}"
-               th:classappend="${menu == 'trip'} ? 'active'">Trip</a>
+            <a class="nav-link text-white"
+               th:href="@{/user/home}"
+               th:classappend="${menu == 'userHome'} ? 'active'">
+                Home
+            </a>
+
+            <a class="nav-link text-white"
+               th:href="@{/user/trip/list}"
+               th:classappend="${menu == 'trip'} ? 'active'">
+                Trip
+            </a>
+
             <a class="nav-link text-white" href="#">Train Seat</a>
-            <a class="nav-link text-white" th:href="@{/user/support}"
-               th:classappend="${menu == 'support'} ? 'active'">Support</a>
+
+            <!-- SUPPORT -->
+            <a class="nav-link text-white position-relative"
+               th:href="@{/user/support}"
+               th:classappend="${menu == 'support'} ? 'active'">
+
+                Support
+                <span id="support-unread-badge"
+                      class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
+                      style="display:none;font-size:0.65rem;">
+                    0
+                </span>
+            </a>
+
+            <a class="nav-link text-white"
+               th:href="@{/user/review/view}"
+               th:classappend="${menu == 'review'} ? 'active'">
+                Rating
+            </a>
+
             <a class="nav-link text-white" href="#">Q&A</a>
         </div>
 
-        <div class="d-flex text-white ms-auto">
-            <!--            <button class="btn btn-light" type="button">-->
+        <!-- RIGHT -->
+        <div class="d-flex text-white ms-auto align-items-center">
+
             <a th:href="@{/user/order/view}" class="nav-link text-white">
-                <i class="bi bi-cart "> Đơn hàng</i>
+                <i class="bi bi-cart"></i> Đơn hàng
             </a>
+
+            <!-- ACCOUNT -->
             <div class="dropdown">
-                <!-- Nút icon tài khoản -->
-                <button class="btn btn-light" type="button" id="accountDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                <button class="btn btn-light"
+                        type="button"
+                        id="accountDropdown"
+                        data-bs-toggle="dropdown">
                     <i class="bi bi-person"></i>
-                    <span th:if="${currentUser != null}"
-                          th:text="${currentUser.fullname}"></span>
-                    <span th:if="${currentUser == null}">Tài khoản</span>
+                    <span th:text="${currentUser != null ? currentUser.fullname : 'Tài khoản'}"></span>
                 </button>
 
-                <!-- Danh sách tùy chọn -->
-                <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="accountDropdown">
-                    <!-- Nếu đã đăng nhập -->
+                <ul class="dropdown-menu dropdown-menu-end">
                     <li th:if="${currentUser != null}">
-                        <a class="dropdown-item text-primary" th:each="role : ${currentUser.role}"
-                           th:if="${role == 'ADMIN'}"
-                           th:href="@{/admin/home}">ADMIN</a>
-                        <hr class="" >
-                    </li>
-                    <li th:if="${currentUser != null}">
-                        <a class="dropdown-item" th:href="@{/cart/checkout}">Checkout</a>
-                    </li>
-                    <li th:if="${currentUser != null}">
-                        <a class="dropdown-item" th:href="@{/cart/checkout-vnpay}">VNPAY</a>
-                    </li>
-                    <li th:if="${currentUser != null}">
-                        <a class="dropdown-item" th:href="@{/orders}">Đơn hàng</a>
-                    </li>
-                    <li th:if="${currentUser != null}">
-                        <a class="dropdown-item" th:href="@{/wishlist}">Yêu thích</a>
-                    </li>
-                    <li th:if="${currentUser != null}">
-                        <a class="dropdown-item" th:href="@{/logout}">Đăng xuất</a>
+                        <a class="dropdown-item"
+                           th:href="@{/user/account}">
+                            Tài khoản
+                        </a>
                     </li>
 
-                    <!-- Nếu chưa đăng nhập -->
-                    <li th:if="${currentUser == null}">
-                        <a class="dropdown-item" th:href="@{/login}">Đăng nhập</a>
-                    </li>
-                    <li th:if="${currentUser == null}">
-                        <a class="dropdown-item" th:href="@{/register}">Tạo tài khoản</a>
+                    <li th:if="${currentUser != null}">
+                        <a class="dropdown-item"
+                           th:href="@{/logout}">
+                            Đăng xuất
+                        </a>
                     </li>
 
+                    <li th:if="${currentUser == null}">
+                        <a class="dropdown-item"
+                           th:href="@{/login}">
+                            Đăng nhập
+                        </a>
+                    </li>
+
+                    <li th:if="${currentUser == null}">
+                        <a class="dropdown-item"
+                           th:href="@{/register}">
+                            Tạo tài khoản
+                        </a>
+                    </li>
                 </ul>
             </div>
-
 
         </div>
     </div>
@@ -764,7 +807,7 @@
             </p>
             <span class="ml-3 text-white bg-green-600 rounded px-2 font-semibold"
                   th:text="${averageRating}">9.6</span>
-            <a th:href="@{/user/review/list}"
+            <a th:href="@{/user/review/view}"
                class="underline text-blue-600 ml-1"
                th:text="${reviewCount} + ' đánh giá'">37 đánh giá</a>
         </div>
@@ -831,75 +874,6 @@
             </div>
 
 
-
-            <!-- Số lượng vé theo loại -->
-            <!--            <div class="form-group full-width">-->
-            <!--                <label class="form-label">👥 Số lượng vé</label>-->
-            <!--                <div class="quantity-group">-->
-            <!--                    <button id="ticketToggle" type="button" class="ticket-selector">-->
-            <!--                        <span id="totalTicketCount">1 vé</span>-->
-            <!--                        <span class="dropdown-arrow">▼</span>-->
-            <!--                    </button>-->
-
-            <!--                    <div id="ticketDropdown" class="ticket-dropdown hidden">-->
-            <!--                        &lt;!&ndash; Người lớn &ndash;&gt;-->
-            <!--                        <div class="ticket-row">-->
-            <!--                            <div class="ticket-info">-->
-            <!--                                <p class="ticket-type">Người lớn</p>-->
-            <!--                                <p class="ticket-desc">Từ 11 - 59 tuổi</p>-->
-            <!--                            </div>-->
-            <!--                            <div class="ticket-controls">-->
-            <!--                                <button type="button" class="ticket-btn decrease" data-type="adult">−</button>-->
-            <!--                                <span class="ticket-count" id="adultCount">1</span>-->
-            <!--                                <button type="button" class="ticket-btn increase" data-type="adult">+</button>-->
-            <!--                                <input type="hidden" name="adult" value="1">-->
-            <!--                            </div>-->
-            <!--                        </div>-->
-
-            <!--                        &lt;!&ndash; Trẻ em &ndash;&gt;-->
-            <!--                        <div class="ticket-row">-->
-            <!--                            <div class="ticket-info">-->
-            <!--                                <p class="ticket-type">Trẻ em <span class="discount">-25%</span></p>-->
-            <!--                                <p class="ticket-desc">Từ 6 - 10 tuổi</p>-->
-            <!--                            </div>-->
-            <!--                            <div class="ticket-controls">-->
-            <!--                                <button type="button" class="ticket-btn decrease" data-type="child">−</button>-->
-            <!--                                <span class="ticket-count" id="childCount">0</span>-->
-            <!--                                <button type="button" class="ticket-btn increase" data-type="child">+</button>-->
-            <!--                                <input type="hidden" name="child" value="0">-->
-            <!--                            </div>-->
-            <!--                        </div>-->
-
-            <!--                        &lt;!&ndash; Người cao tuổi &ndash;&gt;-->
-            <!--                        <div class="ticket-row">-->
-            <!--                            <div class="ticket-info">-->
-            <!--                                <p class="ticket-type">Người cao tuổi <span class="discount">-15%</span></p>-->
-            <!--                                <p class="ticket-desc">Từ 60 tuổi</p>-->
-            <!--                            </div>-->
-            <!--                            <div class="ticket-controls">-->
-            <!--                                <button type="button" class="ticket-btn decrease" data-type="senior">−</button>-->
-            <!--                                <span class="ticket-count" id="seniorCount">0</span>-->
-            <!--                                <button type="button" class="ticket-btn increase" data-type="senior">+</button>-->
-            <!--                                <input type="hidden" name="senior" value="0">-->
-            <!--                            </div>-->
-            <!--                        </div>-->
-
-            <!--                        &lt;!&ndash; Sinh viên &ndash;&gt;-->
-            <!--                        <div class="ticket-row">-->
-            <!--                            <div class="ticket-info">-->
-            <!--                                <p class="ticket-type">Sinh viên <span class="discount">-10%</span></p>-->
-            <!--                                <p class="ticket-desc">Thẻ SV</p>-->
-            <!--                            </div>-->
-            <!--                            <div class="ticket-controls">-->
-            <!--                                <button type="button" class="ticket-btn decrease" data-type="student">−</button>-->
-            <!--                                <span class="ticket-count" id="studentCount">0</span>-->
-            <!--                                <button type="button" class="ticket-btn increase" data-type="student">+</button>-->
-            <!--                                <input type="hidden" name="student" value="0">-->
-            <!--                            </div>-->
-            <!--                        </div>-->
-            <!--                    </div>-->
-            <!--                </div>-->
-            <!--            </div>-->
 
             <!-- Số lượng vé theo loại -->
             <div class="form-group full-width">
@@ -1018,7 +992,7 @@
         });
     });
 </script>
-// Xử lý chuyển đổi giữa một chiều và khứ hồi
+<!--// Xử lý chuyển đổi giữa một chiều và khứ hồi-->
 <script>
     const ticketTypeRadios = document.querySelectorAll('input[name="tripType"]');
     const returnDateGroup = document.getElementById('returnDateGroup');
@@ -1081,195 +1055,6 @@
         });
     });
 </script>
-// Xử lý dropdown số lượng vé
-<!--<script>-->
-<!--    const ticketToggle = document.getElementById('ticketToggle');-->
-<!--    const ticketDropdown = document.getElementById('ticketDropdown');-->
-
-<!--    ticketToggle.addEventListener('click', function() {-->
-<!--        ticketDropdown.classList.toggle('hidden');-->
-<!--        ticketToggle.classList.toggle('active');-->
-<!--    });-->
-
-<!--    // Đóng dropdown khi click bên ngoài-->
-<!--    document.addEventListener('click', function(e) {-->
-<!--        if (!ticketToggle.contains(e.target) && !ticketDropdown.contains(e.target)) {-->
-<!--            ticketDropdown.classList.add('hidden');-->
-<!--            ticketToggle.classList.remove('active');-->
-<!--        }-->
-<!--    });-->
-
-<!--    // Xử lý tăng/giảm số lượng vé-->
-<!--    const ticketCounts = {-->
-<!--        adult: 1,-->
-<!--        child: 0,-->
-<!--        senior: 0,-->
-<!--        student: 0-->
-<!--    };-->
-
-<!--    document.querySelectorAll('.ticket-btn').forEach(btn => {-->
-<!--        btn.addEventListener('click', function() {-->
-<!--            const type = this.dataset.type;-->
-<!--            const isIncrease = this.classList.contains('increase');-->
-
-<!--            if (isIncrease) {-->
-<!--                if (getTotalTickets() < 9) { // Giới hạn tối đa 9 vé-->
-<!--                    ticketCounts[type]++;-->
-<!--                }-->
-<!--            } else {-->
-<!--                if (ticketCounts[type] > 0) {-->
-<!--                    // Đảm bảo luôn có ít nhất 1 vé-->
-<!--                    if (getTotalTickets() > 1) {-->
-<!--                        ticketCounts[type]&#45;&#45;;-->
-<!--                    }-->
-<!--                }-->
-<!--            }-->
-
-<!--            updateTicketDisplay();-->
-<!--        });-->
-<!--    });-->
-
-<!--    function getTotalTickets() {-->
-<!--        return Object.values(ticketCounts).reduce((sum, count) => sum + count, 0);-->
-<!--    }-->
-
-<!--    function updateTicketDisplay() {-->
-<!--        // Cập nhật hiển thị số lượng từng loại-->
-<!--        document.getElementById('adultCount').textContent = ticketCounts.adult;-->
-<!--        document.getElementById('childCount').textContent = ticketCounts.child;-->
-<!--        document.getElementById('seniorCount').textContent = ticketCounts.senior;-->
-<!--        document.getElementById('studentCount').textContent = ticketCounts.student;-->
-
-<!--        // Cập nhật hidden inputs-->
-<!--        document.querySelector('input[name="adult"]').value = ticketCounts.adult;-->
-<!--        document.querySelector('input[name="child"]').value = ticketCounts.child;-->
-<!--        document.querySelector('input[name="senior"]').value = ticketCounts.senior;-->
-<!--        document.querySelector('input[name="student"]').value = ticketCounts.student;-->
-
-<!--        // Cập nhật tổng số vé-->
-<!--        const total = getTotalTickets();-->
-<!--        document.getElementById('totalTicketCount').textContent = `${total} vé`;-->
-<!--    }-->
-<!--    const today = new Date().toISOString().split('T')[0];-->
-<!--    document.getElementById('departure-date').min = today;-->
-<!--    document.getElementById('return-date').min = today;-->
-
-<!--    // Thiết lập ngày mặc định-->
-<!--    document.getElementById('departure-date').value = today;-->
-
-<!--    const tomorrow = new Date();-->
-<!--    tomorrow.setDate(tomorrow.getDate() + 1);-->
-<!--    document.getElementById('return-date').value = tomorrow.toISOString().split('T')[0];-->
-
-<!--    // Xử lý thay đổi loại chuyến đi-->
-<!--    document.querySelectorAll('input[name="tripType"]').forEach(radio => {-->
-<!--        radio.addEventListener('change', function() {-->
-<!--            const returnGroup = document.getElementById('return-date-group');-->
-<!--            const returnInput = document.getElementById('return-date');-->
-
-<!--            if (this.value === 'oneway') {-->
-<!--                returnGroup.style.opacity = '0.5';-->
-<!--                returnGroup.style.pointerEvents = 'none';-->
-<!--                returnInput.required = false;-->
-<!--            } else {-->
-<!--                returnGroup.style.opacity = '1';-->
-<!--                returnGroup.style.pointerEvents = 'auto';-->
-<!--                returnInput.required = true;-->
-<!--            }-->
-<!--        });-->
-<!--    });-->
-
-<!--    // Cập nhật ngày về tối thiểu khi thay đổi ngày đi-->
-<!--    document.getElementById('departure-date').addEventListener('change', function() {-->
-<!--        const returnDate = document.getElementById('return-date');-->
-<!--        returnDate.min = this.value;-->
-
-<!--        // Nếu ngày về nhỏ hơn ngày đi, cập nhật ngày về-->
-<!--        if (returnDate.value && returnDate.value < this.value) {-->
-<!--            const nextDay = new Date(this.value);-->
-<!--            nextDay.setDate(nextDay.getDate() + 1);-->
-<!--            returnDate.value = nextDay.toISOString().split('T')[0];-->
-<!--        }-->
-<!--    });-->
-
-<!--    function swapDates() {-->
-<!--        const departureInput = document.getElementById('departure-date');-->
-<!--        const returnInput = document.getElementById('return-date');-->
-
-<!--        const temp = departureInput.value;-->
-<!--        departureInput.value = returnInput.value;-->
-<!--        returnInput.value = temp;-->
-
-<!--        // Cập nhật ngày tối thiểu-->
-<!--        returnInput.min = departureInput.value;-->
-<!--    }-->
-
-<!--    function searchTrains() {-->
-<!--        const departureDate = document.getElementById('departure-date').value;-->
-<!--        const returnDate = document.getElementById('return-date').value;-->
-<!--        const tripType = document.querySelector('input[name="tripType"]:checked').value;-->
-
-<!--        if (!departureDate) {-->
-<!--            alert('Vui lòng chọn ngày đi!');-->
-<!--            return;-->
-<!--        }-->
-
-<!--        if (tripType === 'roundtrip' && !returnDate) {-->
-<!--            alert('Vui lòng chọn ngày về!');-->
-<!--            return;-->
-<!--        }-->
-
-<!--        // Hiệu ứng loading-->
-<!--        const button = document.querySelector('.search-button');-->
-<!--        const originalText = button.innerHTML;-->
-<!--        button.innerHTML = '⏳ Đang tìm kiếm...';-->
-<!--        button.disabled = true;-->
-
-<!--        setTimeout(() => {-->
-<!--            button.innerHTML = originalText;-->
-<!--            button.disabled = false;-->
-
-<!--            // Hiển thị thông tin đã chọn-->
-<!--            let message = `Tìm kiếm chuyến tàu:\n`;-->
-<!--            message += `Ngày đi: ${formatDate(departureDate)}\n`;-->
-<!--            if (tripType === 'roundtrip') {-->
-<!--                message += `Ngày về: ${formatDate(returnDate)}\n`;-->
-<!--            }-->
-<!--            message += `Loại vé: ${tripType === 'roundtrip' ? 'Khứ hồi' : 'Một chiều'}\n`;-->
-
-<!--            // Thêm thông tin số lượng vé-->
-<!--            message += `Số lượng vé:\n`;-->
-<!--            if (ticketCounts.adult > 0) message += `- Người lớn: ${ticketCounts.adult}\n`;-->
-<!--            if (ticketCounts.child > 0) message += `- Trẻ em: ${ticketCounts.child}\n`;-->
-<!--            if (ticketCounts.senior > 0) message += `- Người cao tuổi: ${ticketCounts.senior}\n`;-->
-<!--            if (ticketCounts.student > 0) message += `- Sinh viên: ${ticketCounts.student}\n`;-->
-<!--            message += `Tổng: ${getTotalTickets()} vé`;-->
-
-<!--            alert(message);-->
-<!--        }, 1500);-->
-<!--    }-->
-
-<!--    function formatDate(dateString) {-->
-<!--        const date = new Date(dateString);-->
-<!--        return date.toLocaleDateString('vi-VN', {-->
-<!--            weekday: 'long',-->
-<!--            year: 'numeric',-->
-<!--            month: 'long',-->
-<!--            day: 'numeric'-->
-<!--        });-->
-<!--    }-->
-
-<!--    // Hiệu ứng hover cho input-->
-<!--    document.querySelectorAll('.date-input').forEach(input => {-->
-<!--        input.addEventListener('focus', function() {-->
-<!--            this.parentElement.style.transform = 'scale(1.02)';-->
-<!--        });-->
-
-<!--        input.addEventListener('blur', function() {-->
-<!--            this.parentElement.style.transform = 'scale(1)';-->
-<!--        });-->
-<!--    });-->
-<!--</script>-->
 
 <!--thể loại vé(form)-->
 <script>
@@ -1334,7 +1119,67 @@
         updateTotal();
     });
 </script>
+<!--user home-->
+<script th:if="${currentUser != null}" th:inline="javascript">
+    const contextPath = /*[[@{/}]]*/ '/';
+    const userId = /*[[${currentUser.id}]]*/ 0;
 
+    console.log('USER ID =', userId);
+
+    let stompClient = null;
+
+    document.addEventListener('DOMContentLoaded', () => {
+        loadInitialUnread();
+        connectSupportBadgeWS();
+    });
+
+    // ✅ LOAD BAN ĐẦU (khi reload trang)
+    function loadInitialUnread() {
+        fetch(contextPath + 'user/support/unread-count')
+            .then(res => res.json())
+            .then(count => updateSupportUnread(count))
+            .catch(err => console.log('Unread fetch error', err));
+    }
+
+    // ✅ WEBSOCKET REALTIME (FIXED)
+    function connectSupportBadgeWS() {
+        console.log('>>> Connecting Support Badge WS');
+
+        const socket = new SockJS(contextPath + 'ws-chat');
+        stompClient = Stomp.over(socket);
+        stompClient.debug = null;
+
+        stompClient.connect(
+            { userId: userId }, // 🔥 QUAN TRỌNG
+            () => {
+                console.log('🔔 Support badge WS connected, userId=', userId);
+
+                stompClient.subscribe(
+                    `/topic/user/${userId}/support-unread`,
+                    msg => {
+                        const count = JSON.parse(msg.body);
+                        updateSupportUnread(count);
+                    }
+                );
+            },
+            error => {
+                console.error('❌ Support badge WS error', error);
+            }
+        );
+    }
+
+    function updateSupportUnread(count) {
+        const badge = document.getElementById('support-unread-badge');
+        if (!badge) return;
+
+        if (count > 0) {
+            badge.style.display = 'inline-block';
+            badge.textContent = count > 9 ? '9+' : count;
+        } else {
+            badge.style.display = 'none';
+        }
+    }
+</script>
 
 </body>
 </html>

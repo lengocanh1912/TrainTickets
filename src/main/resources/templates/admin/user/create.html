@@ -21,6 +21,8 @@
     <h3 class="btn btn-primary">Thêm người dùng</h3>
     </header>
     <div class="container-fluid">
+        <div th:if="${error}" class="alert alert-danger" th:text="${error}">
+        </div>
         <form th:action="@{'/admin/user/save'}" method="post" th:object="${user}">
             <div class="mb-3">
                 <label for="userName" class="form-label">Tên đăng nhập</label>
@@ -71,12 +73,16 @@
                 <label for="role" class="form-label">Quyền</label>
                 <select th:field="*{role}" class="form-select" id="role" >
                     <option value="ADMIN">ADMIN</option>
-                    <option value="EMPLOYEE">EMPLOYEE</option>
+<!--                    <option value="EMPLOYEE">EMPLOYEE</option>-->
                     <option value="CUSTOMER">CUSTOMER</option>
                 </select>
             </div>
-            <button type="submit" class="btn btn-primary">Tạo tài khoản</button>
-            <a class="btn btn-primary" th:href="@{'/admin/user/view'}">hủy</a>
+            <button type="submit" class="btn btn-success">Tạo tài khoản</button>
+            <a class="btn btn-danger"
+               th:href="@{|/admin/user/view?page=${page != null ? page : 0}|}">
+                Hủy
+            </a>
+
         </form>
     </div>
 </div>

@@ -4,6 +4,7 @@ import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.ui.Model;
 //import ch.qos.logback.core.model.Model;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,44 +19,29 @@ import t3h.edu.vn.traintickets.config.UserDetailServiceImpl;
 import t3h.edu.vn.traintickets.dto.UserCreateDto;
 import t3h.edu.vn.traintickets.dto.UserPasswordDto;
 import t3h.edu.vn.traintickets.entities.User;
-import t3h.edu.vn.traintickets.repository.OrderRepository;
-import t3h.edu.vn.traintickets.repository.TicketRepository;
-import t3h.edu.vn.traintickets.repository.TrainRepository;
-import t3h.edu.vn.traintickets.repository.UserRepository;
+import t3h.edu.vn.traintickets.repository.*;
 import t3h.edu.vn.traintickets.service.*;
+import org.springframework.security.crypto.password.PasswordEncoder;
+
+import java.security.Principal;
 
 @Controller
 public class HomeController {
 
     @Autowired
     private UserRepository userRepository;
-
-    @Autowired
-    private TrainService trainService;
     @Autowired
     private TrainRepository trainRepository;
-//
-    @Autowired
-    private TicketService ticketService;
-//
-//    @Autowired
-//    private OrderService orderService;
     @Autowired
     private OrderRepository orderRepository;
     @Autowired
     private TicketRepository ticketRepository;
     @Autowired
-    private OrderService orderService;
-    @Autowired
     private ReviewService reviewService;
-//    @Autowired
-//    private RouteService routeService;
-//
-//    @Autowired
-//    private SeatService seatService;
-//
-//    @Autowired
-//    private DiscountService discountService;
+    @Autowired
+    private RevenueService revenueService;
+    @Autowired
+    private RouteRepository routeRepository;
 
     @GetMapping("/admin/home")
     public String showDashboard( Model model) {
@@ -66,12 +52,17 @@ public class HomeController {
         model.addAttribute("trainCount", trainRepository.count());
         model.addAttribute("ticketSold", ticketRepository.count());
         model.addAttribute("orderCount", orderRepository.count());
-//        model.addAttribute("routeCount", routeService.count());
+        model.addAttribute("routeCount", routeRepository.count());
 //        model.addAttribute("availableSeats", seatService.countAvailableSeats());
-//        model.addAttribute("discountCount", discountService.count());
-        model.addAttribute("totalRevenue", orderService.getTotalRevenue());
+//        model.addAttribute("discountCount", discountR.count());
+        model.addAttribute("totalRevenue", revenueService.getTotalRevenueOrderPaid());
 
-        return "/admin/home"; // trỏ tới file admin_home.jsp hoặc admin_home.html
+        return "/admin/home";
+    }
+
+    @GetMapping("/admin/home-test")
+    public String adminHome(Model model){
+        return  "admin/home-test";
     }
 
     @GetMapping("/user/home")
@@ -81,29 +72,6 @@ public class HomeController {
         model.addAttribute("reviewCount", reviewService.getTotalReviewCount());
         return "user/home";
     }
-
-    @Autowired
-    private UserService userService;
-
-    @GetMapping("/admin/password")
-    public String password(HttpSession session, Model model) {
-        UserPasswordDto user = (UserPasswordDto) session.getAttribute("user");
-        model.addAttribute("user", user);
-        return "admin/password";
-    }
-
-    @PostMapping("/admin/password")
-    public String passwordSave(@RequestParam("newPassword") String newPassword,
-                               HttpSession session,
-                               RedirectAttributes redirectAttributes) {
-        User user = (User) session.getAttribute("user");
-
-        userService.updatePassword(user.getId(), newPassword); // custom method đổi mật khẩu
-
-        redirectAttributes.addFlashAttribute("message", "Đổi mật khẩu thành công");
-        return "redirect:/admin/user/view";
-    }
-
 
 
 }

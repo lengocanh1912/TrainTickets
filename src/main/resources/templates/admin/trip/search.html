@@ -76,8 +76,8 @@
           <td th:text="${#numbers.formatDecimal(trip.price, 1, 'COMMA',0,'POINT' )} + ' đ'"></td>
           <td>
               <span th:switch="${trip.status}">
-                <span th:case="true" class="badge bg-success">Đang chạy</span>
-                <span th:case="false" class="badge bg-secondary">Tạm dừng</span>
+                <span th:case="${TripSate.ACTIVE}" class="badge bg-success">Đang chạy</span>
+                <span th:case="${TripSate.INACTIVE}" class="badge bg-secondary">Tạm dừng</span>
                 <span th:case="*">Không xác định</span>
               </span>
           </td>

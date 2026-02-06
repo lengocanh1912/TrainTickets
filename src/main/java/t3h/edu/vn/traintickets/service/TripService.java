@@ -5,6 +5,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import t3h.edu.vn.traintickets.dto.TripCreateDto;
 import t3h.edu.vn.traintickets.dto.TripDto;
@@ -12,14 +13,18 @@ import t3h.edu.vn.traintickets.dto.TripUpdateDto;
 import t3h.edu.vn.traintickets.entities.Route;
 import t3h.edu.vn.traintickets.entities.Train;
 import t3h.edu.vn.traintickets.entities.Trip;
+import t3h.edu.vn.traintickets.enums.TripState;
 import t3h.edu.vn.traintickets.repository.RouteRepository;
 import t3h.edu.vn.traintickets.repository.TripRepository;
 import t3h.edu.vn.traintickets.repository.TrainRepository;
+import t3h.edu.vn.traintickets.utils.PriceUtils;
 
 
+import java.math.BigDecimal;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.concurrent.TransferQueue;
 import java.util.stream.Collectors;
@@ -36,11 +41,12 @@ public class TripService {
     public List<Trip> searchTripsByRoute(String keyword) {
         return tripRepository.searchByRouteName(keyword);
     }
-    public Page paging(int pageNo, int pageSize) {
-        Pageable pageable = PageRequest.of(pageNo, pageSize);
-        Page<Trip> trips = tripRepository.findAll(pageable);
-        return trips;
+
+    public Page<Trip> paging(int pageNo, int pageSize) {
+        Pageable pageable = PageRequest.of(pageNo, pageSize, Sort.by(Sort.Direction.DESC, "createdAt"));
+        return tripRepository.findAllWithDetails(pageable);
     }
+
 
     public void deleteById(Long id) {
         if (!tripRepository.existsById(id)) {
@@ -71,34 +77,74 @@ public class TripService {
     }
 
     public void createTrip(TripCreateDto dto) {
+        // 1. Kiểm tra trùng lịch tàu
         if (tripRepository.existsByTrainAndTimeOverlap(dto.getTrainId(), dto.getDepartureAt(), dto.getArrivalAt())) {
             throw new IllegalArgumentException("Tàu đã được sử dụng trong khung giờ này.");
         }
 
+        // 2. Kiểm tra thời gian đến phải sau thời gian đi
+        if (dto.getArrivalAt().isBefore(dto.getDepartureAt()) || dto.getArrivalAt().isEqual(dto.getDepartureAt())) {
+            throw new IllegalArgumentException("Thời gian đến phải sau thời gian xuất phát.");
+        }
+
+        // 3. Khởi tạo trip
         Trip trip = new Trip();
         trip.setTrain(trainRepository.getReferenceById(dto.getTrainId()));
         trip.setRoute(routeRepository.getReferenceById(dto.getRouteId()));
         trip.setDepartureAt(dto.getDepartureAt());
         trip.setArrivalAt(dto.getArrivalAt());
-        trip.setPrice(dto.getPrice());
-        trip.setStatus(1==1);
-        trip.setCreatedAt(Instant.now());
 
+        // 4. Xử lý giá
+        String rawPrice = dto.getPrice();
+        BigDecimal numericPrice = new BigDecimal(rawPrice.replace(".", ""));
+        trip.setPrice(numericPrice);
+
+        trip.setStatus(TripState.ACTIVE);
+        trip.setCreatedAt(LocalDateTime.now());
+
+        // 5. Lưu DB
         tripRepository.save(trip);
     }
 
-    public List<TripDto> findAllDto() {
-        return tripRepository.findAll().stream().map(t -> {
-            return new TripDto(
-                    t.getId(),
-                    t.getTrain().getName(),
-                    t.getRoute().getDeparture().getName(),
-                    t.getRoute().getArrival().getName(),
-                    t.getPrice(),
-                    t.getDepartureAt(),
-                    t.getArrivalAt()
-            );
-        }).collect(Collectors.toList());
+
+    public void updateTrip(TripUpdateDto dto) {
+        Trip trip = tripRepository.findById(dto.getId())
+                .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy chuyến đi với ID: " + dto.getId()));
+
+        Train train = trainRepository.findById(dto.getTrainId())
+                .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy tàu"));
+
+        Route route = routeRepository.findById(dto.getRouteId())
+                .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy tuyến đường"));
+
+        // ✅ Kiểm tra thời gian đến phải sau thời gian đi
+        if (dto.getArrivalAt().isBefore(dto.getDepartureAt()) || dto.getArrivalAt().isEqual(dto.getDepartureAt())) {
+            throw new IllegalArgumentException("Thời gian đến phải sau thời gian xuất phát.");
+        }
+
+        // ✅ Kiểm tra trùng lịch với các chuyến khác (tránh đè lên một chuyến khác)
+        boolean isOverlapping = tripRepository.existsByTrainAndTimeOverlapExceptCurrent(
+                dto.getTrainId(), dto.getDepartureAt(), dto.getArrivalAt(), dto.getId()
+        );
+        if (isOverlapping) {
+            throw new IllegalArgumentException("Tàu đã có chuyến khác trong khung giờ này.");
+        }
+
+        // ✅ Cập nhật dữ liệu
+        trip.setTrain(train);
+        trip.setRoute(route);
+        trip.setDepartureAt(dto.getDepartureAt());
+        trip.setArrivalAt(dto.getArrivalAt());
+
+        // ✅ Xử lý giá
+        String rawPrice = dto.getPrice();
+        BigDecimal numericPrice = new BigDecimal(rawPrice.replace(".", ""));
+        trip.setPrice(numericPrice);
+
+        trip.setStatus(dto.getStatus());
+        trip.setUpdatedAt(LocalDateTime.now());
+
+        tripRepository.save(trip);
     }
 
 
@@ -112,32 +158,28 @@ public class TripService {
         dto.setRouteId(trip.getRoute().getId());
         dto.setDepartureAt(trip.getDepartureAt());
         dto.setArrivalAt(trip.getArrivalAt());
-        dto.setPrice(trip.getPrice());
+        // set price as formatted string (no currency), e.g. "300.000"
+        dto.setPrice(PriceUtils.formatNoCurrency(trip.getPrice()));
         dto.setStatus(trip.getStatus());
 
         return dto;
     }
 
-    public void updateTrip(TripUpdateDto dto) {
-        Trip trip = tripRepository.findById(dto.getId())
-                .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy chuyến đi với ID: " + dto.getId()));
 
-        // Cập nhật lại thông tin chuyến đi
-        Train train = trainRepository.findById(dto.getTrainId())
-                .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy tàu"));
-
-        Route route = routeRepository.findById(dto.getRouteId())
-                .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy tuyến đường"));
-
-        trip.setTrain(train);
-        trip.setRoute(route);
-        trip.setDepartureAt(dto.getDepartureAt());
-        trip.setArrivalAt(dto.getArrivalAt());
-        trip.setPrice(dto.getPrice());
-        trip.setStatus(dto.getStatus());
-
-        // Lưu lại
-        tripRepository.save(trip);
+    public List<TripDto> findAllDto() {
+        return tripRepository.findAll().stream().map(t -> {
+            return new TripDto(
+                    t.getId(),
+                    t.getTrain().getName(),
+                    t.getRoute().getDeparture().getName(),
+                    t.getRoute().getArrival().getName(),
+                    t.getPrice(), // BigDecimal
+                    t.getDepartureAt(),
+                    t.getArrivalAt()
+            );
+        }).collect(Collectors.toList());
     }
+
+
 
 }

@@ -2,11 +2,9 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <title>Thống kê doanh thu</title>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <!-- Bootstrap -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" th:href="@{/css/styles.css}">
     <link th:href="@{'/img/favicon.ico'}" rel="shortcut icon" type="image/x-icon">
     <!-- Bootstrap v5.0.1 -->
@@ -16,80 +14,302 @@
     <link th:href="@{'/css/bootstrap-icons.css'}" type="text/css" rel="stylesheet">
     <!-- Custom Styles -->
     <link th:href="@{'/css/styles.css'}" type="text/css" rel="stylesheet">
-    <script>
-        var changeLanguage = function (dom) {
-            window.location.href = '?lang=' + dom.value;
-        }
-    </script>
-    <style>
-        .chart-container {
-            max-width: 600px;
-            margin: 0 auto;
-        }
 
-        #revenueChart {
-            width: 100% !important;
-            height: 300px !important;
+    <!-- Bootstrap -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        .stat-card {
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,.08);
+        }
+        .chart-box {
+            height: 380px;
         }
     </style>
 </head>
-<body style="padding-top: 55px;">
-<!--header frag-->
-<div th:replace="/admin/common/fragments :: header_nav"> </div>
-<!-- Sidebar Fragment -->
-<div th:replace="/admin/common/fragments :: side_navbar"> </div>
-<!-- Main Content -->
+<body style="padding-top:55px">
+
+<div th:replace="/admin/common/fragments :: header_nav"></div>
+<div th:replace="/admin/common/fragments :: side_navbar"></div>
+
 <div class="main-content">
     <div class="container-fluid">
-        <h2 style="text-align: center;">Doanh thu năm [[${year}]]</h2>
-        <p style="text-align: center;">
-            Tổng doanh thu:
-            <strong th:text="${#numbers.formatInteger(totalRevenue, 3, 'POINT')} + ' đ'"></strong>
-        </p>
 
-        <div class="chart-container">
-            <canvas id="revenueChart"></canvas>
+        <!-- HEADER -->
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h4 class="fw-bold" id="pageTitle">
+                📊 Thống kê doanh thu năm [[${year}]]
+            </h4>
+
+            <form class="d-flex gap-2 align-items-center" onsubmit="return false;">
+
+                <!-- YEAR -->
+                <select id="yearSelect" class="form-select">
+                    <option th:each="y : ${#numbers.sequence(2022, 2026)}"
+                            th:value="${y}"
+                            th:selected="${y == year}"
+                            th:text="${y}">
+                    </option>
+                </select>
+
+                <!-- MONTH -->
+                <select id="monthSelect" class="form-select">
+                    <option value="">-- Cả năm --</option>
+                    <option th:each="m : ${#numbers.sequence(1,12)}"
+                            th:value="${m}"
+                            th:text="'Tháng ' + ${m}">
+                    </option>
+                </select>
+
+                <!-- TYPE -->
+                <select id="typeSelect" class="form-select">
+                    <option value="PAID">Đã thanh toán</option>
+                    <option value="CANCELLED">Đơn huỷ</option>
+                </select>
+
+                <!-- BUTTON -->
+                <button type="button" class="btn btn-primary" id="viewBtn">
+                    Xem
+                </button>
+            </form>
         </div>
+
+        <!-- STATS -->
+        <div class="row mb-4">
+            <div class="col-md-2">
+                <div class="card stat-card p-3 text-center">
+                    <small>Tổng doanh thu</small>
+                    <h6 id="totalRevenue" class="fw-bold text-success"></h6>
+                </div>
+            </div>
+            <div class="col-md-2">
+                <div class="card stat-card p-3 text-center">
+                    <small>Doanh thu bị huỷ</small>
+                    <h6 id="cancelledRevenue" class="text-danger"></h6>
+
+                </div>
+            </div>
+            <div class="col-md-2">
+                <div class="card stat-card p-3 text-center">
+                    <small>TB / tháng</small>
+                    <h6 id="avgRevenue"></h6>
+                </div>
+            </div>
+
+            <div class="col-md-2">
+                <div class="card stat-card p-3 text-center">
+                    <small>Tháng cao nhất</small>
+                    <h6 id="bestMonth"></h6>
+                </div>
+            </div>
+
+            <div class="col-md-2">
+                <div class="card stat-card p-3 text-center">
+                    <small>Tháng thấp nhất</small>
+                    <h6 id="worstMonth"></h6>
+                </div>
+            </div>
+
+
+        </div>
+
+        <!-- CHART -->
+        <div class="card stat-card p-3">
+            <h6 id="chartTitle" class="fw-bold mb-3 text-center">
+                Doanh thu theo tháng
+            </h6>
+            <div class="chart-box">
+                <canvas id="revenueChart"></canvas>
+            </div>
+        </div>
+
     </div>
 </div>
 
-
 <script th:inline="javascript">
-    let revenueData = /*[[${monthlyRevenue}]]*/ [];
-    let labels = [];
-    let data = [];
+    const ctx = document.getElementById('revenueChart');
+    const yearSelect = document.getElementById('yearSelect');
+    const monthSelect = document.getElementById('monthSelect');
+    const typeSelect = document.getElementById('typeSelect');
+    const viewBtn = document.getElementById('viewBtn');
 
-    for (let i = 1; i <= 12; i++) {
-        labels.push("Tháng " + i);
-        let monthData = revenueData.find(r => r.month === i);
-        data.push(monthData ? monthData.revenue : 0);
+    const contextPath = /*[[@{/}]]*/ '/';
+    const cache = {}; // key = year-month-status
+
+    let chart;
+
+    function getChartColor(status) {
+        return status === 'PAID'
+            ? 'rgba(54, 162, 235, 0.8)'   // xanh
+            : 'rgba(255, 193, 7, 0.8)';   // vàng
     }
 
-    new Chart(document.getElementById('revenueChart'), {
-        type: 'bar',
-        data: {
-            labels: labels,
-            datasets: [{
-                label: 'Doanh thu (VNĐ)',
-                data: data,
-                backgroundColor: '#42a5f5'
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    ticks: {
-                        callback: function(value) {
-                            return value.toLocaleString('vi-VN') + ' đ';
+    function getLabel(status) {
+        return status === 'PAID'
+            ? 'Doanh thu (VNĐ)'
+            : 'Giá trị đơn huỷ (VNĐ)';
+    }
+
+    function renderChart(labels, data, title, status) {
+        if (chart) chart.destroy();
+
+        document.getElementById('chartTitle').innerText = title;
+
+        chart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: getLabel(status),
+                    data: data,
+                    backgroundColor: getChartColor(status)
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: v => v.toLocaleString('vi-VN') + ' đ'
                         }
                     }
                 }
             }
+        });
+    }
+
+    function renderMonthly(year, status) {
+        const key = `${year}-ALL-${status}`;
+
+        if (cache[key]) {
+            drawMonthly(cache[key], year, status);
+            return;
+        }
+
+        fetch(`${contextPath}admin/revenue/monthly?year=${year}&status=${status}`)
+            .then(res => res.json())
+            .then(data => {
+                cache[key] = data;
+                drawMonthly(data, year, status);
+            });
+    }
+
+    function renderDaily(year, month, status) {
+        const key = `${year}-${month}-${status}`;
+
+        if (cache[key]) {
+            drawDaily(cache[key], month, status);
+            return;
+        }
+
+        fetch(`${contextPath}admin/revenue/daily?year=${year}&month=${month}&status=${status}`)
+            .then(res => res.json())
+            .then(data => {
+                cache[key] = data;
+                drawDaily(data, month, status);
+            });
+    }
+
+    function drawMonthly(data, year, status) {
+        const labels = [];
+        const values = [];
+
+        for (let i = 1; i <= 12; i++) {
+            labels.push(`Tháng ${i}`);
+            const found = data.find(x => x.month === i);
+            values.push(found ? found.revenue : 0);
+        }
+
+        renderChart(
+            labels,
+            values,
+            status === 'PAID'
+                ? `Doanh thu năm ${year}`
+                : `Đơn huỷ năm ${year}`,
+            status
+        );
+    }
+
+function updatePageTitle(year, month, status) {
+    let text = '📊 Thống kê ';
+
+    text += status === 'PAID' ? 'doanh thu ' : 'đơn huỷ ';
+
+    if (month) {
+        text += `tháng ${month} / `;
+    }
+
+    text += `năm ${year}`;
+
+    document.getElementById('pageTitle').innerText = text;
+}
+function renderSummary(year, month) {
+    let url = `${contextPath}admin/revenue/summary?year=${year}`;
+    if (month) url += `&month=${month}`;
+
+    fetch(url)
+        .then(res => res.json())
+        .then(data => {
+            document.getElementById('totalRevenue').innerText =
+                data.totalRevenue.toLocaleString('vi-VN') + ' VNĐ';
+
+            document.getElementById('cancelledRevenue').innerText =
+                data.cancelledRevenue.toLocaleString('vi-VN') + ' VNĐ';
+
+            document.getElementById('avgRevenue').innerText =
+                data.avgRevenue.toLocaleString('vi-VN') + ' VNĐ';
+
+            document.getElementById('bestMonth').innerText =
+                data.bestMonth ? `Tháng ${data.bestMonth}` : '-';
+
+            document.getElementById('worstMonth').innerText =
+                data.worstMonth ? `Tháng ${data.worstMonth}` : '-';
+        });
+}
+
+    function drawDaily(data, month, status) {
+        const labels = [];
+        const values = [];
+
+        for (let d = 1; d <= 31; d++) {
+            labels.push(`Ngày ${d}`);
+            const found = data.find(x => x.day === d);
+            values.push(found ? found.revenue : 0);
+        }
+
+        renderChart(
+            labels,
+            values,
+            status === 'PAID'
+                ? `Doanh thu tháng ${month}`
+                : `Đơn huỷ tháng ${month}`,
+            status
+        );
+    }
+
+    // ===== EVENT =====
+    viewBtn.addEventListener('click', () => {
+        const year = yearSelect.value;
+        const month = monthSelect.value;
+        const status = typeSelect.value;
+
+    updatePageTitle(year, month, status);
+    renderSummary(year, month);
+
+        if (!month) {
+            renderMonthly(year, status);
+        } else {
+            renderDaily(year, month, status);
         }
     });
+
+    // render mặc định lần đầu
+    renderMonthly(yearSelect.value, 'PAID');
 </script>
+
 </body>
 </html>

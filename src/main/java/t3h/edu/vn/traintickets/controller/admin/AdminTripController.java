@@ -10,6 +10,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import t3h.edu.vn.traintickets.dto.TripCreateDto;
 import t3h.edu.vn.traintickets.dto.TripUpdateDto;
 import t3h.edu.vn.traintickets.entities.Trip;
+import t3h.edu.vn.traintickets.enums.TripState;
 import t3h.edu.vn.traintickets.service.RouteService;
 import t3h.edu.vn.traintickets.service.TrainService;
 import t3h.edu.vn.traintickets.service.TripDtoService;
@@ -39,6 +40,7 @@ public class AdminTripController {
     public String searchTrips(@RequestParam String keyword, Model model) {
         List<Trip> trips = tripService.searchTripsByRoute(keyword);
         model.addAttribute("trips", trips);
+        model.addAttribute("TripSate", TripState.class);
         return "admin/trip/search";
     }
 
@@ -55,6 +57,8 @@ public class AdminTripController {
                        @RequestParam(defaultValue = "5") Integer perpage) {
         model.addAttribute("page", tripService.paging(page, perpage));
         model.addAttribute("path", "/admin/trip/view");
+        model.addAttribute("TripSate", TripState.class);
+
         return "admin/trip/view";
     }
 
@@ -65,9 +69,10 @@ public class AdminTripController {
         model.addAttribute("routes", routeService.findAll());
         model.addAttribute("actionUrl", "/admin/trip/save");
 
-        return "admin/trip/form";
+        return "admin/trip/create";
     }
 
+    // tạo mới chuyến
     @PostMapping("/save")
     public String save(@ModelAttribute("trip") @Valid TripCreateDto dto,
                        BindingResult bindingResult,
@@ -76,7 +81,7 @@ public class AdminTripController {
         if (bindingResult.hasErrors()) {
             model.addAttribute("trains", trainService.findAll());
             model.addAttribute("routes", routeService.findAll());
-            return "admin/trip/form";
+            return "admin/trip/create";
         }
 
         try {
@@ -87,7 +92,7 @@ public class AdminTripController {
             bindingResult.reject("error", e.getMessage());
             model.addAttribute("trains", trainService.findAll());
             model.addAttribute("routes", routeService.findAll());
-            return "admin/trip/form";
+            return "admin/trip/create";
         }
     }
 

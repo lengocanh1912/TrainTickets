@@ -21,44 +21,172 @@
             window.location.href = '?lang=' + dom.value;
         }
     </script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const btn = document.getElementById('sidebarToggle');
+            if (btn) {
+                btn.addEventListener('click', function () {
+                    document.body.classList.toggle('sb-sidenav-toggled');
+                });
+            }
+        });
+    </script>
+
+
+    <!-- Additional CSS for hover effects -->
+    <style>
+        .nav-link {
+            padding: 0.75rem 1rem;
+            color: rgba(255,255,255,0.8) !important;
+        }
+
+        .nav-link:hover {
+            background-color: rgba(255,255,255,0.1) !important;
+            color: white !important;
+            transform: translateX(5px);
+        }
+
+        .nav-link.active {
+            color: white !important;
+            font-weight: 500;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .nav-link i {
+            opacity: 0.8;
+        }
+
+        .nav-link.active i {
+            opacity: 1;
+        }
+
+        .sb-sidenav-footer {
+            backdrop-filter: blur(10px);
+        }
+
+        .dropdown-menu {
+            border: none;
+            border-radius: 0.5rem;
+        }
+
+        .dropdown-item {
+            padding: 0.75rem 1.25rem;
+            transition: all 0.2s;
+        }
+
+        .dropdown-item:hover {
+            background-color: rgba(0,123,255,0.1);
+            padding-left: 1.5rem;
+        }
+<!--        .sb-sidenav {-->
+<!--            height: 100vh;-->
+<!--        }-->
+
+        .sb-sidenav-menu {
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        /* Ẩn scrollbar cho đẹp (optional) */
+        .sb-sidenav-menu::-webkit-scrollbar {
+            width: 6px;
+        }
+        .sb-sidenav-menu::-webkit-scrollbar-thumb {
+            background: rgba(255,255,255,0.2);
+            border-radius: 3px;
+        }
+
+        /* Wrapper */
+        #layoutSidenav {
+            display: flex;
+        }
+
+        /* Sidebar */
+        #layoutSidenav_nav {
+            position: fixed;
+            top: 56px;              /* né header */
+            left: 0;
+            width: 250px;
+            height: calc(100vh - 56px);
+            z-index: 1038;          /* dưới header */
+        }
+
+        /* Content */
+        #layoutSidenav_content {
+            margin-left: 250px;
+            padding-top: 56px;      /* né header */
+            min-height: 100vh;
+        }
+
+        /* Toggle sidebar */
+        .sb-sidenav-toggled #layoutSidenav_nav {
+            transform: translateX(-250px);
+        }
+
+        .sb-sidenav-toggled #layoutSidenav_content {
+            margin-left: 0;
+        }
+
+
+        .navbar-nav > .nav-item {
+            margin-left:12px;
+        }
+        .navbar-nav .nav-link {
+            min-width:44px;
+            height:44px;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+        }
+        .navbar-nav .badge {
+            position:absolute;
+            top:6px;
+            right:6px;
+        }
+
+
+    </style>
 
 </head>
 <!--header-->
-<div th:fragment="header_nav">
-    <nav class="sb-topnav navbar navbar-expand navbar-dark bg-dark fixed-top">
-        <!-- Navbar Brand-->
-        <a class="navbar-brand ps-3" th:href="@{/admin/home}">TrainTicket</a>
-        <!-- Sidebar Toggle Button -->
-        <button class="btn btn-link btn-sm order-1 order-lg-0 me-4 me-lg-0"
-                id="sidebarToggle" type="button">
-            <i class="fa-solid fa-bars"></i>
-        </button>
-        <!-- Navbar Search-->
-        <form
-                class="d-none d-md-inline-block form-inline ms-auto me-0 me-md-3 my-2 my-md-0">
-        </form>
-        <!-- Navbar-->
-        <ul class="navbar-nav ms-auto ms-md-0 me-3 me-lg-4">
-            <div class="dropdown">
-                <!-- Account Icon -->
-                <button class="btn btn-secondary " type="button" id="accountDropdown"
-                        data-bs-toggle="dropdown"
-                        aria-expanded="false">
-                    <i class="bi bi-person"></i>
-                </button>
-                <ul class="dropdown-menu" aria-labelledby="accountDropdown">
-                    <li><a class="dropdown-item text-primary"
-                           th:href="@{/user/home}">BUSINESS</a></li>
-                    <hr>
-                    <li><a class="dropdown-item text-dark"
-                           th:href="@{/admin/password}">Đổi mật khẩu</a></li>
-                    <li><a class="dropdown-item text-dark"
-                           th:href="@{/logout}">Đăng xuất</a></li>
-                </ul>
-            </div>
-        </ul>
-    </nav>
-</div>
+<!--<div th:fragment="header_nav">-->
+<!--    <nav class="sb-topnav navbar navbar-expand navbar-dark bg-dark fixed-top">-->
+<!--        &lt;!&ndash; Navbar Brand&ndash;&gt;-->
+<!--        <a class="navbar-brand ps-3" th:href="@{/admin/home}">TrainTicket</a>-->
+<!--        &lt;!&ndash; Sidebar Toggle Button &ndash;&gt;-->
+<!--        <button class="btn btn-link btn-sm order-1 order-lg-0 me-4 me-lg-0"-->
+<!--                id="sidebarToggle" type="button">-->
+<!--            <i class="fa-solid fa-bars"></i>-->
+<!--        </button>-->
+<!--        &lt;!&ndash; Navbar Search&ndash;&gt;-->
+<!--        <form-->
+<!--                class="d-none d-md-inline-block form-inline ms-auto me-0 me-md-3 my-2 my-md-0">-->
+<!--        </form>-->
+<!--        &lt;!&ndash; Navbar&ndash;&gt;-->
+<!--        <ul class="navbar-nav ms-auto ms-md-0 me-3 me-lg-4">-->
+
+<!--            <div class="dropdown">-->
+<!--                &lt;!&ndash; Account Icon &ndash;&gt;-->
+<!--                <button class="btn btn-secondary " type="button" id="accountDropdown"-->
+<!--                        data-bs-toggle="dropdown"-->
+<!--                        aria-expanded="false">-->
+<!--                    <i class="bi bi-person"></i>-->
+<!--                </button>-->
+<!--                <ul class="dropdown-menu" aria-labelledby="accountDropdown">-->
+<!--                    <li><a class="dropdown-item text-primary"-->
+<!--                           th:href="@{/user/home}">BUSINESS</a></li>-->
+<!--                    <hr>-->
+<!--                    <li><a class="dropdown-item text-dark"-->
+<!--                           th:href="@{/admin/updatePassword}">Đổi mật khẩu</a></li>-->
+<!--                    <li><a class="dropdown-item text-dark"-->
+<!--                           th:href="@{/logout}">Đăng xuất</a></li>-->
+<!--                </ul>-->
+<!--            </div>-->
+
+<!--        </ul>-->
+<!--    </nav>-->
+<!--</div>-->
+
 <!--sidebar-->
 <div id="layoutSidenav_nav" th:fragment="side_navbar">
     <nav class="sb-sidenav accordion sb-sidenav-dark" id="sidenavAccordion">
@@ -68,7 +196,7 @@
                     <a th:href="@{/admin/home}" th:classappend="${menu == 'dashboard'} ? 'active'">Dashboard</a>
                     <hr>
                     <!-- Sidebar Links -->
-<!--                    <a class="nav-link" th:href="@{/admin/home}" th:classappend="${menu == 'dashboard'} ? 'active'">Trang chủ</a>-->
+                    <!--                    <a class="nav-link" th:href="@{/admin/home}" th:classappend="${menu == 'dashboard'} ? 'active'">Trang chủ</a>-->
                     <!--  <li class="nav-link" th:classappend="${menu == 'dashboard'} ? 'active'">-->
                     <!--    <a th:href="@{/admin/home}">Trang chủ</a>-->
                     <!--  </li>-->
@@ -95,57 +223,332 @@
                         <div class="text-danger block" th:text="${currentUser.email}"></div>
                     </div>
                 </div>
+
             </div>
+
         </div>
+
     </nav>
     <!-- End of nav bar-->
 </div>
 
-<!--footer-->
-<footer th:fragment="footer()" class="section-footer">
-    <section class="footer-top py-5 bg-light">
-        <div class="container">
-            <div class="row">
-                <aside class="col-sm-6 col-lg-3">
-                    <h6 class="pb-2">Giới thiệu</h6>
-                    <ul class="list-unstyled">
-                        <li><a href="#">Về Shop</a></li>
-                        <li><a href="#">Tuyển dụng</a></li>
-                        <li><a href="#">Chính sách thanh toán</a></li>
-                        <li><a href="#">Chính sách bảo mật</a></li>
-                        <li><a href="#">Giải quyết khiếu nại</a></li>
-                        <li><a href="#">Hợp tác</a></li>
-                    </ul>
-                </aside>
-                <aside class="col-sm-6 col-lg-3">
-                    <h6 class="pb-2">Hỗ trợ khách hàng</h6>
-                    <ul class="list-unstyled">
-                        <li>Hotline: 1900-80xx</li>
-                        <li><a href="#">Câu hỏi thường gặp</a></li>
-                        <li><a href="#">Hướng dẫn đặt hàng</a></li>
-                        <li><a href="#">Phương thức vận chuyển</a></li>
-                        <li><a href="#">Chính sách đổi trả</a></li>
-                    </ul>
-                </aside>
-                <aside class="col-lg-5">
-                    <h6 class="pb-2">Đăng ký nhận tin</h6>
-                    <form action="#">
-                        <div class="input-group w-100">
-                            <input type="text" class="form-control" placeholder="Email của bạn ...">
-                            <button class="btn btn-primary" type="button">
-                                Đăng ký
-                            </button>
-                        </div>
-                    </form>
-                </aside>
-            </div> <!-- row.// -->
-        </div> <!-- container.// -->
-    </section> <!-- footer-top.// -->
+<div th:fragment="header_nav">
+    <nav class="sb-topnav navbar navbar-expand navbar-dark bg-dark fixed-top shadow-sm">
 
-    <section class="footer-bottom text-center bg-light border-top py-3">
-        <div class="container-fluid">© 2025 — Shop Bán Sách</div> <!-- container-fluid.// -->
-    </section> <!-- footer-bottom.// -->
-</footer> <!-- section-footer.// -->
+        <!-- Brand -->
+        <a class="navbar-brand ps-3 fw-bold" th:href="@{/admin/home}">
+            <i class="fa-solid fa-train me-2"></i>TrainTicket
+        </a>
+
+        <!-- Sidebar Toggle -->
+        <button class="btn btn-link btn-sm me-3 text-white"
+                id="sidebarToggle" type="button">
+            <i class="fa-solid fa-bars fa-lg"></i>
+        </button>
+
+        <!-- RIGHT SIDE -->
+        <ul class="navbar-nav ms-auto d-flex align-items-center gap-2">
+
+            <!-- SUPPORT (CHAT ICON) -->
+            <li class="nav-item">
+                <a class="nav-link position-relative"
+                   th:href="@{/admin/support}"
+                   th:classappend="${menu == 'support'} ? 'active'">
+                    💬
+                    <i class="fa-solid fa-comment-dots fa-lg"></i>
+
+                    <!-- badge -->
+                    <span id="admin-support-badge"
+                          class="badge rounded-pill bg-danger"
+                          style="display:none; font-size:0.65rem;">
+                    </span>
+                </a>
+            </li>
+
+            <!-- NOTIFICATION -->
+            <li class="nav-item dropdown">
+                <a class="nav-link position-relative"
+                   href="#"
+                   data-bs-toggle="dropdown">
+                    🔔
+                    <i class="fa-solid fa-bell fa-lg"></i>
+                    <span class="badge rounded-pill bg-danger">
+                        5
+                    </span>
+
+                </a>
+
+                <ul class="dropdown-menu dropdown-menu-end shadow">
+                    <li><h6 class="dropdown-header">Thông báo</h6></li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li><a class="dropdown-item">🛒 Có đơn hàng mới</a></li>
+                    <li><a class="dropdown-item">⭐ Có đánh giá mới</a></li>
+                    <li><a class="dropdown-item">🎫 Vé mới được đặt</a></li>
+                </ul>
+            </li>
+
+            <!-- ACCOUNT -->
+            <li class="nav-item dropdown">
+                <button class="btn btn-dark border-0 d-flex align-items-center"
+                        data-bs-toggle="dropdown">
+
+                    <div class="rounded-circle bg-primary d-flex
+                                align-items-center justify-content-center me-2"
+                         style="width:32px;height:32px;">
+                        <i class="bi bi-person text-white"></i>
+                    </div>
+
+                    <i class="fa-solid fa-caret-down"></i>
+                </button>
+
+                <ul class="dropdown-menu dropdown-menu-end shadow">
+                    <li>
+                        <a class="dropdown-item" th:href="@{/user/home}">
+                            <i class="bi bi-briefcase me-2 text-primary"></i>
+                            Chế độ Business
+                        </a>
+                    </li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li>
+                        <a class="dropdown-item" th:href="@{/admin/updatePassword}">
+                            <i class="fa-solid fa-key me-2 text-warning"></i>
+                            Đổi mật khẩu
+                        </a>
+                    </li>
+                    <li>
+                        <a class="dropdown-item text-danger" th:href="@{/logout}">
+                            <i class="fa-solid fa-sign-out-alt me-2"></i>
+                            Đăng xuất
+                        </a>
+                    </li>
+                </ul>
+            </li>
+
+        </ul>
+    </nav>
+</div>
+
+
+<!--&lt;!&ndash;hdhdhfhhhhlllllhahhflaasii&ndash;&gt;-->
+<!--header-->
+<!--<div th:fragment="header_nav">-->
+<!--    <nav class="sb-topnav navbar navbar-expand navbar-dark bg-dark fixed-top shadow-sm">-->
+<!--        &lt;!&ndash; Navbar Brand&ndash;&gt;-->
+<!--        <a class="navbar-brand ps-3 fw-bold" th:href="@{/admin/home}">-->
+<!--            <i class="fa-solid fa-train me-2"></i>TrainTicket-->
+<!--        </a>-->
+<!--        &lt;!&ndash; Sidebar Toggle Button &ndash;&gt;-->
+<!--        <button class="btn btn-link btn-sm order-1 order-lg-0 me-4 me-lg-0 text-white"-->
+<!--                id="sidebarToggle" type="button">-->
+<!--            <i class="fa-solid fa-bars fa-lg"></i>-->
+<!--        </button>-->
+<!--        <ul class="navbar-nav ms-auto ms-md-0 me-3 me-lg-4">-->
+<!--            &lt;!&ndash; support&ndash;&gt;-->
+<!--            &lt;!&ndash; NEW: Support Feature &ndash;&gt;-->
+<!--            <a class="nav-link rounded mb-2 d-flex align-items-center"-->
+<!--               th:href="@{/admin/support}"-->
+<!--               th:classappend="${menu == 'support'} ? 'active bg-primary'"-->
+<!--               style="transition: all 0.3s;">-->
+
+<!--                <i class="fa-solid fa-headset me-3 fa-fw"></i>-->
+
+<!--                <span class="me-2">Suppport</span>-->
+
+<!--                &lt;!&ndash; 🔔 Support badge &ndash;&gt;-->
+<!--                <span id="admin-support-badge"-->
+<!--                      class="badge bg-danger rounded-pill px-2"-->
+<!--                      style="display:none; font-size:0.65rem;">-->
+<!--                            </span>-->
+<!--            </a>-->
+<!--            &lt;!&ndash; Notification &ndash;&gt;-->
+<!--            <li class="nav-item dropdown">-->
+<!--                <a class="nav-link position-relative" href="#"-->
+<!--                   id="notificationDropdown"-->
+<!--                   data-bs-toggle="dropdown">🔔-->
+<!--                    <i class="fa-solid fa-bell fa-lg"></i>-->
+
+<!--                    &lt;!&ndash; badge &ndash;&gt;-->
+<!--                    <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">-->
+<!--                5-->
+<!--            </span>-->
+<!--                </a>-->
+
+<!--                <ul class="dropdown-menu dropdown-menu-end shadow">-->
+<!--                    <li><h6 class="dropdown-header">Thông báo</h6></li>-->
+<!--                    <li><hr class="dropdown-divider"></li>-->
+<!--                    <li><a class="dropdown-item">🛒 Có đơn hàng mới</a></li>-->
+<!--                    <li><a class="dropdown-item">⭐ Có đánh giá mới</a></li>-->
+<!--                    <li><a class="dropdown-item">🎫 Vé mới được đặt</a></li>-->
+<!--                </ul>-->
+<!--            </li>-->
+<!--            &lt;!&ndash; Account Dropdown &ndash;&gt;-->
+<!--            <li class="nav-item dropdown">-->
+<!--                <button class="btn btn-dark border-0 d-flex align-items-center" type="button"-->
+<!--                        id="accountDropdown" data-bs-toggle="dropdown" aria-expanded="false">-->
+<!--                    <div class="rounded-circle bg-primary d-flex align-items-center justify-content-center me-2"-->
+<!--                         style="width: 32px; height: 32px;">-->
+<!--                        <i class="bi bi-person text-white"></i>-->
+<!--                    </div>-->
+<!--                    <i class="fa-solid fa-caret-down"></i>-->
+<!--                </button>-->
+<!--                <ul class="dropdown-menu dropdown-menu-end shadow" aria-labelledby="accountDropdown">-->
+<!--                    <li>-->
+<!--                        <a class="dropdown-item" th:href="@{/user/home}">-->
+<!--                            <i class="bi bi-briefcase me-2 text-primary"></i>Chế độ Business-->
+<!--                        </a>-->
+<!--                    </li>-->
+<!--                    <li><hr class="dropdown-divider"></li>-->
+<!--                    <li>-->
+<!--                        <a class="dropdown-item" th:href="@{/admin/updatePassword}">-->
+<!--                            <i class="fa-solid fa-key me-2 text-warning"></i>Đổi mật khẩu-->
+<!--                        </a>-->
+<!--                    </li>-->
+<!--                    <li>-->
+<!--                        <a class="dropdown-item text-danger" th:href="@{/logout}">-->
+<!--                            <i class="fa-solid fa-sign-out-alt me-2"></i>Đăng xuất-->
+<!--                        </a>-->
+<!--                    </li>-->
+<!--                </ul>-->
+<!--            </li>-->
+<!--        </ul>-->
+<!--    </nav>-->
+<!--</div>-->
+<!--sidebar-->
+<!--<div id="layoutSidenav_nav" th:fragment="side_navbar">-->
+<!--    <nav class="sb-sidenav accordion sb-sidenav-dark" id="sidenavAccordion"-->
+<!--         style="background: linear-gradient(180deg, #1a1a2e 0%, #16213e 100%);">-->
+<!--        <div class="sb-sidenav-menu">-->
+<!--            <div class="nav">-->
+<!--                <div class="sidebar d-flex flex-column justify-content-between h-100">-->
+<!--                    &lt;!&ndash; Dashboard &ndash;&gt;-->
+<!--                    <div class="px-3 py-3">-->
+<!--                        <a th:href="@{/admin/home}"-->
+<!--                           class="nav-link rounded mb-2 d-flex align-items-center"-->
+<!--                           th:classappend="${menu == 'dashboard'} ? 'active bg-primary'"-->
+<!--                           style="transition: all 0.3s;">-->
+<!--                            <i class="fa-solid fa-chart-line me-3 fa-fw"></i>-->
+<!--                            <span>Dashboard</span>-->
+<!--                        </a>-->
+
+<!--                        <hr class="my-3" style="border-color: rgba(255,255,255,0.1);">-->
+
+<!--                        &lt;!&ndash; Main Menu &ndash;&gt;-->
+<!--                        <h6 class="text-uppercase text-muted small mb-3 px-2">-->
+<!--                            <i class="fa-solid fa-grip-horizontal me-2"></i>Quản lý-->
+<!--                        </h6>-->
+
+<!--                        <a class="nav-link rounded mb-2 d-flex align-items-center"-->
+<!--                           th:href="@{/admin/user/view}"-->
+<!--                           th:classappend="${menu == 'user'} ? 'active bg-primary'"-->
+<!--                           style="transition: all 0.3s;">-->
+<!--                            <i class="fa-solid fa-users me-3 fa-fw"></i>-->
+<!--                            <span>Người dùng</span>-->
+<!--                        </a>-->
+
+<!--                        <a class="nav-link rounded mb-2 d-flex align-items-center"-->
+<!--                           th:href="@{/admin/train/view}"-->
+<!--                           th:classappend="${menu == 'train'} ? 'active bg-primary'"-->
+<!--                           style="transition: all 0.3s;">-->
+<!--                            <i class="fa-solid fa-train me-3 fa-fw"></i>-->
+<!--                            <span>Các tàu</span>-->
+<!--                        </a>-->
+
+<!--                        <a class="nav-link rounded mb-2 d-flex align-items-center"-->
+<!--                           th:href="@{/admin/trip/view}"-->
+<!--                           th:classappend="${menu == 'trip'} ? 'active bg-primary'"-->
+<!--                           style="transition: all 0.3s;">-->
+<!--                            <i class="fa-solid fa-route me-3 fa-fw"></i>-->
+<!--                            <span>Chuyến đi</span>-->
+<!--                        </a>-->
+
+<!--                        <a class="nav-link rounded mb-2 d-flex align-items-center"-->
+<!--                           th:href="@{/admin/ticket/view}"-->
+<!--                           th:classappend="${menu == 'ticket'} ? 'active bg-primary'"-->
+<!--                           style="transition: all 0.3s;">-->
+<!--                            <i class="fa-solid fa-ticket me-3 fa-fw"></i>-->
+<!--                            <span>Vé tàu đã đặt</span>-->
+<!--                        </a>-->
+
+<!--                        <a class="nav-link rounded mb-2 d-flex align-items-center"-->
+<!--                           th:href="@{/admin/order/view}"-->
+<!--                           th:classappend="${menu == 'order'} ? 'active bg-primary'"-->
+<!--                           style="transition: all 0.3s;">-->
+<!--                            <i class="fa-solid fa-shopping-cart me-3 fa-fw"></i>-->
+<!--                            <span>Đơn đặt vé</span>-->
+<!--                        </a>-->
+
+<!--                        <a class="nav-link rounded mb-2 d-flex align-items-center"-->
+<!--                           th:href="@{/admin/route/view}"-->
+<!--                           th:classappend="${menu == 'route'} ? 'active bg-primary'"-->
+<!--                           style="transition: all 0.3s;">-->
+<!--                            <i class="fa-solid fa-map-marked-alt me-3 fa-fw"></i>-->
+<!--                            <span>Tuyến đường</span>-->
+<!--                        </a>-->
+
+<!--                        <hr class="my-3" style="border-color: rgba(255,255,255,0.1);">-->
+
+<!--                        &lt;!&ndash; Analytics & Support Section &ndash;&gt;-->
+<!--                        <h6 class="text-uppercase text-muted small mb-3 px-2">-->
+<!--                            <i class="fa-solid fa-chart-bar me-2"></i>Phân tích & Hỗ trợ-->
+<!--                        </h6>-->
+
+<!--                        <a class="nav-link rounded mb-2 d-flex align-items-center"-->
+<!--                           th:href="@{/admin/revenue/view}"-->
+<!--                           th:classappend="${menu == 'revenue'} ? 'active bg-primary'"-->
+<!--                           style="transition: all 0.3s;">-->
+<!--                            <i class="fa-solid fa-dollar-sign me-3 fa-fw"></i>-->
+<!--                            <span>Doanh thu</span>-->
+<!--                        </a>-->
+
+<!--                        <a class="nav-link rounded mb-2 d-flex align-items-center"-->
+<!--                           th:href="@{/admin/review/view}"-->
+<!--                           th:classappend="${menu == 'review'} ? 'active bg-primary'"-->
+<!--                           style="transition: all 0.3s;">-->
+<!--                            <i class="fa-solid fa-star me-3 fa-fw"></i>-->
+<!--                            <span>Đánh giá</span>-->
+<!--                        </a>-->
+
+<!--                        &lt;!&ndash; NEW: Support Feature &ndash;&gt;-->
+<!--                        <a class="nav-link rounded mb-2 d-flex align-items-center"-->
+<!--                           th:href="@{/admin/support}"-->
+<!--                           th:classappend="${menu == 'support'} ? 'active bg-primary'"-->
+<!--                           style="transition: all 0.3s;">-->
+
+<!--                            <i class="fa-solid fa-headset me-3 fa-fw"></i>-->
+
+<!--                            <span class="me-2">Hỗ trợ khách hàng</span>-->
+
+<!--                            &lt;!&ndash; 🔔 Support badge &ndash;&gt;-->
+<!--                            <span id="admin-support-badge"-->
+<!--                                  class="badge bg-danger rounded-pill px-2"-->
+<!--                                  style="display:none; font-size:0.65rem;">-->
+<!--                            </span>-->
+<!--                        </a>-->
+
+
+<!--                    </div>-->
+
+<!--                    &lt;!&ndash; Footer with User Info &ndash;&gt;-->
+<!--                    <div class="sb-sidenav-footer mt-auto p-3"-->
+<!--                         style="background: rgba(0,0,0,0.2); border-top: 1px solid rgba(255,255,255,0.1);">-->
+<!--                        <div class="d-flex align-items-center">-->
+<!--                            <div class="rounded-circle bg-primary d-flex align-items-center justify-content-center me-2"-->
+<!--                                 style="width: 40px; height: 40px; min-width: 40px;">-->
+<!--                                <i class="bi bi-person text-white"></i>-->
+<!--                            </div>-->
+<!--                            <div class="flex-grow-1 overflow-hidden">-->
+<!--                                <div class="small text-muted">Đăng nhập với:</div>-->
+<!--                                <div class="text-white small fw-bold text-truncate"-->
+<!--                                     th:text="${currentUser.email}">admin@example.com</div>-->
+<!--                            </div>-->
+<!--                        </div>-->
+<!--                    </div>-->
+<!--                </div>-->
+<!--            </div>-->
+<!--        </div>-->
+<!--    </nav>-->
+<!--</div>-->
+
 <!--phân trang-->
 <nav th:fragment="paginationid()" class="mt-4" th:if="${page.totalPages > 0}">
     <ul class="pagination">
@@ -176,4 +579,182 @@
         </li>
     </ul>
 </nav>
+
+<!--<div id="layoutSidenav_nav" th:fragment="side_navbar">-->
+<!--    <nav class="sb-sidenav accordion sb-sidenav-dark d-flex flex-column"-->
+<!--         id="sidenavAccordion"-->
+<!--         style="background: linear-gradient(180deg, #1a1a2e 0%, #16213e 100%);">-->
+
+<!--        &lt;!&ndash; MENU (scroll được) &ndash;&gt;-->
+<!--        <div class="sb-sidenav-menu flex-grow-1">-->
+<!--            <div class="nav px-3 py-3">-->
+<!--                &lt;!&ndash; TOÀN BỘ MENU CỦA BẠN GIỮ NGUYÊN Ở ĐÂY &ndash;&gt;-->
+<!--                    <a th:href="@{/admin/home}"-->
+<!--                       class="nav-link rounded mb-2 d-flex align-items-center"-->
+<!--                       th:classappend="${menu == 'dashboard'} ? 'active bg-primary'"-->
+<!--                       style="transition: all 0.3s;">-->
+<!--                        <i class="fa-solid fa-chart-line me-3 fa-fw"></i>-->
+<!--                        <span>Dashboard</span>-->
+<!--                    </a>-->
+
+<!--                    <hr class="my-3" style="border-color: rgba(255,255,255,0.1);">-->
+
+<!--                    &lt;!&ndash; Main Menu &ndash;&gt;-->
+<!--                    <h6 class="text-uppercase text-muted small mb-3 px-2">-->
+<!--                        <i class="fa-solid fa-grip-horizontal me-2"></i>Quản lý-->
+<!--                    </h6>-->
+
+<!--                    <a class="nav-link rounded mb-2 d-flex align-items-center"-->
+<!--                       th:href="@{/admin/user/view}"-->
+<!--                       th:classappend="${menu == 'user'} ? 'active bg-primary'"-->
+<!--                       style="transition: all 0.3s;">-->
+<!--                        <i class="fa-solid fa-users me-3 fa-fw"></i>-->
+<!--                        <span>Người dùng</span>-->
+<!--                    </a>-->
+
+<!--                    <a class="nav-link rounded mb-2 d-flex align-items-center"-->
+<!--                       th:href="@{/admin/train/view}"-->
+<!--                       th:classappend="${menu == 'train'} ? 'active bg-primary'"-->
+<!--                       style="transition: all 0.3s;">-->
+<!--                        <i class="fa-solid fa-train me-3 fa-fw"></i>-->
+<!--                        <span>Các tàu</span>-->
+<!--                    </a>-->
+
+<!--                    <a class="nav-link rounded mb-2 d-flex align-items-center"-->
+<!--                       th:href="@{/admin/trip/view}"-->
+<!--                       th:classappend="${menu == 'trip'} ? 'active bg-primary'"-->
+<!--                       style="transition: all 0.3s;">-->
+<!--                        <i class="fa-solid fa-route me-3 fa-fw"></i>-->
+<!--                        <span>Chuyến đi</span>-->
+<!--                    </a>-->
+
+<!--                    <a class="nav-link rounded mb-2 d-flex align-items-center"-->
+<!--                       th:href="@{/admin/ticket/view}"-->
+<!--                       th:classappend="${menu == 'ticket'} ? 'active bg-primary'"-->
+<!--                       style="transition: all 0.3s;">-->
+<!--                        <i class="fa-solid fa-ticket me-3 fa-fw"></i>-->
+<!--                        <span>Vé tàu đã đặt</span>-->
+<!--                    </a>-->
+
+<!--                    <a class="nav-link rounded mb-2 d-flex align-items-center"-->
+<!--                       th:href="@{/admin/order/view}"-->
+<!--                       th:classappend="${menu == 'order'} ? 'active bg-primary'"-->
+<!--                       style="transition: all 0.3s;">-->
+<!--                        <i class="fa-solid fa-shopping-cart me-3 fa-fw"></i>-->
+<!--                        <span>Đơn đặt vé</span>-->
+<!--                    </a>-->
+
+<!--                    <a class="nav-link rounded mb-2 d-flex align-items-center"-->
+<!--                       th:href="@{/admin/route/view}"-->
+<!--                       th:classappend="${menu == 'route'} ? 'active bg-primary'"-->
+<!--                       style="transition: all 0.3s;">-->
+<!--                        <i class="fa-solid fa-map-marked-alt me-3 fa-fw"></i>-->
+<!--                        <span>Tuyến đường</span>-->
+<!--                    </a>-->
+
+<!--                    <hr class="my-3" style="border-color: rgba(255,255,255,0.1);">-->
+
+<!--                    &lt;!&ndash; Analytics & Support Section &ndash;&gt;-->
+<!--                    <h6 class="text-uppercase text-muted small mb-3 px-2">-->
+<!--                        <i class="fa-solid fa-chart-bar me-2"></i>Phân tích & Hỗ trợ-->
+<!--                    </h6>-->
+
+<!--                    <a class="nav-link rounded mb-2 d-flex align-items-center"-->
+<!--                       th:href="@{/admin/revenue/view}"-->
+<!--                       th:classappend="${menu == 'revenue'} ? 'active bg-primary'"-->
+<!--                       style="transition: all 0.3s;">-->
+<!--                        <i class="fa-solid fa-dollar-sign me-3 fa-fw"></i>-->
+<!--                        <span>Doanh thu</span>-->
+<!--                    </a>-->
+
+<!--                    <a class="nav-link rounded mb-2 d-flex align-items-center"-->
+<!--                       th:href="@{/admin/review/view}"-->
+<!--                       th:classappend="${menu == 'review'} ? 'active bg-primary'"-->
+<!--                       style="transition: all 0.3s;">-->
+<!--                        <i class="fa-solid fa-star me-3 fa-fw"></i>-->
+<!--                        <span>Đánh giá</span>-->
+<!--                    </a>-->
+
+<!--                    &lt;!&ndash; NEW: Support Feature &ndash;&gt;-->
+<!--                    <a class="nav-link rounded mb-2 d-flex align-items-center"-->
+<!--                       th:href="@{/admin/support}"-->
+<!--                       th:classappend="${menu == 'support'} ? 'active bg-primary'"-->
+<!--                       style="transition: all 0.3s;">-->
+
+<!--                        <i class="fa-solid fa-headset me-3 fa-fw"></i>-->
+
+<!--                        <span class="me-2">Hỗ trợ khách hàng</span>-->
+
+<!--                        &lt;!&ndash; 🔔 Support badge &ndash;&gt;-->
+<!--                        <span id="admin-support-badge"-->
+<!--                              class="badge bg-danger rounded-pill px-2"-->
+<!--                              style="display:none; font-size:0.65rem;">-->
+<!--                            </span>-->
+<!--                    </a>-->
+<!--            </div>-->
+<!--        </div>-->
+
+<!--        &lt;!&ndash; FOOTER (CỐ ĐỊNH DƯỚI) &ndash;&gt;-->
+<!--        <div class="sb-sidenav-footer p-3"-->
+<!--             style="background: rgba(0,0,0,0.3); border-top: 1px solid rgba(255,255,255,0.1);">-->
+<!--            <div class="d-flex align-items-center">-->
+<!--                <div class="rounded-circle bg-primary d-flex align-items-center justify-content-center me-2"-->
+<!--                     style="width: 40px; height: 40px;">-->
+<!--                    <i class="bi bi-person text-white"></i>-->
+<!--                </div>-->
+<!--                <div>-->
+<!--                    <div class="small text-muted">Đăng nhập:</div>-->
+<!--                    <div class="text-white small fw-bold"-->
+<!--                         th:text="${currentUser.email}"></div>-->
+<!--                </div>-->
+<!--            </div>-->
+<!--        </div>-->
+<!--    </nav>-->
+<!--</div>-->
+
+
+<script th:if="${currentUser != null}" th:inline="javascript">
+    const adminId = [[${currentUser.id}]];
+    let stompClient = null;
+
+    function updateAdminBadge(count) {
+        const badge = document.getElementById('admin-support-badge');
+        if (!badge) return;
+
+        if (count > 0) {
+            badge.style.display = 'inline-block';
+            badge.textContent = count > 9 ? '9+' : count;
+        } else {
+            badge.style.display = 'none';
+        }
+    }
+
+    function refreshAdminBadge() {
+        fetch('/trainticket/admin/support/unread-count')
+            .then(res => res.json())
+            .then(updateAdminBadge);
+    }
+
+    function connectAdminWS() {
+        const socket = new SockJS(/*[[@{/ws-chat}]]*/ '/ws-chat');
+        stompClient = Stomp.over(socket);
+        stompClient.debug = null;
+
+        stompClient.connect({}, () => {
+            stompClient.subscribe('/topic/admin/notification', refreshAdminBadge);
+            stompClient.subscribe(
+                `/queue/admin/${adminId}/notification`,
+                refreshAdminBadge
+            );
+        });
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        refreshAdminBadge();   // load ban đầu
+        connectAdminWS();      // realtime
+    });
+</script>
+
+
+
 </html>

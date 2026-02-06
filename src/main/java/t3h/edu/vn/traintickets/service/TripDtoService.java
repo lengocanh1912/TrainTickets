@@ -8,6 +8,8 @@ import t3h.edu.vn.traintickets.dto.TripDetailDto;
 import t3h.edu.vn.traintickets.dto.TripDto;
 import t3h.edu.vn.traintickets.dto.SeatDto;
 import t3h.edu.vn.traintickets.entities.*;
+import t3h.edu.vn.traintickets.enums.SeatStatus;
+import t3h.edu.vn.traintickets.enums.TicketStatus;
 import t3h.edu.vn.traintickets.repository.*;
 
 
@@ -77,15 +79,27 @@ public class TripDtoService {
 
             // 3.2 Convert sang SeatDto
             List<SeatDto> seatDtos = seats.stream().map(seat -> {
-                boolean booked = ticketRepository.existsBySeatIdAndTripId(seat.getId(), tripId);
-                return new SeatDto(seat.getId(), seat.getSeatCode(), booked, trip.getPrice());
+                SeatDto seatDto = new SeatDto();
+                seatDto.setId(seat.getId());
+                seatDto.setSeatCode(seat.getSeatCode());
+                //check seat có trong ticket k
+                boolean booked = ticketRepository.existsValidTicket(
+                        seat.getId(),
+                        tripId,
+                        TicketStatus.CANCELLED,
+                        TicketStatus.REFUNDED
+                );
+                seatDto.setBooked(booked);
+                seatDto.setPrice(trip.getPrice());
+
+                return seatDto;
             }).toList();
 
             // 3.3 Tạo CoachDto
             CoachDto coachDto = new CoachDto();
             coachDto.setId(coach.getId());
             coachDto.setCode(coach.getCode());
-            coachDto.setType(coach.getType()); // nếu coach.getType() là Enum
+            coachDto.setType(coach.getType());
             coachDto.setCapacity(coach.getCapacity());
             coachDto.setState(coach.getState());
             coachDto.setPosition(coach.getPosition());
@@ -100,6 +114,7 @@ public class TripDtoService {
         dto.setDepartureStation(route.getDeparture().getName());
         dto.setArrivalStation(route.getArrival().getName());
         dto.setDepartureDate(trip.getDepartureAt().toLocalDate().toString());
+//        dto.getPrice(trip.getPrice());
         dto.setCoaches(coachDtos);
 
         return dto;

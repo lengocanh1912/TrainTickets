@@ -35,7 +35,7 @@
                 <form th:action="@{/admin/order/search}" method="GET" class="flex-grow-1" style="max-width: 400px;">
                     <div class="input-group">
                         <input type="text" name="keyword" class="form-control"
-                               placeholder="Nhập từ khóa..." aria-label="Search"
+                               placeholder="Tìm kiếm theo tên người dùng, mã đơn, email,..." aria-label="Search"
                                th:value="${param.keyword}">
                         <button class="btn btn-primary" type="submit">
                             <i class="bi bi-search"></i>
@@ -89,7 +89,19 @@
                         </div>
                     </td>
 
-                    <td th:text="${order.status == 1 ? 'Đã thanh toán' : 'Chưa thanh toán'}"></td>
+<!--                    <td th:text="${order.status}"></td>-->
+<!--                    <td th:text="${order.status.getClass().name}"></td>-->
+
+                    <td>
+                      <span th:switch="${order.status}">
+                        <span th:case="${OrderStatus.PENDING}" class="badge bg-warning text-dark">Chờ thanh toán</span>
+                        <span th:case="${OrderStatus.PAID}" class="badge bg-success">Đã thanh toán</span>
+                        <span th:case="${OrderStatus.CANCELLED}" class="badge bg-danger">Đã huỷ</span>
+                        <span th:case="${OrderStatus.FAILED}" class="badge bg-secondary">Thanh toán thất bại</span>
+                        <span th:case="*">Không xác định</span>
+                      </span>
+                    </td>
+
                     <td th:text="${#temporals.format(order.createdAt, 'dd/MM/yyyy HH:mm')}"></td>
                     <td class="text-nowrap text-center">
                         <a class="btn btn-primary btn-sm me-1" th:href="@{/admin/order/detail(orderCode=${order.orderCode})}">Xem</a>

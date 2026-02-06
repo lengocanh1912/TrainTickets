@@ -43,12 +43,21 @@ public class    AdminUserController {
                        @RequestParam(defaultValue = "5") Integer perpage) {
         model.addAttribute("page", userService.paging(page, perpage));
         model.addAttribute("path", "/admin/user/view");
+        model.addAttribute("currentPage", page); // ✅ Thêm dòng này
         return "admin/user/view";
     }
 
+//    @GetMapping("create")
+//    public String create(Model model) {
+//        model.addAttribute("user", new UserCreateDto());
+//        return "/admin/user/create";
+//    }
+
     @GetMapping("create")
-    public String create(Model model) {
+    public String create(Model model,
+                         @RequestParam(name = "page", defaultValue = "0") Integer page) {
         model.addAttribute("user", new UserCreateDto());
+        model.addAttribute("page", page); // truyền lại sang form
         return "/admin/user/create";
     }
 
@@ -58,27 +67,43 @@ public class    AdminUserController {
         return "/admin/user/update";
     }
 
+    // lưu ttin khi tạo mơi ng dùng
     @PostMapping("save")
     public String save(Model model, @Valid @ModelAttribute(value = "user") UserCreateDto user,
                        BindingResult bindingResult,
+                       @RequestParam(name = "page", defaultValue = "0") Integer page,
                        RedirectAttributes redirectAttributes) {
         if (bindingResult.hasErrors()) {
+            model.addAttribute("page", page); // ⚠ Thêm lại dòng này
+            return "/admin/user/create";
+        }
+        if (userService.existsByEmail(user.getEmail())) {
+            model.addAttribute("error", "Email đã tồn tại!");
+            return "/admin/user/create"; // quay lại form mà không redirect
+        }
+
+        if (userService.existsByPhone(user.getPhoneNumber())) {
+            model.addAttribute("error", "Số điện thoại đã tồn tại!");
             return "/admin/user/create";
         }
         if (!user.getPassword().equals(user.getRePassword())){
             bindingResult.rejectValue("rePassword", "error.user",
                     "Mật khẩu không trùng khớp");
+            model.addAttribute("page", page); // ⚠ Thêm lại dòng này
             return "/admin/user/create";
         }
         userService.createUser(user);
         redirectAttributes.addFlashAttribute("message",
                 "Tạo mới tài khoản thành công");
-        return "redirect:/admin/user/view";
+//        return "redirect:/admin/user/view";
+        return "redirect:/admin/user/view?page=" + page;
+
     }
 
     @PostMapping("update")
     public String save(Model model, @Valid @ModelAttribute(value = "user") UserUpdateDto user,
                        BindingResult bindingResult,
+                       @RequestParam(name = "page", defaultValue = "0") Integer page,
                        RedirectAttributes redirectAttributes) {
         if (bindingResult.hasErrors()) {
             return "/admin/user/update";
@@ -86,7 +111,8 @@ public class    AdminUserController {
         userService.updateUser(user);
         redirectAttributes.addFlashAttribute("message",
                 "Cập nhật tài khoản thành công");
-        return "redirect:/admin/user/view";
+//        return "redirect:/admin/user/view";
+        return "redirect:/admin/user/view?page=" + page;
     }
 
     @GetMapping("/search")
@@ -98,9 +124,11 @@ public class    AdminUserController {
 
     @GetMapping("/detail")
     public String userDetail(@RequestParam("id") Long id,
+                             @RequestParam(defaultValue = "0") Integer page,
                              Model model) {
         User user = userService.findById(id);
         model.addAttribute("user", user);
+        model.addAttribute("page", page); // ✅ Thêm dòng này
         return "/admin/user/detail";
     }
 

@@ -5,9 +5,12 @@ import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
 import org.hibernate.annotations.ColumnDefault;
+import t3h.edu.vn.traintickets.enums.RateState;
+import t3h.edu.vn.traintickets.enums.ReviewStatus;
 
-import java.time.Instant;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Getter
 @Setter
@@ -42,6 +45,9 @@ public class Review {
     @Column(name = "comment")
     private String comment;
 
+    @OneToMany(mappedBy = "review", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    private List<ReviewImage> reviewImages = new ArrayList<>();
+
     @ColumnDefault("CURRENT_TIMESTAMP")
     @Column(name = "created_at")
     private LocalDateTime createdAt;
@@ -50,67 +56,12 @@ public class Review {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
-    public Long getId() {
-        return id;
-    }
+    @Column(nullable = false)
+    @Enumerated(EnumType.STRING)
+    private RateState rateStatus ;
 
-    public void setId(Long id) {
-        this.id = id;
-    }
+    @Column(nullable = false)
+    @Enumerated(EnumType.STRING)
+    private ReviewStatus status = ReviewStatus.PENDING;
 
-    public @NotNull User getUser() {
-        return user;
-    }
-
-    public void setUser(@NotNull User user) {
-        this.user = user;
-    }
-
-    public @NotNull Order getOrder() {
-        return order;
-    }
-
-    public void setOrder(@NotNull Order order) {
-        this.order = order;
-    }
-
-    public @NotNull Trip getTrip() {
-        return trip;
-    }
-
-    public void setTrip(@NotNull Trip trip) {
-        this.trip = trip;
-    }
-
-    public @NotNull Integer getRating() {
-        return rating;
-    }
-
-    public void setRating(@NotNull Integer rating) {
-        this.rating = rating;
-    }
-
-    public String getComment() {
-        return comment;
-    }
-
-    public void setComment(String comment) {
-        this.comment = comment;
-    }
-
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
-
-    public void setCreatedAt(LocalDateTime createdAt) {
-        this.createdAt = createdAt;
-    }
-
-    public LocalDateTime getUpdatedAt() {
-        return updatedAt;
-    }
-
-    public void setUpdatedAt(LocalDateTime updatedAt) {
-        this.updatedAt = updatedAt;
-    }
 }

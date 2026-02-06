@@ -1,6 +1,8 @@
 package t3h.edu.vn.traintickets.repository;
 
-import org.hibernate.type.descriptor.converter.spi.JpaAttributeConverter;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.CrudRepository;
@@ -24,20 +26,18 @@ public interface TripRepository extends JpaRepository<Trip, Long> {
     List<Trip> searchByRouteName(@Param("keyword") String keyword);
 
 
-    @Query("""
-        SELECT COUNT(t) > 0 FROM Trip t
-        WHERE t.train.id = :trainId
-        AND (
-            (:departureAt BETWEEN t.departureAt AND t.arrivalAt)
-            OR (:arrivalAt BETWEEN t.departureAt AND t.arrivalAt)
-            OR (t.departureAt BETWEEN :departureAt AND :arrivalAt)
-        )
-    """)
-    boolean existsByTrainAndTimeOverlap(@Param("trainId") Long trainId,
-                                        @Param("departureAt") LocalDateTime departureAt,
-                                        @Param("arrivalAt") LocalDateTime arrivalAt);
 
-    //get trip by station name
+
+    @Query("""
+SELECT COUNT(t) > 0 FROM Trip t
+WHERE t.train.id = :trainId
+AND NOT (
+    t.arrivalAt <= :departureAt OR t.departureAt >= :arrivalAt
+)
+""")
+    boolean existsByTrainAndTimeOverlap(Long trainId, LocalDateTime departureAt, LocalDateTime arrivalAt);
+
+    // tìm chuyến đang hoạt động
     @Query("""
     SELECT new t3h.edu.vn.traintickets.dto.TripDto(
         t.id,
@@ -55,6 +55,7 @@ public interface TripRepository extends JpaRepository<Trip, Long> {
     WHERE d.name = :departureName
       AND a.name = :arrivalName
       AND DATE(t.departureAt) = :departureAt
+      AND t.status = t3h.edu.vn.traintickets.enums.TripState.ACTIVE
       AND (
               SELECT COUNT(s) FROM Seat s
               WHERE s.coach.train = t.train
@@ -93,17 +94,33 @@ public interface TripRepository extends JpaRepository<Trip, Long> {
             )
     List<TripDto> findByIdDto(long id);
 
-//    // Chỉ fetch Trip → Train → Coaches + Route + Station, không fetch Seats
-//    @Query("""
-//    SELECT t FROM Trip t
-//    JOIN FETCH t.train train
-//    JOIN FETCH train.coaches coach
-//    JOIN FETCH t.route r
-//    JOIN FETCH r.departureStation
-//    JOIN FETCH r.arrivalStation
-//    WHERE t.id = :tripId
-//""")
-//    Optional<Trip> findTripWithTrainAndCoaches(@Param("tripId") Long tripId);
+    @Query("""
+    SELECT t FROM Trip t
+    JOIN FETCH t.train tr
+    JOIN FETCH t.route r
+    JOIN FETCH r.departure
+    JOIN FETCH r.arrival
+    """)
+    Page<Trip> findAllWithDetails(Pageable pageable);
+
+    @Query("""
+    SELECT COUNT(t) > 0 FROM Trip t
+    WHERE t.train.id = :trainId
+      AND t.id <> :currentTripId
+      AND (
+          (:departureAt BETWEEN t.departureAt AND t.arrivalAt)
+          OR (:arrivalAt BETWEEN t.departureAt AND t.arrivalAt)
+          OR (t.departureAt BETWEEN :departureAt AND :arrivalAt)
+      )
+""")
+    boolean existsByTrainAndTimeOverlapExceptCurrent(
+            Long trainId,
+            LocalDateTime departureAt,
+            LocalDateTime arrivalAt,
+            Long currentTripId
+    );
+
+
 
 
 }

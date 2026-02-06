@@ -25,7 +25,8 @@ public class QRPaymentController {
     private VNPayService vnPayService;
 
     @GetMapping("/generate")
-    public ResponseEntity<Map<String, String>> generateQrUrl(@RequestParam Long orderId, HttpServletRequest request) {
+    public ResponseEntity<Map<String, String>> generateQrUrl(@RequestParam Long orderId,
+                                                             HttpServletRequest request) {
         System.out.println("==> QR generate endpoint hit with orderId: " + orderId);
 
         Order order = orderService.findById(orderId);

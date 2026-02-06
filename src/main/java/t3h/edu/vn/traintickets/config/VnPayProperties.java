@@ -14,6 +14,8 @@ public class VnPayProperties {
     private String hashSecret;
     private String url;
     private String returnUrl;
+    private String ipnUrl;
+
 
     public String getTmnCode() {
         return tmnCode;
