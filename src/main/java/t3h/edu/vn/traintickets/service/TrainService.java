@@ -111,7 +111,8 @@ public class TrainService {
             List<Seat> seats = coachDto.getSeats().stream().map(seatDto -> {
                 Seat seat = new Seat();
                 seat.setSeatCode(seatDto.getSeatCode());
-                seat.setType("standard"); // hoặc seatDto.getType()
+                seat.setType(coachDto.getType());
+                seat.setStatus(SeatStatus.AVAILABLE);
                 seat.setCoach(savedCoach);
                 return seat;
             }).collect(Collectors.toList());
@@ -140,7 +141,20 @@ public class TrainService {
         train.setName(dto.getName());
         train.setCode(dto.getCode());
         train.setUpdatedAt(LocalDateTime.now());
+        train.setState(dto.getState());
 
+        if (train.getState() == TrainState.INACTIVE) {
+
+            for (Coach coach : train.getCoaches()) {
+
+                coach.setState(CoachState.INACTIVE);
+
+                deactivateAllSeats(coach);//set seat inactive
+            }
+
+//            train.setCapacity(0);
+            return; // 🚀 dừng luôn, không update capacity nữa
+        }
         int totalCapacity = 0;
 
         if (dto.getCoaches() == null) return;
@@ -301,7 +315,7 @@ public class TrainService {
         dto.setId(train.getId());
         dto.setName(train.getName());
         dto.setCode(train.getCode());
-
+        dto.setState(train.getState());
         List<CoachDto> coachDtos = train.getCoaches().stream().map(coach -> {
             CoachDto c = new CoachDto();
             c.setId(coach.getId());

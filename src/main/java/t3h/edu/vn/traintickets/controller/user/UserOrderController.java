@@ -2,6 +2,7 @@ package t3h.edu.vn.traintickets.controller.user;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -40,20 +41,33 @@ public class UserOrderController {
 
     @GetMapping("/list")
     @ResponseBody
-    public Page<OrderGroupedTicketDto> list(@RequestParam(defaultValue = "0") Integer page,
-                                            @RequestParam(defaultValue = "2") Integer perpage) {
-        return orderService.pagingGroupedOrders(page, perpage);
+    public Page<OrderGroupedTicketDto> list(
+            @RequestParam(defaultValue = "0") Integer page,
+            @RequestParam(defaultValue = "2") Integer perpage,
+            Authentication authentication
+            ) {
+
+        String username = authentication.getName();
+
+        return orderService.pagingGroupedOrders(page, perpage,username);
     }
 
     @GetMapping("/view")
     public String view(Model model,
                        @RequestParam(defaultValue = "0") Integer page,
-                       @RequestParam(defaultValue = "2") Integer perpage) {
-        Page<OrderGroupedTicketDto> paged = orderService.pagingGroupedOrders(page, perpage);
+                       @RequestParam(defaultValue = "2") Integer perpage,
+                       Authentication authentication) {
+
+        String username = authentication.getName();
+
+        Page<OrderGroupedTicketDto> paged =
+                orderService.pagingGroupedOrders(page, perpage, username);
+
         model.addAttribute("page", paged);
         model.addAttribute("path", "/user/order/view");
         model.addAttribute("OrderStatus", OrderStatus.class);
         model.addAttribute("TicketStatus", TicketStatus.class);
+
         return "/user/grouped_order_list";
     }
 

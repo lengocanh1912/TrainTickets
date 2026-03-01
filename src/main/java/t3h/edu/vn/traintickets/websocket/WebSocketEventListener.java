@@ -5,7 +5,7 @@ import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.stereotype.Component;
 import org.springframework.web.socket.messaging.SessionConnectEvent;
 import org.springframework.web.socket.messaging.SessionDisconnectEvent;
-import t3h.edu.vn.traintickets.service.UserPresenceService;
+import t3h.edu.vn.traintickets.service.auth.UserPresenceService;
 
 @Component
 public class WebSocketEventListener {

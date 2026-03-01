@@ -1,4 +1,4 @@
-package t3h.edu.vn.traintickets.service;
+package t3h.edu.vn.traintickets.service.booking;
 
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -10,6 +10,9 @@ import t3h.edu.vn.traintickets.entities.Order;
 import t3h.edu.vn.traintickets.enums.OrderStatus;
 import t3h.edu.vn.traintickets.repository.OrderRepository;
 import t3h.edu.vn.traintickets.repository.TicketRepository;
+import t3h.edu.vn.traintickets.service.OrderService;
+import t3h.edu.vn.traintickets.service.pdf_qr.MailService;
+import t3h.edu.vn.traintickets.service.pdf_qr.TicketPdfService;
 
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
@@ -43,12 +46,6 @@ public class VNPayService {
         this.vnPayProperties = vnPayProperties;
     }
 
-    /**
-     * ✅ Tạo URL thanh toán VNPay
-     * @param order Đơn hàng cần thanh toán
-     * @param request HTTP request để lấy IP
-     * @return URL thanh toán VNPay
-     */
     public String createVNPayPayment(Order order, HttpServletRequest request) {
         try {
             // === 1. Chuẩn bị dữ liệu ===
@@ -149,11 +146,7 @@ public class VNPayService {
         }
     }
 
-    /**
-     * ✅ Xử lý callback từ VNPay sau khi thanh toán
-     * @param request HTTP request chứa params từ VNPay
-     * @return 1: thành công, 0: thất bại, -1: chữ ký sai, -2: không tìm thấy đơn hàng
-     */
+
     public int processVNPayResponse(HttpServletRequest request) {
         try {
             Map<String, String> fields = new HashMap<>();
@@ -220,9 +213,7 @@ public class VNPayService {
         }
     }
 
-    /**
-     * ✅ Hàm mã hóa HMAC SHA512
-     */
+
     private String hmacSHA512(String key, String data) throws Exception {
         Mac hmac512 = Mac.getInstance("HmacSHA512");
         SecretKeySpec secretKey = new SecretKeySpec(key.getBytes(StandardCharsets.UTF_8), "HmacSHA512");
@@ -236,9 +227,7 @@ public class VNPayService {
         return result.toString();
     }
 
-    /**
-     * ✅ Lấy IP thực của client (hỗ trợ proxy)
-     */
+
     private String getClientIp(HttpServletRequest request) {
         String ip = request.getHeader("X-FORWARDED-FOR");
         if (ip == null || ip.isEmpty()) {
@@ -254,10 +243,7 @@ public class VNPayService {
         return ip;
     }
 
-    /**
-     * ✅ Validate callback từ VNPay
-     * Dùng để kiểm tra nhanh trước khi xử lý
-     */
+
     public boolean validateCallback(HttpServletRequest request) {
         try {
             Map<String, String> fields = new HashMap<>();

@@ -35,33 +35,6 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
     List<Order> searchByKeyword(@Param("keyword") String keyword);
 
 
-    //danh sách đơn hàng của người dùng hiện tại
-//    @EntityGraph(attributePaths = {
-//            "orderTickets",
-//            "orderTickets.ticket",
-//            "orderTickets.ticket.trip",
-//            "orderTickets.ticket.seat",
-//            "orderTickets.ticket.trip.departureStation",
-//            "orderTickets.ticket.trip.arrivalStation"
-//    })
-//    List<Order> findByUserId(Long userId);
-    Page<Order> findByUserId(Long userId, Pageable pageable);
-
-    @Query("SELECT o FROM Order o WHERE o.user.id = :userId")
-    @EntityGraph(attributePaths = {
-            "orderTickets",
-            "orderTickets.ticket",
-            "orderTickets.ticket.trip",
-            "orderTickets.ticket.trip.route",
-            "orderTickets.ticket.trip.route.departure",
-            "orderTickets.ticket.trip.route.arrival",
-            "orderTickets.ticket.trip.train",
-            "orderTickets.ticket.seat",
-            "orderTickets.ticket.seat.coach"
-    })
-    List<Order> findByUserIdWithTickets(@Param("userId") Long userId);
-
-
 
 
     // Tính tổng doanh thu từ các đơn hàng thành công
@@ -81,24 +54,6 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
     })
     Optional<Order> findWithTicketsById(Long id);
 
-
-    @Query("""
-    SELECT o FROM Order o
-    JOIN FETCH o.user u
-    LEFT JOIN FETCH o.orderTickets ot
-    LEFT JOIN FETCH ot.ticket t
-    LEFT JOIN FETCH t.trip tr
-    LEFT JOIN FETCH tr.train
-    LEFT JOIN FETCH t.seat s
-    LEFT JOIN FETCH s.coach c
-    LEFT JOIN FETCH tr.route r
-    LEFT JOIN FETCH r.departure
-    LEFT JOIN FETCH r.arrival
-    """)
-    List<Order> findAllWithTickets();
-
-    boolean existsByOrderCode(String orderCode);
-
     @Query(value = """
     SELECT DISTINCT o FROM Order o
     JOIN FETCH o.user
@@ -114,6 +69,26 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
     """,
             countQuery = "SELECT COUNT(o) FROM Order o")
     Page<Order> findAllWithTicketsPage(Pageable pageable);
+
+
+    @EntityGraph(attributePaths = {
+            "orderTickets",
+            "orderTickets.ticket",
+            "orderTickets.ticket.trip",
+            "orderTickets.ticket.trip.route",
+            "orderTickets.ticket.trip.route.departure",
+            "orderTickets.ticket.trip.route.arrival",
+            "orderTickets.ticket.seat",
+            "orderTickets.ticket.seat.coach"
+    })
+    @Query("""
+            SELECT o FROM Order o
+            WHERE o.user.username = :username
+        """)
+    Page<Order> findByUsername(
+            @Param("username") String username,
+            Pageable pageable
+    );
 
     @Query("""
         SELECT 
@@ -149,14 +124,12 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
     """)
     Optional<Order> findByTicketId(@Param("ticketId") Long ticketId);
 
-    @Query("SELECT o FROM Order o WHERE o.status = 'PENDING_PAYMENT' AND o.expiresAt < :now")
-    List<Order> findExpiredUnpaidOrders(LocalDateTime now);
-
     Order findByTransactionCode(String transactionCode);
 
-    List<Order> findByStatusAndHoldUntilBefore(OrderStatus status, LocalDateTime time);
+    List<Order> findByStatusAndHoldUntilBefore(
+            OrderStatus status,
+            LocalDateTime time);
 
-    List<Order> findByStatusAndExpiresAtBefore(OrderStatus status, LocalDateTime expiresAt);
 
     @Query("""
         SELECT 
@@ -206,4 +179,12 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
     """)
     BigDecimal getTotalRevenueOrderPaid(@Param("status") OrderStatus status);
 
-}
+    @Query("""
+    SELECT DISTINCT o FROM Order o
+    LEFT JOIN FETCH o.orderTickets ot
+    LEFT JOIN FETCH ot.ticket t
+    LEFT JOIN FETCH t.seat s
+    LEFT JOIN FETCH t.trip tr
+    WHERE o.id = :id
+""")
+    Optional<Order> findByIdWithTickets(@Param("id") Long id);}

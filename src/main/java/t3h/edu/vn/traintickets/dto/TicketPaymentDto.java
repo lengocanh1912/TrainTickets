@@ -4,6 +4,8 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.math.BigDecimal;
+
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -15,7 +17,7 @@ public class TicketPaymentDto {
     private String seatNumber;
     private String seatType;
 
-    private Float price;
+    private BigDecimal price;
 
     // 0: người lớn, 1: trẻ em, 2: sinh viên, 3: người già
     private Byte ticketType;

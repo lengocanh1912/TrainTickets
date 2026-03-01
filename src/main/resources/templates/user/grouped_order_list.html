@@ -240,7 +240,7 @@
   </div>
 </nav>
 
-
+<!--danh sách đơn-->
 <div class="order-container">
   <h1> Đơn hàng của bạn</h1>
   <div th:each="order : ${page.getContent()}" class="order-card">
@@ -281,7 +281,7 @@
       <!-- Cột 3: Thao tác -->
       <div class="actions">
         <div>
-          <a th:href="@{/user/trip/trip_booking/{id}(id=${order.id})}" class="action-button btn-pay"
+          <a th:href="@{/user/trip/passengerInfo/{id}(id=${order.id})}" class="action-button btn-pay"
              th:if="${order.status == OrderStatus.PENDING}">Thanh toán</a>
         </div>
 <!--        <div>-->
@@ -297,18 +297,27 @@
              th:if="${order.ticketStatus == TicketStatus.CHECKED_IN}">đánh giá</a>
         </div>
         <div>
-          <a th:href="@{/user/trip/rebooking}" class="action-button btn-rebook"
-             th:if="${order.status == OrderStatus.CANCELLED}">Đặt lại</a>
-        </div>
-        <div>
-          <a  class="action-button btn-cancel"
-             th:if="${order.status == OrderStatus.FAILED}">Đã hủy</a>
-        </div>
+            <form th:action="@{/user/trip/rebook}" method="post"
+                  th:if="${order.status == OrderStatus.CANCELLED || order.status == OrderStatus.FAILED}">
+
+                <input type="hidden" name="orderId"
+                       th:value="${order.id}" />
+
+                <button type="submit" class="action-button btn-rebook">
+                    Đặt lại
+                </button>
+            </form>
+<!--        <div>-->
+<!--          <a  class="action-button btn-cancel"-->
+<!--             th:if="${order.status == OrderStatus.FAILED}">Đã hủy</a>-->
+<!--        </div>-->
       </div>
     </div>
   </div>
+  </div>
   <!-- Gọi phân trang -->
   <nav th:replace="/admin/common/fragments :: paginationid()"></nav>
+
 </div>
 
 <script>
@@ -321,6 +330,8 @@
     });
   });
 </script>
+</div>
 
 </body>
+
 </html>

@@ -10,10 +10,13 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 public class BookingRequest {
-    private Long tripId;
-    private List<Long> seatIds;
-    private List<Float> prices;
-    private List<Byte> ticketTypes; // 0: 1 chiều, 1: chiều đi, 2: chiều về
 
+    private List<TicketRequest> tickets;
+
+    @Data
+    public static class TicketRequest {
+        private Long seatId;
+        private Byte ticketType;
+    }
 }
 

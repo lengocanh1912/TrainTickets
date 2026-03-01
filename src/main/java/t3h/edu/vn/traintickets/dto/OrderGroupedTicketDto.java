@@ -13,7 +13,9 @@ import java.util.Map;
 
 @Data
 public class OrderGroupedTicketDto  {
+
     private Long id;
+    private Long tripId;
     private String userFullname;
     private String orderCode;
     private String departureStation;
@@ -26,8 +28,6 @@ public class OrderGroupedTicketDto  {
     private TicketStatus ticketStatus;
     private RateState rateStatus;
     private Map<String, List<TicketDto>> groupedTickets;
-
-
 
 }
 

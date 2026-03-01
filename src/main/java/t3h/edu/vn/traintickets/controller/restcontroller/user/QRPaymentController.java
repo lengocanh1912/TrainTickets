@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import t3h.edu.vn.traintickets.entities.Order;
 import t3h.edu.vn.traintickets.service.OrderService;
-import t3h.edu.vn.traintickets.service.VNPayService;
+import t3h.edu.vn.traintickets.service.booking.VNPayService;
 
 import java.util.Map;
 

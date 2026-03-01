@@ -1,13 +1,10 @@
-package t3h.edu.vn.traintickets.service;
+package t3h.edu.vn.traintickets.service.auth;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.stereotype.Service;
 import t3h.edu.vn.traintickets.entities.User;
-import t3h.edu.vn.traintickets.repository.UserRepository;
 import t3h.edu.vn.traintickets.security.UserDetailsImpl;
 
 @Service
@@ -15,8 +12,7 @@ import t3h.edu.vn.traintickets.security.UserDetailsImpl;
 public class AuthService {
 
     public User getCurrentUser() {
-        Authentication auth =
-                SecurityContextHolder.getContext().getAuthentication();
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
 
         if (auth == null || !auth.isAuthenticated()) {
             throw new RuntimeException("Unauthenticated");

@@ -1,7 +1,6 @@
 package t3h.edu.vn.traintickets.service;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -15,6 +14,7 @@ import t3h.edu.vn.traintickets.dto.UserPasswordDto;
 import t3h.edu.vn.traintickets.dto.UserUpdateDto;
 import t3h.edu.vn.traintickets.entities.User;
 import t3h.edu.vn.traintickets.repository.UserRepository;
+import t3h.edu.vn.traintickets.service.pdf_qr.MailService;
 
 import java.io.File;
 import java.nio.file.Files;
@@ -23,15 +23,12 @@ import java.nio.file.Paths;
 import java.security.Principal;
 import java.time.Instant;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
-
-import static t3h.edu.vn.traintickets.utils.PasswordUtil.md5;
 
 @Service
 @RequiredArgsConstructor

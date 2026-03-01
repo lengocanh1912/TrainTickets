@@ -809,7 +809,8 @@
                 <p class="text-sm text-gray-500" th:text="${trip.duration}"></p>
               </div>
               <div class="text-right">
-                <p class="text-orange-600 font-bold" th:text="${#numbers.formatDecimal(trip.price, 0, 'POINT', 0, 'COMMA')} + ' đ'"></p>
+                <p class="text-orange-600 font-bold"
+                   th:text="${#numbers.formatDecimal(trip.price, 0, 'POINT', 0, 'COMMA')} + ' đ'"></p>
                 <button class="bg-orange-500 hover:bg-yellow-400 text-white px-4 py-2 rounded mt-2">Chọn chỗ</button>
               </div>
             </div>

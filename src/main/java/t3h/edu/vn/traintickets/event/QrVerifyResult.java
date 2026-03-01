@@ -1,4 +1,4 @@
-package t3h.edu.vn.traintickets.dto;
+package t3h.edu.vn.traintickets.event;
 
 import t3h.edu.vn.traintickets.entities.Ticket;
 

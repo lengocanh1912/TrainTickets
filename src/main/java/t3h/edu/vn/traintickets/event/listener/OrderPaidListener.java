@@ -2,13 +2,12 @@ package t3h.edu.vn.traintickets.event.listener;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.transaction.event.TransactionalEventListener;
 import t3h.edu.vn.traintickets.event.OrderPaidEvent;
-import t3h.edu.vn.traintickets.service.MailService;
+import t3h.edu.vn.traintickets.service.pdf_qr.MailService;
 
 @Slf4j
 @Component

@@ -85,7 +85,7 @@ public class AdminTrainController {
     public String updateTrain(@ModelAttribute TrainUpdateDto trainDto,
                               RedirectAttributes redirectAttributes) {
         try {
-            trainService.updateTrain(trainDto); // bạn phải có hàm update trong service
+            trainService.updateTrain(trainDto);
             redirectAttributes.addFlashAttribute("message", "Cập nhật tàu thành công!");
             System.out.println("DTO ID: " + trainDto.getId());
             System.out.println("Name: " + trainDto.getName());

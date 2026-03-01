@@ -53,7 +53,7 @@ public class Train {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "state", nullable = false, length = 20)
-    private TrainState state = TrainState.ACTIVE;
+    private TrainState state ;
 
     public Long getId() {
         return id;

@@ -43,14 +43,14 @@ public class AdminOrderController {
     @ResponseBody
     public Page<OrderGroupedTicketDto> list(@RequestParam(defaultValue = "0") Integer page,
                                             @RequestParam(defaultValue = "5") Integer perpage) {
-        return orderService.pagingGroupedOrders(page, perpage);
+        return orderService.pagingOrders(page, perpage);
     }
 
     @GetMapping("/view")
     public String view(Model model,
                        @RequestParam(defaultValue = "0") Integer page,
                        @RequestParam(defaultValue = "5") Integer perpage) {
-        Page<OrderGroupedTicketDto> paged = orderService.pagingGroupedOrders(page, perpage);
+        Page<OrderGroupedTicketDto> paged = orderService.pagingOrders(page, perpage);
         model.addAttribute("page", paged);
         model.addAttribute("path", "/admin/order/view");
         model.addAttribute("OrderStatus", OrderStatus.class);

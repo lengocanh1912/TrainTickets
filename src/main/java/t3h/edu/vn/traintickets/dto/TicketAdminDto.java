@@ -5,6 +5,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import t3h.edu.vn.traintickets.enums.TicketStatus;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Data
@@ -20,7 +21,7 @@ public class TicketAdminDto {
     private LocalDateTime arrivalAt;
     private String seatCode;
     private Byte ticketType;
-    private Float price;
+    private BigDecimal price;
     private TicketStatus status;
     private LocalDateTime createdAt;
 

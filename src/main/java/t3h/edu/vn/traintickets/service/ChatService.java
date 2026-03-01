@@ -16,11 +16,11 @@ import t3h.edu.vn.traintickets.enums.MessageType;
 import t3h.edu.vn.traintickets.repository.ConversationRepository;
 import t3h.edu.vn.traintickets.repository.MessageRepository;
 import t3h.edu.vn.traintickets.repository.UserRepository;
+import t3h.edu.vn.traintickets.service.auth.UserPresenceService;
 
 import java.io.IOException;
 import java.nio.file.*;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 

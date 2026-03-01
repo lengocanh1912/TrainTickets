@@ -6,7 +6,7 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.web.authentication.logout.LogoutHandler;
 import org.springframework.stereotype.Component;
-import t3h.edu.vn.traintickets.service.UserPresenceService;
+import t3h.edu.vn.traintickets.service.auth.UserPresenceService;
 
 @Component
 public class LogoutHandlerImpl implements LogoutHandler {

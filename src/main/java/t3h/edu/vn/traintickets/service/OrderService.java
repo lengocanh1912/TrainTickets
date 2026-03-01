@@ -1,19 +1,16 @@
 package t3h.edu.vn.traintickets.service;
 
 
-import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.*;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import t3h.edu.vn.traintickets.dto.*;
 import t3h.edu.vn.traintickets.entities.*;
 import t3h.edu.vn.traintickets.enums.CancelType;
 import t3h.edu.vn.traintickets.enums.OrderStatus;
-import t3h.edu.vn.traintickets.enums.SeatStatus;
 import t3h.edu.vn.traintickets.enums.TicketStatus;
 import t3h.edu.vn.traintickets.event.OrderPaidEvent;
 import t3h.edu.vn.traintickets.repository.OrderRepository;
@@ -21,8 +18,9 @@ import t3h.edu.vn.traintickets.repository.OrderTicketRepository;
 import t3h.edu.vn.traintickets.repository.SeatRepository;
 import t3h.edu.vn.traintickets.repository.TicketRepository;
 import org.springframework.context.ApplicationEventPublisher;
+import t3h.edu.vn.traintickets.service.pdf_qr.MailService;
 
-import java.time.Duration;
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -120,74 +118,105 @@ public class OrderService {
         return revenue != null ? revenue : 0.0;
     }
 
-    @Transactional
-    public Page<OrderGroupedTicketDto> pagingGroupedOrders(int pageNo, int pageSize) {
-        Pageable pageable = PageRequest.of(pageNo, pageSize, Sort.by("createdAt").descending());
-        Page<Order> ordersPage = orderRepository.findAllWithTicketsPage(pageable); // thêm query
+    @Transactional(readOnly = true)
+    public Page<OrderGroupedTicketDto> pagingOrders(
+            int pageNo,
+            int pageSize
+    ) {
 
-        List<OrderGroupedTicketDto> content = new ArrayList<>();
+        Pageable pageable = PageRequest.of(
+                pageNo,
+                pageSize,
+                Sort.by("createdAt").descending()
+        );
 
-        for (Order order : ordersPage.getContent()) {
-            List<OrderTicket> orderTickets = order.getOrderTickets();
-            if (orderTickets == null || orderTickets.isEmpty()) continue;
+        Page<Order> ordersPage =
+                orderRepository.findAllWithTicketsPage(pageable);
 
-            OrderGroupedTicketDto dto = new OrderGroupedTicketDto();
-            dto.setId(order.getId());
-            dto.setOrderCode(order.getOrderCode());
-            dto.setCreatedAt(order.getCreatedAt());
-            dto.setStatus(order.getStatus());
-            dto.setUserFullname(order.getUser().getFullname());
+        List<OrderGroupedTicketDto> content = ordersPage.getContent()
+                .stream()
+                .map(this::convertToGroupedDto)
+                .toList();
 
-            // Lấy vé đầu
-            Ticket firstTicket = orderTickets.stream()
-                    .map(OrderTicket::getTicket)
-                    .findFirst()
-                    .orElse(null);
+        return new PageImpl<>(content, pageable, ordersPage.getTotalElements());
+    }
+    @Transactional(readOnly = true)
+    public Page<OrderGroupedTicketDto> pagingGroupedOrders(int pageNo,
+                                                            int pageSize,
+                                                            String username
+                                                    ) {
 
-            if (firstTicket == null) continue;
+        Pageable pageable = PageRequest.of(pageNo,
+                                            pageSize,
+                                            Sort.by("createdAt").descending()
+                                    );
 
-            Trip trip = firstTicket.getTrip();
-            dto.setDepartureAt(trip.getDepartureAt());
-            dto.setArrivalAt(trip.getArrivalAt());
-            dto.setDepartureStation(trip.getRoute().getDeparture().getName());
-            dto.setArrivalStation(trip.getRoute().getArrival().getName());
+        Page<Order> ordersPage =
+                orderRepository.findByUsername(username, pageable);
 
-            // Gom vé theo loại
-            Map<String, List<TicketDto>> grouped = new LinkedHashMap<>();
-            for (OrderTicket ot : orderTickets) {
-                Ticket t = ot.getTicket();
-                String label = switch (t.getTicketType()) {
-                    case 0 -> "Người lớn";
-                    case 1 -> "Trẻ em";
-                    case 2 -> "Sinh viên";
-                    case 3 -> "Người cao tuổi";
-                    default -> "Không rõ";
-                };
-
-                grouped.computeIfAbsent(label, k -> new ArrayList<>());
-
-                TicketDto td = new TicketDto();
-                td.setCoachCode(t.getSeat().getCoach().getCode());
-                td.setSeatCode(t.getSeat().getSeatCode());
-                td.setPrice(t.getPrice());
-                td.setTicketType(t.getTicketType());
-                td.setTrainName(t.getTrip().getTrain().getName());
-                td.setUserFullname(order.getUser().getFullname());
-
-                grouped.get(label).add(td);
-            }
-
-            dto.setGroupedTickets(grouped);
-            content.add(dto);
-        }
+        List<OrderGroupedTicketDto> content = ordersPage.getContent()
+                .stream()
+                .map(this::convertToGroupedDto)
+                .toList();
 
         return new PageImpl<>(content, pageable, ordersPage.getTotalElements());
     }
 
-    public String generateOrderCode() {
-        String timePart = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMddHHmmss"));
-        String randomPart = UUID.randomUUID().toString().substring(0, 5).toUpperCase();
-        return "OD" + timePart + randomPart;
+    private OrderGroupedTicketDto convertToGroupedDto(Order order) {
+
+        OrderGroupedTicketDto dto = new OrderGroupedTicketDto();
+
+        dto.setId(order.getId());
+        dto.setOrderCode(order.getOrderCode());
+        dto.setCreatedAt(order.getCreatedAt());
+        dto.setStatus(order.getStatus());
+        dto.setUserFullname(order.getUser().getFullname());
+
+        List<OrderTicket> orderTickets = order.getOrderTickets();
+
+        if (orderTickets == null || orderTickets.isEmpty()) {
+            dto.setGroupedTickets(new LinkedHashMap<>());
+            return dto;
+        }
+
+        Ticket firstTicket = orderTickets.get(0).getTicket();
+        Trip trip = firstTicket.getTrip();
+
+        dto.setTripId(trip.getId());
+        dto.setDepartureAt(trip.getDepartureAt());
+        dto.setArrivalAt(trip.getArrivalAt());
+        dto.setDepartureStation(trip.getRoute().getDeparture().getName());
+        dto.setArrivalStation(trip.getRoute().getArrival().getName());
+
+        Map<String, List<TicketDto>> grouped = new LinkedHashMap<>();
+
+        for (OrderTicket ot : orderTickets) {
+            Ticket t = ot.getTicket();
+
+            String label = switch (t.getTicketType()) {
+                case 0 -> "Người lớn";
+                case 1 -> "Trẻ em";
+                case 2 -> "Sinh viên";
+                case 3 -> "Người cao tuổi";
+                default -> "Không rõ";
+            };
+
+            grouped.computeIfAbsent(label, k -> new ArrayList<>());
+
+            TicketDto td = new TicketDto();
+            td.setCoachCode(t.getSeat().getCoach().getCode());
+            td.setSeatCode(t.getSeat().getSeatCode());
+            td.setPrice(t.getPrice());
+            td.setTicketType(t.getTicketType());
+            td.setTrainName(t.getTrip().getTrain().getName());
+            td.setUserFullname(order.getUser().getFullname());
+
+            grouped.get(label).add(td);
+        }
+
+        dto.setGroupedTickets(grouped);
+
+        return dto;
     }
 
     @Transactional
@@ -310,7 +339,8 @@ public class OrderService {
             );
         } else {
             order.setStatus(OrderStatus.FAILED);
-
+            order.setCancelNote("thanh toán thất bại");
+            order.setCancelType(CancelType.SYSTEM_CANCELLED);
             for (OrderTicket ot : order.getOrderTickets()) {
                 Ticket ticket = ot.getTicket();
                 ticket.setStatus(TicketStatus.CANCELLED);
@@ -323,8 +353,6 @@ public class OrderService {
 
     }
 
-
-
     @Transactional
     public void cancelOrderAndReleaseEverything(Long orderId) {
 
@@ -336,37 +364,24 @@ public class OrderService {
         for (OrderTicket ot : orderTickets) {
 
             Ticket ticket = ot.getTicket();
-            Seat seat = ticket.getSeat();  // LẤY GHẾ Ở ĐÂY
 
-            // 1. Giải phóng ghế
-            if (seat != null) {
-                seat.setStatus(SeatStatus.AVAILABLE);
-                seatRepository.save(seat);
-                order.setHoldUntil(null);
-            }
-
-            // 2. Hủy vé
             ticket.setStatus(TicketStatus.CANCELLED);
             ticket.setUpdatedAt(LocalDateTime.now());
-            ticket.setPassengerName(null);
-            ticket.setCccd(null);
-            ticket.setAddress(null);
-            ticket.setBirthday(null);
             ticketRepository.save(ticket);
-
-            // 3. Xóa OrderTicket
-            orderTicketRepository.delete(ot);
         }
 
-        // 4. Cập nhật trạng thái của đơn hàng
         order.setStatus(OrderStatus.CANCELLED);
         order.setCancelType(CancelType.AUTO_EXPIRED);
         order.setUpdatedAt(LocalDateTime.now());
+        order.setHoldUntil(null);
+        order.setExpiresAt(LocalDateTime.now());
+        order.setCancelNote("Hệ thống tự động hủy do quá thời gian thanh toán");
+
         orderRepository.save(order);
 
-        log.info("Order {} cancelled, tickets cancelled, seats released, OT deleted", orderId);
-    }
+        log.info("Order {} cancelled, tickets cancelled, seats released", orderId);
 
+    }
 
     public void updateOrderContactInfo(OrderPaymentDto dto) {
         Order order = orderRepository.findById(dto.getOrderId())
@@ -410,13 +425,6 @@ public class OrderService {
         orderRepository.save(order);
     }
 
-//    @Transactional
-//    public void markOrderPaid(Order order) {
-//        order.setStatus(OrderStatus.PAID);
-//        order.setUpdatedAt(LocalDateTime.now());
-//        orderRepository.save(order);
-//    }
-
     private String generateUniqueTicketCode() {
         String code ;
         do {
@@ -430,6 +438,80 @@ public class OrderService {
             ;
         } while (ticketRepository.existsByTicketCode(code));
         return code;
+    }
+
+    public Order createOrder(User user, List<Ticket> tickets) {
+
+        BigDecimal totalAmount = tickets.stream()
+                .map(Ticket::getPrice)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        Order order = new Order();
+        order.setUser(user);
+        order.setOrderCode(generateOrderCode());
+        order.setTotalAmount(totalAmount);
+        order.setFinalAmount(totalAmount);
+        order.setStatus(OrderStatus.PENDING);
+        order.setCreatedAt(LocalDateTime.now());
+        order.setHoldUntil(LocalDateTime.now().plusMinutes(10));
+
+        orderRepository.save(order);
+
+        for (Ticket ticket : tickets) {
+            OrderTicket ot = new OrderTicket();
+            ot.setOrder(order);
+            ot.setTicket(ticket);
+            orderTicketRepository.save(ot);
+        }
+
+        return order;
+    }
+
+    private String generateOrderCode() {
+        String timePart = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMddHHmmss"));
+        String randomPart = UUID.randomUUID().toString().substring(0, 5).toUpperCase();
+        return "OD" + timePart + randomPart;
+    }
+
+    @Transactional
+    public void autoCancelExpiredOrders() {
+
+        LocalDateTime now = LocalDateTime.now();
+
+        List<Order> expiredOrders =
+                orderRepository.findByStatusAndHoldUntilBefore(
+                        OrderStatus.PENDING,
+                        now
+                );
+
+        for (Order order : expiredOrders) {
+            cancelOrderInternal(order, CancelType.AUTO_EXPIRED);
+        }
+    }
+
+    @Transactional
+    public void cancelOrderInternal(Order order, CancelType cancelType) {
+
+        if (order.getStatus() != OrderStatus.PENDING) {
+            return; // tránh double cancel
+        }
+
+        LocalDateTime now = LocalDateTime.now();
+
+        // 1️⃣ Release ghế
+        for (OrderTicket ot : order.getOrderTickets()) {
+            Ticket ticket = ot.getTicket();
+            ticket.setStatus(TicketStatus.CANCELLED);
+            ticket.setUpdatedAt(now);
+        }
+
+        // 2️⃣ Update order
+        order.setStatus(OrderStatus.CANCELLED);
+        order.setCancelType(cancelType);
+        order.setCancelNote("Hệ thống tự động hủy do quá hạn thanh toán");
+        order.setHoldUntil(null);
+        order.setUpdatedAt(now);
+        order.setExpiresAt(now);
     }
 
 }

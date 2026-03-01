@@ -332,91 +332,49 @@ function selectDeparture(button) {
         console.log(`🔍 ${type} length:`, selectedSeats[type] ? selectedSeats[type].length : 'null/undefined');
     });
 
-    const seatIds = [];
-    const prices = [];
-    const ticketTypes = [];
+    const tickets = [];
+
+    const typeMapping = {
+        adult: 0,
+        child: 1,
+        student: 2,
+        senior: 3
+    };
 
     for (const [type, seats] of Object.entries(selectedSeats)) {
-        console.log(`\n🔄 Processing ${type}:`, seats);
 
-        if (!seats || !Array.isArray(seats)) {
-            console.warn(`⚠️ ${type} is not a valid array:`, seats);
-            continue;
-        }
+        if (!Array.isArray(seats)) continue;
 
-        seats.forEach((seat, index) => {
-            console.log(`  🔍 Checking ${type}[${index}]:`, seat);
-
-            if (seat && seat.id && seat.price !== undefined) {
-                console.log(`  ✅ Valid seat found:`, seat);
-
-                seatIds.push(seat.id);
-                prices.push(seat.price);
-
-                const typeMapping = {
-                    "adult": 0,
-                    "child": 1,
-                    "student": 2,
-                    "senior": 3
-                };
-
-                ticketTypes.push(typeMapping[type]);
-            } else {
-                console.log(`  ❌ Invalid seat at ${type}[${index}]:`, seat);
+        seats.forEach(seat => {
+            if (seat && seat.id) {
+                tickets.push({
+                    seatId: seat.id,
+                    ticketType: typeMapping[type]
+                });
             }
         });
     }
 
-    console.log("\n📊 Final arrays:");
-    console.log("seatIds:", seatIds);
-    console.log("prices:", prices);
-    console.log("ticketTypes:", ticketTypes);
-
-    // Kiểm tra dữ liệu trước khi gửi
-    if (seatIds.length === 0) {
-        console.error("❌ No valid seats found!");
+    if (tickets.length === 0) {
         alert("Vui lòng chọn ít nhất một ghế!");
         return;
     }
 
+    console.log("\n📊 Final arrays:");
+
     // ✅ Validation chi tiết
     console.log("🔍 Validation checks:");
     console.log("- tripId type:", typeof tripId, "value:", tripId);
-    console.log("- seatIds length:", seatIds.length, "values:", seatIds);
-    console.log("- prices length:", prices.length, "values:", prices);
-    console.log("- ticketTypes length:", ticketTypes.length, "values:", ticketTypes);
-
-    // Kiểm tra tất cả arrays cùng độ dài
-    if (seatIds.length !== prices.length || prices.length !== ticketTypes.length) {
-        console.error("❌ Array lengths don't match!");
-        alert("Dữ liệu không hợp lệ!");
-        return;
-    }
-
-    // Kiểm tra không có giá trị null/undefined
-    for (let i = 0; i < seatIds.length; i++) {
-        if (!seatIds[i] || !prices[i] || ticketTypes[i] === undefined) {
-            console.error(`❌ Invalid data at index ${i}:`, {
-                seatId: seatIds[i],
-                price: prices[i],
-                ticketType: ticketTypes[i]
-            });
-            alert("Dữ liệu ghế không hợp lệ!");
-            return;
-        }
-    }
 
     const bookingData = {
         tripId,
-        seatIds,
-        prices,
-        ticketTypes
+        tickets
     };
 
     console.log("📤 Final booking data:", bookingData);
 
     // ... rest of fetch code ...
-    fetch("/trainticket/api/trips/booking", {
+    fetch(`/trainticket/api/trips/${tripId}/bookings`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
@@ -437,6 +395,18 @@ function selectDeparture(button) {
                 return;
             }
 
+            if (res.status === 409) {
+                return res.json().then(error => {
+                    alert(error.message);
+                    location.reload();
+                    return null;
+                });
+            }
+
+            if (!res.ok) {
+                alert("Có lỗi xảy ra, vui lòng thử lại!");
+                return null;
+            }
 
             return res.json();
         })
@@ -444,16 +414,10 @@ function selectDeparture(button) {
             if (data) {
                 console.log("✅ Booking thành công", data);
 
-                // 🔁 Nếu backend trả về orderId hoặc url
-                if (data.redirectUrl) {
-                    window.location.href = data.redirectUrl;
-                    console.log(data.redirectUrl);
-                } else if (data.orderId) {
-                    window.location.href = "/user/payment?orderId=" + data.orderId;
-                } else if (data.paymentUrl) {
-                    window.location.href = data.paymentUrl;
+                if (data.orderId) {
+                    window.location.href = "/trainticket/user/trip/passengerInfo/" + data.orderId;
                 } else {
-                    alert("Đặt vé thành công, nhưng không có đường dẫn thanh toán!");
+                    alert("Đặt vé thành công, nhưng không có đường dẫn tiếp theo!");
                 }
             }
         })

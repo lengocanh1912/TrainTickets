@@ -1,29 +1,18 @@
-package t3h.edu.vn.traintickets.service;
+package t3h.edu.vn.traintickets.service.pdf_qr;
 
-import com.google.zxing.BarcodeFormat;
-import com.google.zxing.common.BitMatrix;
-import com.google.zxing.qrcode.QRCodeWriter;
 import com.lowagie.text.*;
 import com.lowagie.text.pdf.PdfPCell;
 import com.lowagie.text.pdf.PdfPTable;
 import com.lowagie.text.pdf.PdfWriter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-import t3h.edu.vn.traintickets.dto.TicketPdfDto;
-import t3h.edu.vn.traintickets.entities.Order;
-import t3h.edu.vn.traintickets.entities.OrderTicket;
-import t3h.edu.vn.traintickets.entities.Ticket;
+import t3h.edu.vn.traintickets.event.TicketPdfDto;
 import t3h.edu.vn.traintickets.repository.TicketRepository;
+
 import java.awt.Color;
-import com.lowagie.text.*;
-import com.lowagie.text.pdf.*;
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
-import javax.imageio.ImageIO;
-import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;

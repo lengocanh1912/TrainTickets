@@ -7,14 +7,13 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import t3h.edu.vn.traintickets.dto.TicketCancelFormDto;
-import t3h.edu.vn.traintickets.dto.TicketPdfDto;
+import t3h.edu.vn.traintickets.event.TicketPdfDto;
 import t3h.edu.vn.traintickets.entities.Seat;
 import t3h.edu.vn.traintickets.entities.Ticket;
 import t3h.edu.vn.traintickets.entities.Trip;
 import t3h.edu.vn.traintickets.enums.TicketStatus;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -49,10 +48,14 @@ public interface TicketRepository extends JpaRepository<Ticket, Long> {
             "   OR LOWER(CONCAT(d.name, ' đến ', a.name)) LIKE LOWER(CONCAT('%', :keyword, '%'))")
     List<Ticket> searchByUserOrTripName(@Param("keyword") String keyword);
 
-    Optional<Ticket> findBySeatAndTripAndStatus(Seat seat, Trip trip, TicketStatus status);
+    Optional<Ticket> findBySeatAndTripAndStatus(Seat seat,
+                                                Trip trip,
+                                                TicketStatus status);
 
     // Kiểm tra ticket có cùng seat + trip và status thuộc list
-    boolean existsBySeatAndTripAndStatusIn(Seat seat, Trip trip, List<TicketStatus> statusList);
+    boolean existsBySeatAndTripAndStatusIn(Seat seat,
+                                           Trip trip,
+                                           List<TicketStatus> statusList);
 
     @Query("""
     SELECT t FROM Ticket t
@@ -126,7 +129,7 @@ public interface TicketRepository extends JpaRepository<Ticket, Long> {
 
 
     @Query("""
-    select new t3h.edu.vn.traintickets.dto.TicketPdfDto(
+    select new t3h.edu.vn.traintickets.event.TicketPdfDto(
         t.id,
         t.ticketCode,
         
@@ -171,4 +174,16 @@ public interface TicketRepository extends JpaRepository<Ticket, Long> {
     List<Long> findTicketIdsByOrderId(@Param("orderId") Long orderId);
 
     boolean existsByTicketCode(String code);
+
+    @Query("""
+    select t from Ticket t
+    where t.trip = :trip
+    and t.seat.id in :seatIds
+    and t.status in :statuses
+""")
+    List<Ticket> findByTripAndSeatIdInAndStatusIn(
+            @Param("trip") Trip trip,
+            @Param("seatIds") List<Long> seatIds,
+            @Param("statuses") List<TicketStatus> statuses
+    );
 }

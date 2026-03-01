@@ -64,17 +64,30 @@
                     🚆 Thông tin tàu
                 </div>
                 <div class="card-body row g-3">
-                    <div class="col-md-6">
+                    <div class="col-md-4">
                         <label class="form-label">Tên tàu</label>
                         <input type="text" class="form-control"
                                name="name" th:value="${train.name}" required>
                     </div>
 
-                    <div class="col-md-6">
+                    <div class="col-md-4">
                         <label class="form-label">Mã tàu</label>
                         <input type="text" class="form-control"
                                name="code" th:value="${train.code}" required>
                     </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Trạng thái</label>
+                        <select class="form-select coach-state-select"
+                                th:field="*{state}">
+                            <option value="ACTIVE" data-class="bg-success text-white">
+                                Hoạt động
+                            </option>
+                            <option value="INACTIVE" data-class="bg-secondary text-white">
+                                Tạm dừng
+                            </option>
+                        </select>
+                    </div>
+
                 </div>
             </div>
 

@@ -1,10 +1,8 @@
 package t3h.edu.vn.traintickets.controller.user;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -13,17 +11,11 @@ import t3h.edu.vn.traintickets.dto.*;
 import t3h.edu.vn.traintickets.entities.*;
 import t3h.edu.vn.traintickets.repository.*;
 import t3h.edu.vn.traintickets.service.*;
+import t3h.edu.vn.traintickets.service.booking.BookingService;
+import t3h.edu.vn.traintickets.service.pdf_qr.TicketPdfService;
 
-import java.math.BigDecimal;
 import java.security.Principal;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
 
 @Controller
 @RequestMapping("/user/trip")
@@ -33,10 +25,8 @@ public class UserTripController {
     TripService tripService;
     @Autowired
     TripDtoService tripDtoService;
-    @Autowired
-    private CoachService coachService;
-    @Autowired
-    private SeatService seatService;
+
+
     @Autowired
     private TicketService ticketService;
     @Autowired
@@ -53,7 +43,8 @@ public class UserTripController {
     private OrderTicketRepository orderTicketRepository;
     @Autowired
     private TicketPdfService ticketPdfService;
-
+    @Autowired
+    private BookingService bookingService;
 
     @ModelAttribute
     public void addAttributes(Model model) {
@@ -164,7 +155,7 @@ public class UserTripController {
     }
 
 //    trả về trang thanh toán
-    @GetMapping("/trip_booking/{id}")
+    @GetMapping("/passengerInfo/{id}")
     public String viewPayment(@PathVariable Long id,
                               Model model,
                               Principal principal) {
@@ -202,7 +193,7 @@ public class UserTripController {
         model.addAttribute("contactInfo", contactInfo);
 
         // 3. Trả về view
-        return "user/payment";
+        return "user/passengerInfo";
     }
 
     @GetMapping("/{id}/pdf")
@@ -219,7 +210,22 @@ public class UserTripController {
                 .body(pdf);
     }
 
+    @PostMapping("/rebook")
+    public String rebook(
+                        @RequestParam Long orderId,
+                        Principal principal,
+                        RedirectAttributes redirectAttributes) {
 
+        Long newOrderId = bookingService.createRebookOrder(orderId, principal.getName());
+
+        if (newOrderId == null) {
+            redirectAttributes.addFlashAttribute("error",
+                    "Một hoặc nhiều ghế đã được đặt lại, vui lòng chọn ghế khác");
+            return "redirect:/user/order/view";
+        }
+
+        return "redirect:/user/trip/passengerInfo/" + newOrderId;
+    }
 
 
 

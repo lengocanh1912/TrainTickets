@@ -1,6 +1,7 @@
-package t3h.edu.vn.traintickets.dto;
+package t3h.edu.vn.traintickets.event;
 
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
@@ -25,6 +26,6 @@ public record TicketPdfDto(
         String coachCode,
         String seatCode,
 
-        Float price
+        BigDecimal price
 ) {}
 

@@ -18,9 +18,9 @@ import t3h.edu.vn.traintickets.entities.Conversation;
 import t3h.edu.vn.traintickets.entities.User;
 import t3h.edu.vn.traintickets.repository.UserRepository;
 import t3h.edu.vn.traintickets.security.UserDetailsImpl;
-import t3h.edu.vn.traintickets.service.AuthService;
+import t3h.edu.vn.traintickets.service.auth.AuthService;
 import t3h.edu.vn.traintickets.service.ChatService;
-import t3h.edu.vn.traintickets.service.UserPresenceService;
+import t3h.edu.vn.traintickets.service.auth.UserPresenceService;
 
 import java.io.IOException;
 import java.util.List;

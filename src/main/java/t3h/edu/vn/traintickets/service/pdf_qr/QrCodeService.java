@@ -1,4 +1,4 @@
-package t3h.edu.vn.traintickets.service;
+package t3h.edu.vn.traintickets.service.pdf_qr;
 
 import com.google.zxing.BarcodeFormat;
 import com.google.zxing.common.BitMatrix;
@@ -12,7 +12,7 @@ import java.io.ByteArrayOutputStream;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
-import t3h.edu.vn.traintickets.dto.QrVerifyResult;
+import t3h.edu.vn.traintickets.event.QrVerifyResult;
 import t3h.edu.vn.traintickets.entities.Ticket;
 import t3h.edu.vn.traintickets.repository.TicketRepository;
 

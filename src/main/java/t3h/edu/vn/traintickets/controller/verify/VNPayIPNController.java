@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import t3h.edu.vn.traintickets.repository.OrderRepository;
 import t3h.edu.vn.traintickets.service.OrderService;
-import t3h.edu.vn.traintickets.service.VNPayService;
+import t3h.edu.vn.traintickets.service.booking.VNPayService;
 
 import java.util.Arrays;
 import java.util.HashMap;

@@ -1,4 +1,4 @@
-package t3h.edu.vn.traintickets.service;
+package t3h.edu.vn.traintickets.service.pdf_qr;
 
 import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
@@ -6,7 +6,7 @@ import org.springframework.core.io.ByteArrayResource;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
-import t3h.edu.vn.traintickets.dto.TicketPdfDto;
+import t3h.edu.vn.traintickets.event.TicketPdfDto;
 import t3h.edu.vn.traintickets.repository.TicketRepository;
 
 import java.time.format.DateTimeFormatter;

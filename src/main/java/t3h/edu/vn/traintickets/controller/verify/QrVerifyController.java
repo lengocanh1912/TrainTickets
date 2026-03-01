@@ -5,7 +5,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
-import t3h.edu.vn.traintickets.service.QrCodeService;
+import t3h.edu.vn.traintickets.service.pdf_qr.QrCodeService;
 
 @Controller
 @RequiredArgsConstructor

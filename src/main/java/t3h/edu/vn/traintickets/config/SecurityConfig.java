@@ -121,24 +121,67 @@ public class SecurityConfig {
                 // 👉 Xử lý khi chưa login
                 .exceptionHandling(ex -> ex
                         .authenticationEntryPoint((request, response, authException) -> {
-                            String uri = request.getServletPath();
 
-                            if (uri.startsWith("/api/")) {
-                                // API → trả JSON, không redirect
-                                response.setContentType("application/json;charset=UTF-8");
+                            String uri = request.getRequestURI();
+
+                            // ==============================
+                            // 1️⃣ Nếu là API → trả JSON 401
+                            // ==============================
+                            if (uri.startsWith(request.getContextPath() + "/api/")) {
+
                                 response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                                response.getWriter().write("{\"error\":\"UNAUTHORIZED\"}");
+                                response.setContentType("application/json;charset=UTF-8");
+
+                                response.getWriter().write("""
+                                    {
+                                      "status": 401,
+                                      "error": "UNAUTHORIZED",
+                                      "message": "Bạn cần đăng nhập để truy cập tài nguyên này"
+                                    }
+                                """);
+
+                                return;
+                            }
+
+                            // ==================================
+                            // 2️⃣ Nếu là UI → redirect về login
+                            // ==================================
+
+                            // Lưu full URL (bao gồm query param)
+                            String fullUrl = request.getRequestURI()
+                                    + (request.getQueryString() != null
+                                    ? "?" + request.getQueryString()
+                                    : "");
+
+                            request.getSession().setAttribute("REDIRECT_AFTER_LOGIN", fullUrl);
+                            request.getSession().setAttribute("LOGIN_REQUIRED", true);
+
+                            response.sendRedirect(request.getContextPath() + "/login");
+                        })
+                        .accessDeniedHandler((request, response, accessDeniedException) -> {
+
+                            String uri = request.getRequestURI();
+
+                            if (uri.startsWith(request.getContextPath() + "/api/")) {
+
+                                response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+                                response.setContentType("application/json;charset=UTF-8");
+
+                                response.getWriter().write("""
+                                    {
+                                      "status": 403,
+                                      "error": "FORBIDDEN",
+                                      "message": "Bạn không có quyền truy cập tài nguyên này"
+                                    }
+                                """);
+
                             } else {
-                                request.getSession().setAttribute(
-                                        "REDIRECT_AFTER_LOGIN",
-                                        request.getRequestURI()
-                                );
-                                // UI → redirect về /login
-                                request.getSession().setAttribute("LOGIN_REQUIRED", true);
-                                response.sendRedirect(request.getContextPath() + "/login" );
+                                response.sendRedirect(request.getContextPath() + "/403");
                             }
                         })
+
                 )
+
                 // 👉 Form login
                 .formLogin(form -> form
                         .loginPage("/login")

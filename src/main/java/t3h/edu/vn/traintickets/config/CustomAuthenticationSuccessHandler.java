@@ -7,16 +7,14 @@ import jakarta.servlet.http.HttpSession;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.security.web.savedrequest.HttpSessionRequestCache;
 import org.springframework.security.web.savedrequest.SavedRequest;
 import org.springframework.stereotype.Component;
-import t3h.edu.vn.traintickets.dto.UserCreateDto;
 
 import t3h.edu.vn.traintickets.dto.UserPasswordDto;
 import t3h.edu.vn.traintickets.security.UserDetailsImpl;
-import t3h.edu.vn.traintickets.service.UserPresenceService;
+import t3h.edu.vn.traintickets.service.auth.UserPresenceService;
 
 import java.io.IOException;
 import java.util.Collection;

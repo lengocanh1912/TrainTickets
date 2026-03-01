@@ -1,31 +1,17 @@
 package t3h.edu.vn.traintickets.controller.user;
 
 import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import t3h.edu.vn.traintickets.dto.OrderPaymentDto;
 import t3h.edu.vn.traintickets.entities.Order;
-import t3h.edu.vn.traintickets.entities.Ticket;
-import t3h.edu.vn.traintickets.enums.OrderStatus;
 import t3h.edu.vn.traintickets.repository.OrderRepository;
-import t3h.edu.vn.traintickets.repository.TicketRepository;
-import t3h.edu.vn.traintickets.service.MailService;
+import t3h.edu.vn.traintickets.service.pdf_qr.MailService;
 import t3h.edu.vn.traintickets.service.OrderService;
 import t3h.edu.vn.traintickets.service.TicketService;
-import t3h.edu.vn.traintickets.service.VNPayService;
-
-import java.io.IOException;
-import java.net.InetAddress;
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
-import java.text.SimpleDateFormat;
-import java.time.LocalDateTime;
-import java.util.*;
+import t3h.edu.vn.traintickets.service.booking.VNPayService;
 
 @Controller
 @RequestMapping("/user/payment")
@@ -42,19 +28,10 @@ public class UserPaymentController {
     @Autowired
     private MailService mailService;
 
-    @PostMapping
-    public String createPayment(@RequestParam("orderId") Long orderId,
-                                HttpServletRequest request) {
-        System.out.println("✅ >>> Payment request received. orderId = " + orderId);
-        Order order = orderService.findById(orderId);
-        String paymentUrl = vnPayService.createVNPayPayment(order, request);
-
-        return "redirect:" + paymentUrl;
-    }
-
     @PostMapping("/payment")
     public String createPayment(@ModelAttribute OrderPaymentDto orderDto,
-                                HttpServletRequest request) {
+                                HttpServletRequest request,
+                                Model model) {
 
         System.out.println(">>> Received OrderId: " + orderDto.getOrderId());
         System.out.println(">>> ContactName: " + orderDto.getContactName());
@@ -66,6 +43,11 @@ public class UserPaymentController {
 
         Order order = orderService.findById(orderDto.getOrderId());
         String paymentUrl = vnPayService.createVNPayPayment(order, request);
+
+        if ("QR".equals(orderDto.getPaymentMethod())) {
+            model.addAttribute("paymentUrl", paymentUrl);
+            return "user/payment/payment_qr";
+        }
 
         return "redirect:" + paymentUrl;
     }
@@ -97,12 +79,12 @@ public class UserPaymentController {
 
             // 🔹 B4: Trả về trang kết quả
             model.addAttribute("paymentStatus", paymentStatus == 1 ? "Thành công" : "Thất bại");
-            return "user/payment_result";
+            return "user/payment/payment_result";
 
         } catch (Exception e) {
             e.printStackTrace();
             model.addAttribute("paymentStatus", "Lỗi hệ thống khi xử lý thanh toán");
-            return "user/payment_result";
+            return "user/payment/payment_result";
         }
 
     }

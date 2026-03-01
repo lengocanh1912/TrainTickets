@@ -7,6 +7,7 @@ import lombok.Setter;
 import org.hibernate.annotations.ColumnDefault;
 import t3h.edu.vn.traintickets.enums.TicketStatus;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -38,7 +39,7 @@ public class Ticket {
 
     @NotNull
     @Column(name = "price", nullable = false)
-    private Float price;
+    private BigDecimal price;
 
     @Enumerated(EnumType.STRING) // hoặc EnumType.ORDINAL nếu bạn dùng số
     @Column(name = "status", nullable = false)
