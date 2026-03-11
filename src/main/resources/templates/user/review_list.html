@@ -54,11 +54,30 @@
         .review-stars {
             font-size: 18px;
         }
+
         .star-filled {
             color: #ffc107;
         }
         .star-empty {
             color: #e4e5e9;
+        }
+        .admin-reply{
+            margin-left:40px;
+            padding:12px;
+            background:#f8f9fa;
+            border-radius:10px;
+            border-left:4px solid #0d6efd;
+        }
+
+        .admin-avatar{
+            width:32px;
+            height:32px;
+            border-radius:50%;
+            object-fit:cover;
+        }
+
+        .reply-content p{
+            font-size:14px;
         }
     </style>
 </head>
@@ -136,7 +155,6 @@
 
 <div class="container mt-20 mb-4">
     <h1 class="mb-4 text-center ">Đánh giá từ người dùng</h1>
-
     <div class="row">
         <div class="col-12" th:each="review : ${page.getContent()}">
             <div class="review-card">
@@ -169,8 +187,6 @@
                         th:text="${i <= review.rating ? '⭐' : '☆'}"></span>
                 </div>
 
-
-
                 <!-- Comment -->
                 <p class="mb-2" th:text="${review.comment}">Nội dung đánh giá ở đây...</p>
 
@@ -181,9 +197,41 @@
                          alt="Ảnh đánh giá"
                          onerror="this.src='/images/default-image.png'" />
                 </div>
+                <!-- Admin reply -->
+                <div class="admin-reply d-flex mt-3"
+                     th:if="${review.adminReply != null}">
+
+                    <!-- Avatar admin -->
+                    <div class="me-2">
+                        <img th:src="@{/img/avatar.png}"
+                             class="admin-avatar"
+                             alt="admin">
+                    </div>
+
+                    <div class="reply-content">
+
+                        <!-- Header -->
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="badge bg-danger">ADMIN</span>
+
+                            <small class="text-muted"
+                                   th:text="${#temporals.format(review.replyCreatedAt,'dd/MM/yyyy')}">
+                            </small>
+                        </div>
+
+                        <!-- Content -->
+                        <p class="mb-0 mt-1"
+                           th:text="${review.adminReply}">
+                            Cảm ơn bạn đã sử dụng dịch vụ của chúng tôi.
+                        </p>
+
+                    </div>
+                </div>
+
             </div>
         </div>
     </div>
+
     <!-- Gọi phân trang -->
     <nav th:replace="/admin/common/fragments :: paginationid()"></nav>
 </div>

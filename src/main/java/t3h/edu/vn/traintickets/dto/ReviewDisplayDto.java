@@ -23,6 +23,10 @@ public class ReviewDisplayDto {
     private LocalDateTime createdAt;
     private ReviewStatus status;
 
+    // admin reply
+    private String adminReply;
+    private LocalDateTime replyCreatedAt;
+
     // ✅ CONSTRUCTOR KHỚP JPQL (10 PARAM)
     public ReviewDisplayDto(
             Long reviewId,

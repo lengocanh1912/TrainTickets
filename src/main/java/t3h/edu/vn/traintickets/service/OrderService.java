@@ -11,12 +11,10 @@ import t3h.edu.vn.traintickets.dto.*;
 import t3h.edu.vn.traintickets.entities.*;
 import t3h.edu.vn.traintickets.enums.CancelType;
 import t3h.edu.vn.traintickets.enums.OrderStatus;
+import t3h.edu.vn.traintickets.enums.RateState;
 import t3h.edu.vn.traintickets.enums.TicketStatus;
 import t3h.edu.vn.traintickets.event.OrderPaidEvent;
-import t3h.edu.vn.traintickets.repository.OrderRepository;
-import t3h.edu.vn.traintickets.repository.OrderTicketRepository;
-import t3h.edu.vn.traintickets.repository.SeatRepository;
-import t3h.edu.vn.traintickets.repository.TicketRepository;
+import t3h.edu.vn.traintickets.repository.*;
 import org.springframework.context.ApplicationEventPublisher;
 import t3h.edu.vn.traintickets.service.pdf_qr.MailService;
 
@@ -42,6 +40,8 @@ public class OrderService {
     private OrderTicketRepository orderTicketRepository;
     @Autowired
     private ApplicationEventPublisher eventPublisher;
+    @Autowired
+    private ReviewRepository reviewRepository;
 
     private static final Logger log = LoggerFactory.getLogger(OrderService.class);
 
@@ -188,6 +188,35 @@ public class OrderService {
         dto.setDepartureStation(trip.getRoute().getDeparture().getName());
         dto.setArrivalStation(trip.getRoute().getArrival().getName());
 
+        // ===== CHECK REVIEW CONDITION =====
+
+        boolean hasUsedTicket = orderTickets.stream()
+                .anyMatch(ot -> ot.getTicket().getStatus() == TicketStatus.USED);
+
+        boolean tripFinished =
+                trip.getArrivalAt().isBefore(LocalDateTime.now());
+
+        boolean alreadyRated =
+                reviewRepository.existsByOrderId(order.getId());
+
+        if (order.getStatus() == OrderStatus.PAID
+                && hasUsedTicket
+                && tripFinished
+                && !alreadyRated) {
+
+            dto.setRateStatus(RateState.CAN_RATE);
+
+        } else if (alreadyRated) {
+
+            dto.setRateStatus(RateState.RATED);
+
+        } else {
+
+            dto.setRateStatus(RateState.NOT_AVAILABLE);
+        }
+
+        // ===== GROUP TICKET =====
+
         Map<String, List<TicketDto>> grouped = new LinkedHashMap<>();
 
         for (OrderTicket ot : orderTickets) {
@@ -324,7 +353,6 @@ public class OrderService {
                 Ticket ticket = ot.getTicket();
 
                 ticket.setStatus(TicketStatus.PAID);
-                ticket.setUsed(false);
 
                 if (ticket.getTicketCode() == null) {
                     ticket.setTicketCode(generateUniqueTicketCode());
@@ -395,35 +423,35 @@ public class OrderService {
         orderRepository.save(order);
     }
 
-    @Transactional
-    public void handlePaymentSuccess(Long orderId) {
-
-        Order order = orderRepository.findById(orderId).orElseThrow();
-
-        if (order.getStatus() == OrderStatus.PAID) {
-            return; // IDEMPOTENT
-        }
-
-        order.setStatus(OrderStatus.PAID);
-        order.setUpdatedAt(LocalDateTime.now());
-
-        for (OrderTicket ot : order.getOrderTickets()) {
-
-            Long ticketId = ot.getTicket().getId();
-
-            Ticket t = ticketRepository.findById(ticketId)
-                    .orElseThrow();
-
-            t.setStatus(TicketStatus.PAID);
-            t.setTicketCode(UUID.randomUUID().toString());
-            t.setUsed(false);
-            t.setUpdatedAt(LocalDateTime.now());
-
-            ticketRepository.save(t);
-        }
-
-        orderRepository.save(order);
-    }
+//    @Transactional
+//    public void handlePaymentSuccess(Long orderId) {
+//
+//        Order order = orderRepository.findById(orderId).orElseThrow();
+//
+//        if (order.getStatus() == OrderStatus.PAID) {
+//            return; // IDEMPOTENT
+//        }
+//
+//        order.setStatus(OrderStatus.PAID);
+//        order.setUpdatedAt(LocalDateTime.now());
+//
+//        for (OrderTicket ot : order.getOrderTickets()) {
+//
+//            Long ticketId = ot.getTicket().getId();
+//
+//            Ticket t = ticketRepository.findById(ticketId)
+//                    .orElseThrow();
+//
+//            t.setStatus(TicketStatus.PAID);
+//            t.setTicketCode(UUID.randomUUID().toString());
+//
+//            t.setUpdatedAt(LocalDateTime.now());
+//
+//            ticketRepository.save(t);
+//        }
+//
+//        orderRepository.save(order);
+//    }
 
     private String generateUniqueTicketCode() {
         String code ;

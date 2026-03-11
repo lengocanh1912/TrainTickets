@@ -75,7 +75,5 @@ public class Ticket {
     @Column(name = "ticket_code", unique = true, length = 50)
     private String ticketCode;
 
-    @Column(name = "used")
-    private Boolean used;
 
 }

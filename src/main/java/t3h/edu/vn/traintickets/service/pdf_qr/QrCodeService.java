@@ -12,6 +12,7 @@ import java.io.ByteArrayOutputStream;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import t3h.edu.vn.traintickets.enums.TicketStatus;
 import t3h.edu.vn.traintickets.event.QrVerifyResult;
 import t3h.edu.vn.traintickets.entities.Ticket;
 import t3h.edu.vn.traintickets.repository.TicketRepository;
@@ -61,12 +62,14 @@ public class QrCodeService {
     public QrVerifyResult verify(String data) {
 
         try {
-            // 1️⃣ Validate format
+
+            // 1️⃣ Validate format QR
             if (data == null || !data.contains("|")) {
                 return new QrVerifyResult(false, "QR không hợp lệ", null);
             }
 
             String[] parts = data.split("\\|");
+
             if (parts.length != 2) {
                 return new QrVerifyResult(false, "QR không hợp lệ", null);
             }
@@ -75,14 +78,13 @@ public class QrCodeService {
             String signature = parts[1];
 
             // 2️⃣ Lấy vé
-            Ticket ticket = ticketRepository.findById(ticketId)
-                    .orElse(null);
+            Ticket ticket = ticketRepository.findById(ticketId).orElse(null);
 
             if (ticket == null) {
                 return new QrVerifyResult(false, "Không tìm thấy vé", null);
             }
 
-            // 3️⃣ Verify chữ ký
+            // 3️⃣ Verify chữ ký QR
             String expected = hmacSHA256(
                     ticketId + ":" + ticket.getTicketCode(),
                     secretKey
@@ -93,20 +95,26 @@ public class QrCodeService {
             }
 
             // 4️⃣ Check trạng thái vé
-            if (Boolean.TRUE.equals(ticket.getUsed())) {
+            if (ticket.getStatus() == TicketStatus.USED) {
                 return new QrVerifyResult(false, "Vé đã được sử dụng", ticket);
             }
 
-            ticket.setUsed(true);
+            if (ticket.getStatus() != TicketStatus.PAID) {
+                return new QrVerifyResult(false, "Vé chưa hợp lệ để sử dụng", ticket);
+            }
+
+            // 5️⃣ Đánh dấu vé đã sử dụng
+            ticket.setStatus(TicketStatus.USED);
             ticketRepository.save(ticket);
+
             System.out.println("✅ Hành khách đã quét vé");
+
             return new QrVerifyResult(true, "Vé hợp lệ", ticket);
 
         } catch (Exception e) {
             return new QrVerifyResult(false, "Lỗi xử lý QR", null);
         }
     }
-
     private String hmacSHA256(String data, String key) {
         try {
             Mac mac = Mac.getInstance("HmacSHA256");

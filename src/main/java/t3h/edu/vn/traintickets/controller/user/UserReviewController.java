@@ -37,12 +37,6 @@ public class UserReviewController {
 
     }
 
-//    @GetMapping("/list")
-//    public String getReviewList(Model model) {
-//        List<ReviewDisplayDto> reviews = reviewService.getAllDisplayReviews(); // 👈 Gọi từ service, không gọi trực tiếp repo
-//        model.addAttribute("reviews", reviews);
-//        return "user/review_list"; // Tên template HTML
-//    }
 
     @GetMapping("/list")
     @ResponseBody
@@ -71,12 +65,6 @@ public class UserReviewController {
         // Lấy order và kiểm tra quyền truy cập
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy đơn hàng"));
-
-        // Optional: Kiểm tra order này có thuộc về user hiện tại không
-//        String username = principal.getName();
-//        if (!order.getUser().getUsername().equals(username)) {
-//            throw new RuntimeException("Bạn không có quyền đánh giá đơn hàng này");
-//        }
 
         // Optional: chỉ cho phép đánh giá khi đơn đã hoàn thành
         if (order.getStatus() != OrderStatus.PAID) {

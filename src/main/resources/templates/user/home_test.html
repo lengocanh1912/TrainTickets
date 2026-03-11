@@ -1,0 +1,1058 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org" xmlns:sec="https://www.thymeleaf.org/thymeleaf-extras-springsecurity6">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Đặt vé tàu online</title>
+    <link th:href="@{/img/favicon.ico}" rel="shortcut icon" type="image/x-icon">
+    <link th:href="@{/css/bootstrap.css}" type="text/css" rel="stylesheet">
+    <script th:src="@{/js/bootstrap.bundle.js}" type="text/javascript"></script>
+    <link th:href="@{/static/css/bootstrap-icons.css}" type="text/css" rel="stylesheet">
+    <link th:href="@{/css/styles.css}" type="text/css" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/css/bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/css/layout.css}">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+
+    <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
+
+    <script>
+        var changeLanguage = function (dom) {
+            window.location.href = '?lang=' + dom.value;
+        }
+    </script>
+
+    <style>
+        /* =============================================
+           RESET & BASE
+        ============================================= */
+        *, *::before, *::after { box-sizing: border-box; }
+
+        :root {
+            --navy:    #0d1f40;
+            --blue:    #1a4fb0;
+            --sky:     #3b82f6;
+            --accent:  #f59e0b;
+            --white:   #ffffff;
+            --gray50:  #f8fafc;
+            --gray100: #f1f5f9;
+            --gray200: #e2e8f0;
+            --gray400: #94a3b8;
+            --gray600: #475569;
+            --gray800: #1e293b;
+            --nav-h:   62px;
+            --radius:  12px;
+            --shadow:  0 4px 24px rgba(13,31,64,.12);
+        }
+
+        body {
+            font-family: 'Be Vietnam Pro', sans-serif;
+            min-height: 100vh;
+            padding-top: var(--nav-h);
+            background-image: url('https://res.ivivu.com/train/images/bg-train.jpg');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+        }
+
+        /* =============================================
+           NAVBAR
+        ============================================= */
+        .tt-nav {
+            position: fixed;
+            top: 0; left: 0; right: 0;
+            height: var(--nav-h);
+            background: var(--navy);
+            z-index: 1000;
+            box-shadow: 0 2px 12px rgba(0,0,0,.3);
+        }
+
+        .tt-nav__inner {
+            height: 100%;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 24px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        /* Logo */
+        .tt-nav__logo {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.25rem;
+            color: var(--white);
+            text-decoration: none;
+            white-space: nowrap;
+            flex-shrink: 0;
+            margin-right: 16px;
+        }
+        .tt-nav__logo span { color: var(--accent); }
+
+        /* Main links group */
+        .tt-nav__links {
+            display: flex;
+            align-items: center;
+            gap: 2px;
+            flex: 1;
+        }
+
+        .tt-nav__link {
+            color: rgba(255,255,255,.72);
+            text-decoration: none;
+            font-size: .85rem;
+            font-weight: 500;
+            padding: 6px 12px;
+            border-radius: 8px;
+            transition: color .2s, background .2s;
+            white-space: nowrap;
+            position: relative;
+        }
+        .tt-nav__link:hover { color: var(--white); background: rgba(255,255,255,.09); }
+        .tt-nav__link.active { color: var(--white); background: rgba(59,130,246,.28); }
+
+        /* Support badge */
+        .tt-nav__badge {
+            display: none;
+            position: absolute;
+            top: 2px; right: 2px;
+            background: #ef4444;
+            color: #fff;
+            font-size: .58rem;
+            font-weight: 700;
+            padding: 1px 4px;
+            border-radius: 99px;
+            line-height: 1.5;
+        }
+
+        /* Right zone: order + account — separated from main links */
+        .tt-nav__right {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-left: auto;
+            flex-shrink: 0;
+            padding-left: 16px;
+            border-left: 1px solid rgba(255,255,255,.15);
+        }
+
+        .tt-nav__order {
+            color: rgba(255,255,255,.8);
+            text-decoration: none;
+            font-size: .85rem;
+            font-weight: 500;
+            padding: 6px 12px;
+            border-radius: 8px;
+            transition: color .2s, background .2s;
+            white-space: nowrap;
+        }
+        .tt-nav__order:hover { color: var(--white); background: rgba(255,255,255,.09); }
+
+        /* Account button */
+        .tt-nav__account { position: relative; }
+
+        .tt-nav__account-btn {
+            background: rgba(255,255,255,.13);
+            border: 1px solid rgba(255,255,255,.22);
+            color: var(--white);
+            font-family: 'Be Vietnam Pro', sans-serif;
+            font-size: .85rem;
+            font-weight: 600;
+            padding: 7px 14px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background .2s;
+            white-space: nowrap;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .tt-nav__account-btn:hover { background: rgba(255,255,255,.22); }
+        .tt-nav__account-btn .arrow {
+            font-size: .65rem;
+            color: rgba(255,255,255,.6);
+            transition: transform .25s;
+        }
+        .tt-nav__account-btn.open .arrow { transform: rotate(180deg); }
+
+        /* Account dropdown */
+        .tt-nav__dropdown {
+            display: none;
+            position: absolute;
+            right: 0; top: calc(100% + 8px);
+            background: var(--white);
+            border-radius: var(--radius);
+            box-shadow: 0 8px 32px rgba(0,0,0,.14);
+            min-width: 170px;
+            overflow: hidden;
+            border: 1px solid var(--gray100);
+        }
+        .tt-nav__dropdown.open { display: block; }
+
+        .tt-nav__dropdown a {
+            display: block;
+            padding: 10px 16px;
+            font-size: .875rem;
+            color: var(--gray800);
+            text-decoration: none;
+            transition: background .15s;
+        }
+        .tt-nav__dropdown a:hover { background: var(--gray100); }
+
+        /* Hamburger */
+        .tt-nav__hamburger {
+            display: none;
+            flex-direction: column;
+            gap: 5px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 6px;
+            margin-left: auto;
+        }
+        .tt-nav__hamburger span {
+            display: block;
+            width: 22px; height: 2px;
+            background: var(--white);
+            border-radius: 2px;
+            transition: transform .3s, opacity .3s;
+        }
+        .tt-nav__hamburger.open span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+        .tt-nav__hamburger.open span:nth-child(2) { opacity: 0; }
+        .tt-nav__hamburger.open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+
+        /* Mobile drawer */
+        .tt-nav__drawer {
+            display: none;
+            position: fixed;
+            top: var(--nav-h); left: 0; right: 0;
+            background: var(--navy);
+            padding: 10px 20px 20px;
+            z-index: 999;
+            border-top: 1px solid rgba(255,255,255,.08);
+            flex-direction: column;
+            gap: 2px;
+            max-height: calc(100vh - var(--nav-h));
+            overflow-y: auto;
+        }
+        .tt-nav__drawer.open { display: flex; }
+
+        .tt-nav__drawer-link {
+            color: rgba(255,255,255,.78);
+            text-decoration: none;
+            font-size: .9rem;
+            font-weight: 500;
+            padding: 10px 14px;
+            border-radius: 8px;
+            transition: background .2s, color .2s;
+        }
+        .tt-nav__drawer-link:hover,
+        .tt-nav__drawer-link.active { color: var(--white); background: rgba(255,255,255,.09); }
+
+        .tt-nav__drawer-divider {
+            height: 1px;
+            background: rgba(255,255,255,.1);
+            margin: 8px 0;
+        }
+
+        .tt-nav__drawer-label {
+            font-size: .72rem;
+            font-weight: 700;
+            color: rgba(255,255,255,.35);
+            text-transform: uppercase;
+            letter-spacing: .8px;
+            padding: 4px 14px 2px;
+        }
+
+        /* Responsive */
+        @media (max-width: 860px) {
+            .tt-nav__links,
+            .tt-nav__right { display: none; }
+            .tt-nav__hamburger { display: flex; }
+        }
+
+        /* =============================================
+           PAGE WRAPPER
+        ============================================= */
+        .page-wrapper {
+            max-width: 980px;
+            margin: 0 auto;
+            padding: 32px 16px 60px;
+        }
+
+        /* =============================================
+           HERO HEADER
+        ============================================= */
+        .hero-header {
+            text-align: center;
+            padding: 36px 24px 28px;
+            background: linear-gradient(135deg, rgba(13,31,64,.92) 0%, rgba(26,79,176,.88) 100%);
+            backdrop-filter: blur(8px);
+            border-radius: 20px 20px 0 0;
+            color: var(--white);
+            position: relative;
+            overflow: hidden;
+        }
+        .hero-header::before {
+            content: '';
+            position: absolute; inset: 0;
+            background: radial-gradient(ellipse at 70% 30%, rgba(245,158,11,.18) 0%, transparent 60%);
+            pointer-events: none;
+        }
+
+        .hero-header__title {
+            font-family: 'Playfair Display', serif;
+            font-size: clamp(1.5rem, 4vw, 2.1rem);
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .hero-header__subtitle {
+            font-size: clamp(.85rem, 2vw, .98rem);
+            color: rgba(255,255,255,.72);
+            margin-bottom: 14px;
+        }
+
+        .hero-header__badges {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .badge-hot {
+            background: rgba(239,68,68,.22);
+            border: 1px solid rgba(239,68,68,.4);
+            color: #fca5a5;
+            padding: 4px 12px;
+            border-radius: 99px;
+            font-weight: 600;
+            font-size: .78rem;
+        }
+
+        .badge-rating {
+            background: var(--accent);
+            color: var(--navy);
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-weight: 700;
+            font-size: .85rem;
+        }
+
+        .hero-header__reviews a {
+            color: rgba(255,255,255,.65);
+            text-decoration: underline;
+            font-size: .85rem;
+        }
+        .hero-header__reviews a:hover { color: var(--white); }
+
+        /* =============================================
+           BOOKING CARD
+        ============================================= */
+        .booking-card {
+            background: rgba(255,255,255,.97);
+            backdrop-filter: blur(12px);
+            border-radius: 0 0 20px 20px;
+            box-shadow: 0 12px 40px rgba(13,31,64,.18);
+            padding: 28px 28px 32px;
+        }
+
+        /* Trip type */
+        .trip-type {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 22px;
+            background: var(--gray100);
+            padding: 4px;
+            border-radius: 10px;
+            width: fit-content;
+        }
+        .trip-type input[type="radio"] { display: none; }
+        .trip-type label {
+            padding: 7px 20px;
+            border-radius: 8px;
+            font-size: .85rem;
+            font-weight: 600;
+            cursor: pointer;
+            color: var(--gray600);
+            transition: background .2s, color .2s, box-shadow .2s;
+            user-select: none;
+        }
+        .trip-type input[type="radio"]:checked + label {
+            background: var(--white);
+            color: var(--blue);
+            box-shadow: 0 2px 8px rgba(26,79,176,.15);
+        }
+
+        /* ---- Main form row: ga đi | swap | ga đến | số lượng vé ---- */
+        .form-main-row {
+            display: grid;
+            grid-template-columns: 1fr auto 1fr 1fr;
+            align-items: end;
+            gap: 10px;
+            margin-bottom: 14px;
+        }
+
+        /* ---- Date row: ngày đi | ngày về | nút tìm ---- */
+        .form-date-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr auto;
+            align-items: end;
+            gap: 10px;
+        }
+
+        /* Form group */
+        .form-group { display: flex; flex-direction: column; gap: 6px; }
+
+        .form-label {
+            font-size: .72rem;
+            font-weight: 700;
+            color: var(--gray600);
+            text-transform: uppercase;
+            letter-spacing: .6px;
+        }
+
+        .beautiful-input {
+            width: 100%;
+            padding: 10px 13px;
+            border: 1.5px solid var(--gray200);
+            border-radius: 10px;
+            font-family: 'Be Vietnam Pro', sans-serif;
+            font-size: .9rem;
+            color: var(--gray800);
+            background: var(--gray50);
+            outline: none;
+            transition: border-color .2s, box-shadow .2s, background .2s;
+        }
+        .beautiful-input:focus {
+            border-color: var(--sky);
+            box-shadow: 0 0 0 3px rgba(59,130,246,.12);
+            background: var(--white);
+        }
+        .beautiful-input::placeholder { color: var(--gray400); }
+
+        /* Swap button */
+        .swap-btn {
+            background: var(--gray100);
+            border: 1.5px solid var(--gray200);
+            color: var(--gray800);
+            width: 38px; height: 38px;
+            border-radius: 50%;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background .2s, transform .35s;
+            display: flex; align-items: center; justify-content: center;
+            flex-shrink: 0;
+        }
+        .swap-btn:hover { background: var(--blue); color: var(--white); border-color: var(--blue); transform: rotate(180deg); }
+
+        /* Ticket selector */
+        .ticket-selector {
+            width: 100%;
+            background: var(--gray50);
+            border: 1.5px solid var(--gray200);
+            border-radius: 10px;
+            padding: 10px 13px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            cursor: pointer;
+            font-family: 'Be Vietnam Pro', sans-serif;
+            font-size: .9rem;
+            color: var(--gray800);
+            font-weight: 500;
+            transition: border-color .2s;
+            height: 42px;
+        }
+        .ticket-selector:hover { border-color: var(--sky); }
+        .ticket-selector.open { border-color: var(--sky); box-shadow: 0 0 0 3px rgba(59,130,246,.12); }
+
+        .dropdown-arrow { font-size: .65rem; color: var(--gray400); transition: transform .25s; }
+        .ticket-selector.open .dropdown-arrow { transform: rotate(180deg); }
+
+        /* Ticket dropdown */
+        .ticket-dropdown {
+            position: absolute;
+            background: var(--white);
+            border: 1.5px solid var(--gray200);
+            border-radius: 12px;
+            box-shadow: 0 8px 32px rgba(0,0,0,.1);
+            margin-top: 6px;
+            overflow: hidden;
+            z-index: 200;
+            min-width: 280px;
+            right: 0;
+        }
+        .ticket-dropdown.hidden { display: none; }
+
+        .ticket-slot { position: relative; }
+
+        .ticket-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 11px 16px;
+            border-bottom: 1px solid var(--gray100);
+            gap: 12px;
+        }
+        .ticket-row:last-child { border-bottom: none; }
+
+        .ticket-type-label {
+            font-size: .85rem;
+            font-weight: 600;
+            color: var(--gray800);
+        }
+
+        .discount {
+            display: inline-block;
+            background: #dcfce7;
+            color: #166534;
+            font-size: .68rem;
+            font-weight: 700;
+            padding: 2px 6px;
+            border-radius: 6px;
+            margin-left: 5px;
+        }
+
+        .ticket-controls {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-shrink: 0;
+        }
+
+        .ticket-btn {
+            width: 28px; height: 28px;
+            border-radius: 50%;
+            border: 1.5px solid var(--gray400);
+            background: var(--white);
+            font-size: 1rem;
+            line-height: 1;
+            cursor: pointer;
+            color: var(--gray800);
+            font-weight: 700;
+            display: flex; align-items: center; justify-content: center;
+            transition: background .2s, border-color .2s, color .2s;
+        }
+        .ticket-btn:hover { background: var(--blue); border-color: var(--blue); color: var(--white); }
+
+        .ticket-count {
+            font-size: .9rem;
+            font-weight: 700;
+            color: var(--navy);
+            min-width: 18px;
+            text-align: center;
+        }
+
+        /* Return date opacity */
+        .return-date {
+            opacity: .45;
+            pointer-events: none;
+            transition: opacity .3s;
+        }
+        .return-date.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        /* Search button */
+        .search-btn {
+            padding: 10px 22px;
+            background: linear-gradient(135deg, var(--blue) 0%, var(--navy) 100%);
+            color: var(--white);
+            border: none;
+            border-radius: 10px;
+            font-family: 'Be Vietnam Pro', sans-serif;
+            font-size: .9rem;
+            font-weight: 700;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: opacity .2s, transform .15s;
+            box-shadow: 0 4px 14px rgba(26,79,176,.35);
+            height: 42px;
+            align-self: end;
+        }
+        .search-btn:hover { opacity: .88; transform: translateY(-1px); }
+        .search-btn:active { transform: translateY(0); }
+
+        /* =============================================
+           RESPONSIVE
+        ============================================= */
+        @media (max-width: 860px) {
+            .form-main-row {
+                grid-template-columns: 1fr auto 1fr;
+                grid-template-rows: auto auto;
+            }
+            .ticket-slot {
+                grid-column: 1 / -1;
+            }
+
+            .form-date-row {
+                grid-template-columns: 1fr 1fr;
+                grid-template-rows: auto auto;
+            }
+            .search-btn-wrap {
+                grid-column: 1 / -1;
+            }
+            .search-btn { width: 100%; }
+        }
+
+        @media (max-width: 560px) {
+            .page-wrapper { padding: 14px 10px 48px; }
+            .booking-card { padding: 18px 14px 22px; }
+            .hero-header { padding: 26px 16px 20px; border-radius: 16px 16px 0 0; }
+            .booking-card { border-radius: 0 0 16px 16px; }
+
+            .form-main-row {
+                grid-template-columns: 1fr;
+                grid-template-rows: auto;
+            }
+            .swap-col {
+                display: flex;
+                justify-content: center;
+            }
+            .swap-btn {
+                width: 100%; border-radius: 8px; height: 36px;
+            }
+
+            .form-date-row {
+                grid-template-columns: 1fr;
+            }
+            .search-btn-wrap { grid-column: 1; }
+        }
+
+        /* Footer */
+        footer {
+            background: white;
+            text-align: center;
+        }
+    </style>
+</head>
+
+<body>
+
+<!-- =============================================
+     NAVBAR
+============================================= -->
+<nav class="tt-nav">
+    <div class="tt-nav__inner">
+
+        <!-- Logo -->
+        <a class="tt-nav__logo" th:href="@{/user/home}">Train<span>Ticket</span></a>
+
+        <!-- Main nav links -->
+        <div class="tt-nav__links">
+            <a class="tt-nav__link" th:href="@{/user/home}"
+               th:classappend="${menu == 'userHome'} ? ' active'">Home</a>
+
+            <a class="tt-nav__link" th:href="@{/user/trip/list}"
+               th:classappend="${menu == 'trip'} ? ' active'">Trip</a>
+
+            <a class="tt-nav__link" href="#">Train Seat</a>
+
+            <a class="tt-nav__link" th:href="@{/user/support}"
+               th:classappend="${menu == 'support'} ? ' active'">
+                Support
+                <span id="support-unread-badge" class="tt-nav__badge">0</span>
+            </a>
+
+            <a class="tt-nav__link" th:href="@{/user/review/view}"
+               th:classappend="${menu == 'review'} ? ' active'">Rating</a>
+
+            <a class="tt-nav__link" href="#">Q&amp;A</a>
+        </div>
+
+        <!-- Right zone (separated) -->
+        <div class="tt-nav__right">
+            <a class="tt-nav__order" th:href="@{/user/order/view}">Đơn hàng</a>
+
+            <div class="tt-nav__account">
+                <button class="tt-nav__account-btn" id="accountDropdownBtn">
+                    <span th:text="${currentUser != null ? currentUser.fullname : 'Tài khoản'}">Tài khoản</span>
+                    <span class="arrow">&#9660;</span>
+                </button>
+                <div class="tt-nav__dropdown" id="accountDropdownMenu">
+                    <a th:if="${currentUser != null}" th:href="@{/user/account}">Tài khoản</a>
+                    <a th:if="${currentUser != null}" th:href="@{/logout}">Đăng xuất</a>
+                    <a th:if="${currentUser == null}" th:href="@{/login}">Đăng nhập</a>
+                    <a th:if="${currentUser == null}" th:href="@{/register}">Tạo tài khoản</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Hamburger (mobile) -->
+        <button class="tt-nav__hamburger" id="hamburgerBtn" aria-label="Menu">
+            <span></span><span></span><span></span>
+        </button>
+    </div>
+</nav>
+
+<!-- Mobile drawer -->
+<div class="tt-nav__drawer" id="mobileDrawer">
+    <a class="tt-nav__drawer-link" th:href="@{/user/home}"
+       th:classappend="${menu == 'userHome'} ? ' active'">Home</a>
+    <a class="tt-nav__drawer-link" th:href="@{/user/trip/list}"
+       th:classappend="${menu == 'trip'} ? ' active'">Trip</a>
+    <a class="tt-nav__drawer-link" href="#">Train Seat</a>
+    <a class="tt-nav__drawer-link" th:href="@{/user/support}"
+       th:classappend="${menu == 'support'} ? ' active'">Support</a>
+    <a class="tt-nav__drawer-link" th:href="@{/user/review/view}"
+       th:classappend="${menu == 'review'} ? ' active'">Rating</a>
+    <a class="tt-nav__drawer-link" href="#">Q&amp;A</a>
+    <div class="tt-nav__drawer-divider"></div>
+    <div class="tt-nav__drawer-label">Tài khoản</div>
+    <a class="tt-nav__drawer-link" th:href="@{/user/order/view}">Đơn hàng</a>
+    <a class="tt-nav__drawer-link" th:if="${currentUser != null}" th:href="@{/user/account}">Tài khoản</a>
+    <a class="tt-nav__drawer-link" th:if="${currentUser != null}" th:href="@{/logout}">Đăng xuất</a>
+    <a class="tt-nav__drawer-link" th:if="${currentUser == null}" th:href="@{/login}">Đăng nhập</a>
+    <a class="tt-nav__drawer-link" th:if="${currentUser == null}" th:href="@{/register}">Tạo tài khoản</a>
+</div>
+
+<!-- =============================================
+     MAIN CONTENT
+============================================= -->
+<div class="page-wrapper">
+
+    <!-- HERO HEADER -->
+    <div class="hero-header">
+        <h1 class="hero-header__title">Đặt vé tàu hỏa online</h1>
+        <p class="hero-header__subtitle">Nhận ngay vé điện tử &mdash; lên tàu nhanh, tiện lợi</p>
+        <div class="hero-header__badges">
+            <span class="badge-hot">1000 khách đặt vé trong 24 giờ qua</span>
+            <span class="badge-rating" th:text="${averageRating}">9.6</span>
+            <span class="hero-header__reviews">
+                <a th:href="@{/user/review/view}" th:text="${reviewCount} + ' đánh giá'">37 đánh giá</a>
+            </span>
+        </div>
+    </div>
+
+    <!-- BOOKING CARD -->
+    <div class="booking-card">
+
+        <form id="trainBookingForm" method="get" th:action="@{/user/trip/search}">
+
+            <!-- Loại vé -->
+            <div class="trip-type">
+                <input type="radio" id="oneway" name="tripType" value="oneway" checked>
+                <label for="oneway">Một chiều</label>
+                <input type="radio" id="roundtrip" name="tripType" value="roundtrip">
+                <label for="roundtrip">Khứ hồi</label>
+            </div>
+
+            <!-- Hàng 1: Ga đi | swap | Ga đến | Số lượng vé -->
+            <div class="form-main-row">
+
+                <div class="form-group">
+                    <label class="form-label" for="departureName">Ga đi</label>
+                    <input list="stationF" type="text" name="departureName" id="departureName"
+                           placeholder="Chọn ga đi" class="beautiful-input" required>
+                    <datalist id="stationF">
+                        <option th:each="station : ${stations}" th:text="${station.name}"></option>
+                    </datalist>
+                </div>
+
+                <div class="swap-col" style="display:flex;align-items:flex-end;padding-bottom:1px;">
+                    <button type="button" class="swap-btn" onclick="swapStations()">&#8644;</button>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="arrivalName">Ga đến</label>
+                    <input list="stationT" type="text" name="arrivalName" id="arrivalName"
+                           placeholder="Chọn ga đến" class="beautiful-input" required>
+                    <datalist id="stationT">
+                        <option th:each="station : ${stations}" th:text="${station.name}"></option>
+                    </datalist>
+                </div>
+
+                <!-- Số lượng vé -->
+                <div class="form-group ticket-slot">
+                    <label class="form-label">Số lượng vé</label>
+                    <button id="ticketToggle" type="button" class="ticket-selector">
+                        <span id="totalTicketCount">1 vé</span>
+                        <span class="dropdown-arrow">&#9660;</span>
+                    </button>
+                    <div id="ticketDropdown" class="ticket-dropdown hidden">
+
+                        <div class="ticket-row">
+                            <span class="ticket-type-label">Người lớn (11&ndash;59 tuổi)</span>
+                            <div class="ticket-controls">
+                                <button type="button" class="ticket-btn ticket-decrease" data-type="adult">&#8722;</button>
+                                <span class="ticket-count" id="adultCount">1</span>
+                                <button type="button" class="ticket-btn ticket-increase" data-type="adult">+</button>
+                                <input type="hidden" name="adultQuantity" value="1">
+                            </div>
+                        </div>
+
+                        <div class="ticket-row">
+                            <span class="ticket-type-label">Trẻ em (6&ndash;10 tuổi) <span class="discount">-25%</span></span>
+                            <div class="ticket-controls">
+                                <button type="button" class="ticket-btn ticket-decrease" data-type="child">&#8722;</button>
+                                <span class="ticket-count" id="childCount">0</span>
+                                <button type="button" class="ticket-btn ticket-increase" data-type="child">+</button>
+                                <input type="hidden" name="childQuantity" value="0">
+                            </div>
+                        </div>
+
+                        <div class="ticket-row">
+                            <span class="ticket-type-label">Người cao tuổi (&gt;60 tuổi) <span class="discount">-15%</span></span>
+                            <div class="ticket-controls">
+                                <button type="button" class="ticket-btn ticket-decrease" data-type="senior">&#8722;</button>
+                                <span class="ticket-count" id="seniorCount">0</span>
+                                <button type="button" class="ticket-btn ticket-increase" data-type="senior">+</button>
+                                <input type="hidden" name="seniorQuantity" value="0">
+                            </div>
+                        </div>
+
+                        <div class="ticket-row">
+                            <span class="ticket-type-label">Sinh viên (thẻ SV) <span class="discount">-10%</span></span>
+                            <div class="ticket-controls">
+                                <button type="button" class="ticket-btn ticket-decrease" data-type="student">&#8722;</button>
+                                <span class="ticket-count" id="studentCount">0</span>
+                                <button type="button" class="ticket-btn ticket-increase" data-type="student">+</button>
+                                <input type="hidden" name="studentQuantity" value="0">
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+
+            <!-- Hàng 2: Ngày đi | Ngày về | Nút tìm -->
+            <div class="form-date-row">
+
+                <div class="form-group">
+                    <label class="form-label" for="departureDate">Ngày đi</label>
+                    <input type="date" class="beautiful-input" id="departureDate" name="departureDate" required>
+                </div>
+
+                <div class="form-group return-date" id="returnDateGroup">
+                    <label class="form-label" for="returnDate">Ngày về</label>
+                    <input type="date" class="beautiful-input" id="returnDate" name="returnDate">
+                </div>
+
+                <div class="search-btn-wrap">
+                    <button type="submit" class="search-btn">Tìm chuyến đi</button>
+                </div>
+
+            </div>
+
+        </form>
+    </div>
+</div>
+
+<!-- Footer -->
+<footer>
+    <div class="form-section row">
+        <div class="col-md-4">
+            <p>Tìm chuyến tàu phù hợp<br /><small>Lựa chọn lịch trình linh hoạt</small></p>
+        </div>
+        <div class="col-md-4">
+            <p>Đặt vé nhanh, dễ dàng<br /><small>Nhận vé ngay sau khi đặt</small></p>
+        </div>
+        <div class="col-md-4">
+            <p>Luôn sẵn sàng hỗ trợ<br /><small>Phản hồi trong 15 phút qua điện thoại, Zalo</small></p>
+        </div>
+    </div>
+</footer>
+
+<!-- =============================================
+     SCRIPTS
+============================================= -->
+
+<!-- Navbar: hamburger + account dropdown -->
+<script>
+    // Hamburger
+    const hamburgerBtn = document.getElementById('hamburgerBtn');
+    const mobileDrawer = document.getElementById('mobileDrawer');
+
+    hamburgerBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        hamburgerBtn.classList.toggle('open');
+        mobileDrawer.classList.toggle('open');
+    });
+
+    // Account dropdown (click toggle)
+    const accountBtn  = document.getElementById('accountDropdownBtn');
+    const accountMenu = document.getElementById('accountDropdownMenu');
+
+    accountBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const isOpen = accountMenu.classList.toggle('open');
+        accountBtn.classList.toggle('open', isOpen);
+    });
+
+    // Close both on outside click
+    document.addEventListener('click', () => {
+        hamburgerBtn.classList.remove('open');
+        mobileDrawer.classList.remove('open');
+        accountBtn.classList.remove('open');
+        accountMenu.classList.remove('open');
+    });
+
+    // Prevent drawer/menu clicks from closing themselves
+    mobileDrawer.addEventListener('click', (e) => e.stopPropagation());
+    accountMenu.addEventListener('click', (e) => e.stopPropagation());
+</script>
+
+<!-- Trip type: one-way / round-trip -->
+<script>
+    const ticketTypeRadios = document.querySelectorAll('input[name="tripType"]');
+    const returnDateGroup  = document.getElementById('returnDateGroup');
+    const returnDateInput  = document.getElementById('returnDate');
+
+    function syncReturnDate() {
+        const isRound = document.getElementById('roundtrip').checked;
+        if (isRound) {
+            returnDateGroup.classList.add('active');
+            returnDateInput.required = true;
+        } else {
+            returnDateGroup.classList.remove('active');
+            returnDateInput.required = false;
+            returnDateInput.value = '';
+        }
+    }
+
+    ticketTypeRadios.forEach(r => r.addEventListener('change', syncReturnDate));
+    syncReturnDate();
+
+    // Auto-switch to round-trip when return date selected
+    returnDateInput.addEventListener('change', () => {
+        if (returnDateInput.value) {
+            document.getElementById('roundtrip').checked = true;
+            syncReturnDate();
+        }
+    });
+
+    // Min date = today
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('departureDate').min = today;
+    returnDateInput.min = today;
+
+    document.getElementById('departureDate').addEventListener('change', function () {
+        returnDateInput.min = this.value;
+        if (returnDateInput.value && returnDateInput.value < this.value) {
+            returnDateInput.value = '';
+        }
+    });
+
+    // Swap stations
+    function swapStations() {
+        const dep = document.getElementById('departureName');
+        const arr = document.getElementById('arrivalName');
+        [dep.value, arr.value] = [arr.value, dep.value];
+    }
+</script>
+
+<!-- Ticket dropdown -->
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const toggleBtn  = document.getElementById('ticketToggle');
+        const dropdown   = document.getElementById('ticketDropdown');
+        const totalText  = document.getElementById('totalTicketCount');
+
+        toggleBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const opening = dropdown.classList.toggle('hidden') === false;
+            toggleBtn.classList.toggle('open', opening);
+        });
+
+        document.addEventListener('click', () => {
+            dropdown.classList.add('hidden');
+            toggleBtn.classList.remove('open');
+        });
+        dropdown.addEventListener('click', (e) => e.stopPropagation());
+
+        function updateTotal() {
+            const types = ['adult', 'child', 'senior', 'student'];
+            let total = 0;
+            types.forEach(t => {
+                total += parseInt(document.getElementById(t + 'Count').textContent);
+            });
+            totalText.textContent = total + ' vé';
+        }
+
+        document.querySelectorAll('.ticket-increase').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const type = btn.dataset.type;
+                const span = document.getElementById(type + 'Count');
+                let count = parseInt(span.textContent) + 1;
+                span.textContent = count;
+                document.querySelector(`input[name="${type}Quantity"]`).value = count;
+                updateTotal();
+            });
+        });
+
+        document.querySelectorAll('.ticket-decrease').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const type = btn.dataset.type;
+                const span = document.getElementById(type + 'Count');
+                let count = parseInt(span.textContent);
+                if (type === 'adult' && count <= 1) return;
+                if (count <= 0) return;
+                count--;
+                span.textContent = count;
+                document.querySelector(`input[name="${type}Quantity"]`).value = count;
+                updateTotal();
+            });
+        });
+
+        updateTotal();
+    });
+</script>
+
+<!-- WebSocket: support badge -->
+<script th:if="${currentUser != null}" th:inline="javascript">
+    const contextPath = /*[[@{/}]]*/ '/';
+    const userId = /*[[${currentUser.id}]]*/ 0;
+
+    let stompClient = null;
+
+    document.addEventListener('DOMContentLoaded', () => {
+        loadInitialUnread();
+        connectSupportBadgeWS();
+    });
+
+    function loadInitialUnread() {
+        fetch(contextPath + 'user/support/unread-count')
+            .then(res => res.json())
+            .then(count => updateSupportUnread(count))
+            .catch(err => console.log('Unread fetch error', err));
+    }
+
+    function connectSupportBadgeWS() {
+        const socket = new SockJS(contextPath + 'ws-chat');
+        stompClient = Stomp.over(socket);
+        stompClient.debug = null;
+
+        stompClient.connect(
+            { userId: userId },
+            () => {
+                stompClient.subscribe(
+                    `/topic/user/${userId}/support-unread`,
+                    msg => {
+                        const count = JSON.parse(msg.body);
+                        updateSupportUnread(count);
+                    }
+                );
+            },
+            error => console.error('Support badge WS error', error)
+        );
+    }
+
+    function updateSupportUnread(count) {
+        const badge = document.getElementById('support-unread-badge');
+        if (!badge) return;
+        if (count > 0) {
+            badge.style.display = 'inline-block';
+            badge.textContent = count > 9 ? '9+' : count;
+        } else {
+            badge.style.display = 'none';
+        }
+    }
+</script>
+
+</body>
+</html>

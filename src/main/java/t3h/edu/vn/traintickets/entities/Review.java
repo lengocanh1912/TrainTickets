@@ -45,7 +45,10 @@ public class Review {
     @Column(name = "comment")
     private String comment;
 
-    @OneToMany(mappedBy = "review", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "review",
+            cascade = CascadeType.ALL,
+            orphanRemoval = true,
+            fetch = FetchType.LAZY)
     private List<ReviewImage> reviewImages = new ArrayList<>();
 
     @ColumnDefault("CURRENT_TIMESTAMP")
@@ -58,10 +61,6 @@ public class Review {
 
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)
-    private RateState rateStatus ;
-
-    @Column(nullable = false)
-    @Enumerated(EnumType.STRING)
-    private ReviewStatus status = ReviewStatus.PENDING;
+    private ReviewStatus status ;
 
 }

@@ -10,8 +10,11 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 import t3h.edu.vn.traintickets.dto.ReviewDisplayDto;
 import t3h.edu.vn.traintickets.entities.*;
+import t3h.edu.vn.traintickets.enums.RateState;
+import t3h.edu.vn.traintickets.enums.ReviewStatus;
 import t3h.edu.vn.traintickets.repository.OrderRepository;
 import t3h.edu.vn.traintickets.repository.ReviewImageRepository;
+import t3h.edu.vn.traintickets.repository.ReviewReplyRepository;
 import t3h.edu.vn.traintickets.repository.ReviewRepository;
 
 import java.io.IOException;
@@ -34,7 +37,8 @@ public class ReviewService {
     OrderRepository orderRepository;
     @Autowired
     ReviewImageRepository reviewImageRepository;
-
+    @Autowired
+    private ReviewReplyRepository reviewReplyRepository;
     @Transactional
     public List<ReviewDisplayDto> searchReviewsByUser(String keyword) {
         List<ReviewDisplayDto> result = reviewRepository.searchByUserFullname(keyword);
@@ -51,7 +55,6 @@ public class ReviewService {
         return result;
     }
 
-
     @Transactional
     public void saveReview(Long orderId, int rating, String content, List<MultipartFile> images, String username) {
         Order order = orderRepository.findById(orderId)
@@ -63,7 +66,7 @@ public class ReviewService {
         }
 
         OrderTicket firstTicket = order.getOrderTickets().get(0);
-        Trip trip = firstTicket.getTicket().getTrip(); // ✅ Bắt buộc để set vào Review
+        Trip trip = firstTicket.getTicket().getTrip();
 
         Review review = new Review();
         review.setUser(order.getUser());
@@ -73,6 +76,7 @@ public class ReviewService {
         review.setComment(content);
         review.setCreatedAt(LocalDateTime.now());
         review.setUpdatedAt(LocalDateTime.now());
+        review.setStatus(ReviewStatus.PENDING);
 
         review = reviewRepository.save(review);
 
@@ -99,38 +103,59 @@ public class ReviewService {
     }
 
     public Page<ReviewDisplayDto> getAllDisplayReviews(int pageNo, int pageSize) {
+
         Pageable pageable = PageRequest.of(pageNo, pageSize, Sort.by("createdAt").descending());
 
-        Page<ReviewDisplayDto> dtos = reviewRepository.findAllWithoutImages(pageable );
+        Page<ReviewDisplayDto> page = reviewRepository.findAllWithoutImages(pageable);
 
-        // Lấy tất cả ảnh
-        List<ReviewImage> allImages = reviewImageRepository.findAll();
+        List<ReviewDisplayDto> dtos = page.getContent();
 
-        // Gom ảnh theo reviewId
-        Map<Long, List<String>> imageMap = allImages.stream()
+        if (dtos.isEmpty()) return page;
+
+        // Lấy tất cả reviewId
+        List<Long> reviewIds = dtos.stream()
+                .map(ReviewDisplayDto::getReviewId)
+                .toList();
+
+        // --------- IMAGES ---------
+        List<ReviewImage> images = reviewImageRepository.findAllByReviewIdIn(reviewIds);
+
+        Map<Long, List<String>> imageMap = images.stream()
                 .collect(Collectors.groupingBy(
                         img -> img.getReview().getId(),
                         Collectors.mapping(ReviewImage::getFilePath, Collectors.toList())
                 ));
 
-        // Gán ảnh vào từng DTO
+        // --------- REPLIES ---------
+        List<ReviewReply> replies = reviewReplyRepository.findByReviewIdIn(reviewIds);
+
+        Map<Long, ReviewReply> replyMap = replies.stream()
+                .collect(Collectors.toMap(
+                        r -> r.getReview().getId(),
+                        r -> r
+                ));
+
+        // --------- MAP DTO ---------
         for (ReviewDisplayDto dto : dtos) {
-            List<String> images = imageMap.getOrDefault(dto.getReviewId(), null);
-            dto.setImagePaths(images);
+
+            dto.setImagePaths(imageMap.getOrDefault(dto.getReviewId(), null));
+
+            ReviewReply reply = replyMap.get(dto.getReviewId());
+
+            if (reply != null) {
+                dto.setAdminReply(reply.getContent());
+                dto.setReplyCreatedAt(reply.getCreatedAt());
+            }
         }
 
-        return dtos;
+        return page;
     }
-
-
     public Double getAverageRating() {
         Double avg = reviewRepository.findAverageRating(); // trên thang 5
         if (avg == null) return 0.0;
         double converted = avg * 2; // chuyển sang hệ 10
         return Math.round(converted * 10.0) / 10.0; // làm tròn 1 số thập phân
     }
-
-
 
     public Long getTotalReviewCount() {
         return reviewRepository.countTotalReviews();

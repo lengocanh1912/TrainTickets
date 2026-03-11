@@ -23,7 +23,7 @@ public class AdminPasswordController {
 
     @GetMapping("/admin/updatePassword")
     public String password(HttpSession session, Model model) {
-        model.addAttribute("userpassword", new UserPasswordDto()); // Dùng DTO cho form
+        model.addAttribute("user", new UserPasswordDto()); // Dùng DTO cho form
         return "admin/updatePassword";
     }
 

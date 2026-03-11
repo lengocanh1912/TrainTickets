@@ -60,11 +60,6 @@ public class HomeController {
         return "/admin/home";
     }
 
-    @GetMapping("/admin/home-test")
-    public String adminHome(Model model){
-        return  "admin/home-test";
-    }
-
     @GetMapping("/user/home")
     public String userHome(Model model) {
         model.addAttribute("menu", "userHome");
@@ -72,6 +67,14 @@ public class HomeController {
         model.addAttribute("reviewCount", reviewService.getTotalReviewCount());
         return "user/home";
     }
+    @GetMapping("/admin/home-test")
+    public String adminHome(Model model){
+        return  "admin/home-test";
+    }
 
+    @GetMapping("/user/home-test")
+    public String uHome(Model model){
+        return  "user/home_test";
+    }
 
 }

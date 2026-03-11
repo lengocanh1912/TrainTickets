@@ -279,40 +279,57 @@
       </div>
 
       <!-- Cột 3: Thao tác -->
-      <div class="actions">
-        <div>
-          <a th:href="@{/user/trip/passengerInfo/{id}(id=${order.id})}" class="action-button btn-pay"
-             th:if="${order.status == OrderStatus.PENDING}">Thanh toán</a>
-        </div>
-<!--        <div>-->
-<!--          <a th:href="@{/user/review/rate(id=${order.id})}" class="action-button btn-success"-->
-<!--             th:if="${order.status == OrderStatus.PAID}">Đã thanh toán</a>-->
-<!--        </div>-->
-        <div>
-          <a  class="action-button btn-success"
-             th:if="${order.status == OrderStatus.PAID}">Đã thanh toán</a>
-        </div>
-        <div>
-          <a th:href="@{/user/review/rate(id=${order.id})}" class="action-button btn-rate"
-             th:if="${order.ticketStatus == TicketStatus.CHECKED_IN}">đánh giá</a>
-        </div>
-        <div>
-            <form th:action="@{/user/trip/rebook}" method="post"
-                  th:if="${order.status == OrderStatus.CANCELLED || order.status == OrderStatus.FAILED}">
+        <div class="actions">
+<!--            <span th:text="${order.rateStatus}"></span>-->
+            <!-- Thanh toán -->
+            <div>
+                <a th:href="@{/user/trip/passengerInfo/{id}(id=${order.id})}"
+                   class="action-button btn-pay"
+                   th:if="${order.status == OrderStatus.PENDING}">
+                    Thanh toán
+                </a>
+            </div>
 
-                <input type="hidden" name="orderId"
-                       th:value="${order.id}" />
+            <!-- Đã thanh toán -->
+            <div>
+        <span class="action-button btn-success"
+              th:if="${order.status == OrderStatus.PAID}">
+            Đã thanh toán
+        </span>
+            </div>
 
-                <button type="submit" class="action-button btn-rebook">
-                    Đặt lại
-                </button>
-            </form>
-<!--        <div>-->
-<!--          <a  class="action-button btn-cancel"-->
-<!--             th:if="${order.status == OrderStatus.FAILED}">Đã hủy</a>-->
-<!--        </div>-->
-      </div>
-    </div>
+            <!-- Đánh giá -->
+            <div>
+                <a th:if="${order.rateStatus.name() == 'CAN_RATE'}"
+                   th:href="@{/user/review/rate(id=${order.id})}"
+                   class="action-button btn-rate">
+                    Đánh giá
+                </a>
+
+                <span th:if="${order.rateStatus.name() == 'RATED'}"
+                      class="badge bg-success">
+            Đã đánh giá
+        </span>
+            </div>
+
+            <!-- Đặt lại -->
+            <div>
+                <form th:action="@{/user/trip/rebook}" method="post"
+                      th:if="${order.status == OrderStatus.CANCELLED || order.status == OrderStatus.FAILED}">
+
+                    <input type="hidden"
+                           name="orderId"
+                           th:value="${order.id}" />
+
+                    <button type="submit"
+                            class="action-button btn-rebook">
+                        Đặt lại
+                    </button>
+
+                </form>
+            </div>
+
+        </div>
   </div>
   </div>
   <!-- Gọi phân trang -->
